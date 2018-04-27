@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
-
-	"github.com/mixinmessenger/bot-api-go-client/session"
-	"github.com/mixinmessenger/bot-api-go-client/uuid"
 )
 
 func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, clientId, sessionId, secret string) error {
@@ -31,7 +28,7 @@ func PostMessage(ctx context.Context, conversationId, recipientId, messageId, ca
 		return err
 	}
 	var resp struct {
-		Error session.Error `json:"error"`
+		Error Error `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -54,5 +51,5 @@ func UniqueConversationId(userId, recipientId string) string {
 	sum := h.Sum(nil)
 	sum[6] = (sum[6] & 0x0f) | 0x30
 	sum[8] = (sum[8] & 0x3f) | 0x80
-	return uuid.FromBytes(sum)
+	return FromBytes(sum)
 }

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/mixinmessenger/bot-api-go-client/uuid"
 )
 
 func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (string, error) {
@@ -19,7 +18,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		"sid": sid,
 		"iat": time.Now().UTC().Unix(),
 		"exp": expire.Unix(),
-		"jti": uuid.NewV4().String(),
+		"jti": NewV4().String(),
 		"sig": hex.EncodeToString(sum[:]),
 	})
 

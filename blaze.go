@@ -1,4 +1,4 @@
-package blaze
+package bot
 
 import (
 	"compress/gzip"
@@ -12,9 +12,6 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/mixinmessenger/bot-api-go-client/bot"
-	"github.com/mixinmessenger/bot-api-go-client/session"
-	"github.com/mixinmessenger/bot-api-go-client/uuid"
 )
 
 const keepAlivePeriod = 3 * time.Second
@@ -38,7 +35,7 @@ type BlazeMessage struct {
 	Action string                 `json:"action"`
 	Params map[string]interface{} `json:"params,omitempty"`
 	Data   interface{}            `json:"data,omitempty"`
-	Error  *session.Error         `json:"error,omitempty"`
+	Error  *Error                 `json:"error,omitempty"`
 }
 
 type MessageView struct {
@@ -83,7 +80,7 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	go writePump(ctx, conn, mc)
 	go readPump(ctx, conn, mc)
 	if err = writeMessageAndWait(ctx, mc, "LIST_PENDING_MESSAGES", nil); err != nil {
-		return session.BlazeServerError(ctx, err)
+		return BlazeServerError(ctx, err)
 	}
 	for {
 		select {
@@ -92,7 +89,7 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 		case msg := <-mc.ReadBuffer:
 			params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
 			if err = writeMessageAndWait(ctx, mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
-				return session.BlazeServerError(ctx, err)
+				return BlazeServerError(ctx, err)
 			}
 			err = listener.OnMessage(ctx, mc, msg)
 			if err != nil {
@@ -106,18 +103,18 @@ func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, btn
 	params := map[string]interface{}{
 		"conversation_id": msg.ConversationId,
 		"recipient_id":    msg.UserId,
-		"message_id":      uuid.NewV4().String(),
+		"message_id":      NewV4().String(),
 		"category":        "PLAIN_TEXT",
 		"data":            base64.StdEncoding.EncodeToString([]byte(btns)),
 	}
 	if err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params); err != nil {
-		return session.BlazeServerError(ctx, err)
+		return BlazeServerError(ctx, err)
 	}
 	return nil
 }
 
 func connectMixinBlaze(uid, sid, key string) (*websocket.Conn, error) {
-	token, err := bot.SignAuthenticationToken(uid, sid, key, "GET", "/", "")
+	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/", "")
 	if err != nil {
 		return nil, err
 	}
@@ -147,11 +144,11 @@ func readPump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) err
 			return err
 		}
 		if messageType != websocket.BinaryMessage {
-			return session.BlazeServerError(ctx, fmt.Errorf("invalid message type %d", messageType))
+			return BlazeServerError(ctx, fmt.Errorf("invalid message type %d", messageType))
 		}
 		err = parseMessage(ctx, mc, wsReader)
 		if err != nil {
-			return session.BlazeServerError(ctx, err)
+			return BlazeServerError(ctx, err)
 		}
 	}
 }
@@ -172,7 +169,7 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) er
 }
 
 func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string, params map[string]interface{}) error {
-	blazeMessage, err := json.Marshal(BlazeMessage{Id: uuid.NewV4().String(), Action: action, Params: params})
+	blazeMessage, err := json.Marshal(BlazeMessage{Id: NewV4().String(), Action: action, Params: params})
 	if err != nil {
 		return err
 	}
