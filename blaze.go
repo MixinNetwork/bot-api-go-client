@@ -102,13 +102,13 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	}
 }
 
-func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, btns string) error {
+func SendMessage(ctx context.Context, mc *MessageContext, conversationId, recipientId, category, content string) error {
 	params := map[string]interface{}{
-		"conversation_id": msg.ConversationId,
-		"recipient_id":    msg.UserId,
+		"conversation_id": conversationId,
+		"recipient_id":    recipientId,
 		"message_id":      NewV4().String(),
-		"category":        "PLAIN_TEXT",
-		"data":            base64.StdEncoding.EncodeToString([]byte(btns)),
+		"category":        category,
+		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
 	}
 	if err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params); err != nil {
 		return BlazeServerError(ctx, err)
@@ -116,7 +116,21 @@ func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, btn
 	return nil
 }
 
-func SendAppButton(ctx context.Context, mc *MessageContext, conversationId, recipientId string, label string, action string, color string) error {
+func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, content string) error {
+	params := map[string]interface{}{
+		"conversation_id": msg.ConversationId,
+		"recipient_id":    msg.UserId,
+		"message_id":      NewV4().String(),
+		"category":        "PLAIN_TEXT",
+		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
+	}
+	if err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params); err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
+func SendAppButton(ctx context.Context, mc *MessageContext, conversationId, recipientId, label, action, color string) error {
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
 		"action": action,
