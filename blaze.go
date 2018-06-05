@@ -116,6 +116,29 @@ func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, btn
 	return nil
 }
 
+func SendAppButton(ctx context.Context, mc *MessageContext, conversationId, recipientId string, label string, action string, color string) error {
+	btns, err := json.Marshal([]interface{}{map[string]string{
+		"label":  label,
+		"action": action,
+		"color":  color,
+	}})
+	if err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	params := map[string]interface{}{
+		"conversation_id": conversationId,
+		"recipient_id":    recipientId,
+		"message_id":      NewV4().String(),
+		"category":        "APP_BUTTON_GROUP",
+		"data":            base64.StdEncoding.EncodeToString(btns),
+	}
+	err = writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params)
+	if err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
 func connectMixinBlaze(uid, sid, key string) (*websocket.Conn, error) {
 	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/", "")
 	if err != nil {
