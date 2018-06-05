@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -51,10 +52,11 @@ type MessageView struct {
 }
 
 type MessageContext struct {
-	ReadDone    chan bool
-	WriteDone   chan bool
-	ReadBuffer  chan MessageView
-	WriteBuffer chan []byte
+	Transactions tmap
+	ReadDone     chan bool
+	WriteDone    chan bool
+	ReadBuffer   chan MessageView
+	WriteBuffer  chan []byte
 }
 
 type systemConversationPayload struct {
@@ -72,10 +74,11 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	defer conn.Close()
 
 	mc := &MessageContext{
-		ReadDone:    make(chan bool, 1),
-		WriteDone:   make(chan bool, 1),
-		ReadBuffer:  make(chan MessageView, 102400),
-		WriteBuffer: make(chan []byte, 102400),
+		Transactions: newTmap(),
+		ReadDone:     make(chan bool, 1),
+		WriteDone:    make(chan bool, 1),
+		ReadBuffer:   make(chan MessageView, 102400),
+		WriteBuffer:  make(chan []byte, 102400),
 	}
 	go writePump(ctx, conn, mc)
 	go readPump(ctx, conn, mc)
@@ -87,13 +90,13 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 		case <-mc.ReadDone:
 			return nil
 		case msg := <-mc.ReadBuffer:
-			params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
-			if err = writeMessageAndWait(ctx, mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
-				return BlazeServerError(ctx, err)
-			}
 			err = listener.OnMessage(ctx, mc, msg)
 			if err != nil {
 				return err
+			}
+			params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
+			if err = writeMessageAndWait(ctx, mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
+				return BlazeServerError(ctx, err)
 			}
 		}
 	}
@@ -169,15 +172,32 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) er
 }
 
 func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string, params map[string]interface{}) error {
-	blazeMessage, err := json.Marshal(BlazeMessage{Id: NewV4().String(), Action: action, Params: params})
+	var resp = make(chan BlazeMessage, 1)
+	var id = NewV4().String()
+	mc.Transactions.set(id, func(t BlazeMessage) error {
+		select {
+		case resp <- t:
+		case <-time.After(1 * time.Second):
+			return fmt.Errorf("timeout to hook %s %s", action, id)
+		}
+		return nil
+	})
+	blazeMessage, err := json.Marshal(BlazeMessage{Id: id, Action: action, Params: params})
 	if err != nil {
 		return err
 	}
-
 	select {
 	case <-time.After(keepAlivePeriod):
 		return fmt.Errorf("timeout to write %s %v", action, params)
 	case mc.WriteBuffer <- blazeMessage:
+	}
+	select {
+	case <-time.After(keepAlivePeriod):
+		return fmt.Errorf("timeout to wait %s %v", action, params)
+	case t := <-resp:
+		if t.Error != nil && t.Error.Code != 403 {
+			return writeMessageAndWait(ctx, mc, action, params)
+		}
 	}
 	return nil
 }
@@ -215,6 +235,10 @@ func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) e
 	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
 		return err
 	}
+	transaction := mc.Transactions.retrive(message.Id)
+	if transaction != nil {
+		return transaction(message)
+	}
 	if message.Action != "CREATE_MESSAGE" {
 		return nil
 	}
@@ -232,4 +256,30 @@ func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) e
 	case mc.ReadBuffer <- msg:
 	}
 	return nil
+}
+
+type tmap struct {
+	mutex sync.Mutex
+	m     map[string]mixinTransaction
+}
+
+type mixinTransaction func(BlazeMessage) error
+
+func newTmap() tmap {
+	return tmap{
+		m: make(map[string]mixinTransaction),
+	}
+}
+
+func (m tmap) retrive(key string) mixinTransaction {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	defer delete(m.m, key)
+	return m.m[key]
+}
+
+func (m tmap) set(key string, t mixinTransaction) {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+	m.m[key] = t
 }
