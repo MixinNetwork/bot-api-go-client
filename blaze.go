@@ -19,7 +19,7 @@ const keepAlivePeriod = 3 * time.Second
 const writeWait = 10 * time.Second
 
 type MessageListener interface {
-	OnMessage(ctx context.Context, mc *MessageContext, msg MessageView) error
+	OnMessage(ctx context.Context, mc *MessageContext, msg MessageView, userId string) error
 }
 
 const (
@@ -49,6 +49,17 @@ type MessageView struct {
 	Source         string    `json:"source"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type TransferView struct {
+	Type          string    `json:"type"`
+	SnapshotId    string    `json:"snapshot_id"`
+	CounterUserId string    `json:"counter_user_id"`
+	AssetId       string    `json:"asset_id"`
+	Amount        string    `json:"amount"`
+	TraceId       string    `json:"trace_id"`
+	Memo          string    `json:"memo"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type MessageContext struct {
@@ -90,7 +101,7 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 		case <-mc.ReadDone:
 			return nil
 		case msg := <-mc.ReadBuffer:
-			err = listener.OnMessage(ctx, mc, msg)
+			err = listener.OnMessage(ctx, mc, msg, uid)
 			if err != nil {
 				return err
 			}
