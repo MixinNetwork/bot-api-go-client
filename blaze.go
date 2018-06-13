@@ -141,6 +141,22 @@ func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, con
 	return nil
 }
 
+func SendContact(ctx context.Context, mc *MessageContext, conversationId, recipientId, contactId string) error {
+	contactMap := map[string]string{"user_id": contactId}
+	contactData, _ := json.Marshal(contactMap)
+	params := map[string]interface{}{
+		"conversation_id": conversationId,
+		"recipient_id":    recipientId,
+		"message_id":      NewV4().String(),
+		"category":        "PLAIN_CONTACT",
+		"data":            base64.StdEncoding.EncodeToString(contactData),
+	}
+	if err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params); err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
 func SendAppButton(ctx context.Context, mc *MessageContext, conversationId, recipientId, label, action, color string) error {
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
