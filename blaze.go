@@ -113,13 +113,14 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	}
 }
 
-func SendMessage(ctx context.Context, mc *MessageContext, conversationId, recipientId, category, content string) error {
+func SendMessage(ctx context.Context, mc *MessageContext, conversationId, recipientId, category, content, representativeId string) error {
 	params := map[string]interface{}{
-		"conversation_id": conversationId,
-		"recipient_id":    recipientId,
-		"message_id":      NewV4().String(),
-		"category":        category,
-		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
+		"conversation_id":   conversationId,
+		"recipient_id":      recipientId,
+		"message_id":        NewV4().String(),
+		"representative_id": representativeId,
+		"category":          category,
+		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
 	}
 	if err := writeMessageAndWait(ctx, mc, "CREATE_MESSAGE", params); err != nil {
 		return BlazeServerError(ctx, err)
