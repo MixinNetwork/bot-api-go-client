@@ -5,13 +5,14 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
 var httpClient *http.Client
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
 	if httpClient == nil {
-		httpClient = &http.Client{}
+		httpClient = &http.Client{Timeout: 10 * time.Second}
 	}
 	req, err := http.NewRequest(method, "https://api.mixin.one"+path, bytes.NewReader(body))
 	if err != nil {
