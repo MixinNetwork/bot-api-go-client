@@ -324,7 +324,7 @@ func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) e
 }
 
 type tmap struct {
-	mutex sync.Mutex
+	mutex *sync.Mutex
 	m     map[string]mixinTransaction
 }
 
@@ -332,7 +332,8 @@ type mixinTransaction func(BlazeMessage) error
 
 func newTmap() tmap {
 	return tmap{
-		m: make(map[string]mixinTransaction),
+		m:     make(map[string]mixinTransaction),
+		mutex: &sync.Mutex{},
 	}
 }
 
