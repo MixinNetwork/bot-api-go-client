@@ -29,6 +29,26 @@ func BlazeServerError(ctx context.Context, err error) Error {
 	return createError(ctx, http.StatusInternalServerError, 7000, description, err)
 }
 
+func ServerError(ctx context.Context, err error) Error {
+	description := http.StatusText(http.StatusInternalServerError)
+	return createError(ctx, http.StatusInternalServerError, http.StatusInternalServerError, description, err)
+}
+
+func BadDataError(ctx context.Context) Error {
+	description := "The request data has invalid field."
+	return createError(ctx, http.StatusAccepted, 10002, description, nil)
+}
+
+func AuthorizationError(ctx context.Context) Error {
+	description := "Unauthorized, maybe invalid token."
+	return createError(ctx, http.StatusAccepted, 401, description, nil)
+}
+
+func ForbiddenError(ctx context.Context) Error {
+	description := http.StatusText(http.StatusForbidden)
+	return createError(ctx, http.StatusAccepted, http.StatusForbidden, description, nil)
+}
+
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
