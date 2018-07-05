@@ -63,7 +63,7 @@ type TransferView struct {
 }
 
 type MessageContext struct {
-	Transactions tmap
+	Transactions *tmap
 	ReadDone     chan bool
 	WriteDone    chan bool
 	ReadBuffer   chan MessageView
@@ -330,20 +330,20 @@ type tmap struct {
 
 type mixinTransaction func(BlazeMessage) error
 
-func newTmap() tmap {
-	return tmap{
+func newTmap() *tmap {
+	return &tmap{
 		m: make(map[string]mixinTransaction),
 	}
 }
 
-func (m tmap) retrive(key string) mixinTransaction {
+func (m *tmap) retrive(key string) mixinTransaction {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	defer delete(m.m, key)
 	return m.m[key]
 }
 
-func (m tmap) set(key string, t mixinTransaction) {
+func (m *tmap) set(key string, t mixinTransaction) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.m[key] = t
