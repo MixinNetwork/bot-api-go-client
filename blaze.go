@@ -17,6 +17,8 @@ import (
 
 const keepAlivePeriod = 3 * time.Second
 const writeWait = 10 * time.Second
+const pongWait = 10 * time.Second
+const pingPeriod = (pongWait * 9) / 10
 
 type MessageListener interface {
 	OnMessage(ctx context.Context, mc *MessageContext, msg MessageView, userId string) error
@@ -63,11 +65,11 @@ type TransferView struct {
 }
 
 type MessageContext struct {
-	Transactions *tmap
-	ReadDone     chan bool
-	WriteDone    chan bool
-	ReadBuffer   chan MessageView
-	WriteBuffer  chan []byte
+	transactions *tmap
+	readDone     chan bool
+	writeDone    chan bool
+	readBuffer   chan MessageView
+	writeBuffer  chan []byte
 }
 
 type systemConversationPayload struct {
@@ -85,11 +87,11 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	defer conn.Close()
 
 	mc := &MessageContext{
-		Transactions: newTmap(),
-		ReadDone:     make(chan bool, 1),
-		WriteDone:    make(chan bool, 1),
-		ReadBuffer:   make(chan MessageView, 102400),
-		WriteBuffer:  make(chan []byte, 102400),
+		transactions: newTmap(),
+		readDone:     make(chan bool, 1),
+		writeDone:    make(chan bool, 1),
+		readBuffer:   make(chan MessageView, 102400),
+		writeBuffer:  make(chan []byte, 102400),
 	}
 	go writePump(ctx, conn, mc)
 	go readPump(ctx, conn, mc)
@@ -98,9 +100,9 @@ func Loop(ctx context.Context, listener MessageListener, uid, sid, key string) e
 	}
 	for {
 		select {
-		case <-mc.ReadDone:
+		case <-mc.readDone:
 			return nil
-		case msg := <-mc.ReadBuffer:
+		case msg := <-mc.readBuffer:
 			err = listener.OnMessage(ctx, mc, msg, uid)
 			if err != nil {
 				return err
@@ -202,9 +204,18 @@ func connectMixinBlaze(uid, sid, key string) (*websocket.Conn, error) {
 func readPump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) error {
 	defer func() {
 		conn.Close()
-		mc.WriteDone <- true
-		mc.ReadDone <- true
+		mc.writeDone <- true
+		mc.readDone <- true
 	}()
+
+	conn.SetReadDeadline(time.Now().Add(pongWait))
+	conn.SetPongHandler(func(string) error {
+		err := conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			return BlazeServerError(ctx, err)
+		}
+		return nil
+	})
 
 	for {
 		messageType, wsReader, err := conn.NextReader()
@@ -222,16 +233,25 @@ func readPump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) err
 }
 
 func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) error {
-	defer conn.Close()
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		conn.Close()
+	}()
 	for {
 		select {
-		case data := <-mc.WriteBuffer:
+		case data := <-mc.writeBuffer:
 			err := writeGzipToConn(conn, data)
 			if err != nil {
 				return err
 			}
-		case <-mc.WriteDone:
+		case <-mc.writeDone:
 			return nil
+		case <-ticker.C:
+			conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return err
+			}
 		}
 	}
 }
@@ -239,7 +259,7 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) er
 func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string, params map[string]interface{}) error {
 	var resp = make(chan BlazeMessage, 1)
 	var id = NewV4().String()
-	mc.Transactions.set(id, func(t BlazeMessage) error {
+	mc.transactions.set(id, func(t BlazeMessage) error {
 		select {
 		case resp <- t:
 		case <-time.After(1 * time.Second):
@@ -254,7 +274,7 @@ func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string,
 	select {
 	case <-time.After(keepAlivePeriod):
 		return fmt.Errorf("timeout to write %s %v", action, params)
-	case mc.WriteBuffer <- blazeMessage:
+	case mc.writeBuffer <- blazeMessage:
 	}
 	select {
 	case <-time.After(keepAlivePeriod):
@@ -300,7 +320,7 @@ func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) e
 	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
 		return err
 	}
-	transaction := mc.Transactions.retrive(message.Id)
+	transaction := mc.transactions.retrive(message.Id)
 	if transaction != nil {
 		return transaction(message)
 	}
@@ -318,7 +338,7 @@ func parseMessage(ctx context.Context, mc *MessageContext, wsReader io.Reader) e
 	select {
 	case <-time.After(keepAlivePeriod):
 		return fmt.Errorf("timeout to handle %s %s", msg.Category, msg.MessageId)
-	case mc.ReadBuffer <- msg:
+	case mc.readBuffer <- msg:
 	}
 	return nil
 }
