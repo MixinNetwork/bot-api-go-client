@@ -5,4 +5,4 @@ Installation
 
 Install using the "go get" command:
 
-    go get github.com/mixinmessenger/bot-api-go-client
+    go get github.com/MixinNetwork/bot-api-go-client
