@@ -218,9 +218,13 @@ func readPump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) err
 	})
 
 	for {
+		err := conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			return BlazeServerError(ctx, err)
+		}
 		messageType, wsReader, err := conn.NextReader()
 		if err != nil {
-			return err
+			return BlazeServerError(ctx, err)
 		}
 		if messageType != websocket.BinaryMessage {
 			return BlazeServerError(ctx, fmt.Errorf("invalid message type %d", messageType))
@@ -243,14 +247,15 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) er
 		case data := <-mc.writeBuffer:
 			err := writeGzipToConn(conn, data)
 			if err != nil {
-				return err
+				return BlazeServerError(ctx, err)
 			}
 		case <-mc.writeDone:
 			return nil
 		case <-ticker.C:
 			conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return err
+			err := conn.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				return BlazeServerError(ctx, err)
 			}
 		}
 	}
