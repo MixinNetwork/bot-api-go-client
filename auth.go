@@ -20,7 +20,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		"sid": sid,
 		"iat": time.Now().UTC().Unix(),
 		"exp": expire.Unix(),
-		"jti": NewV4().String(),
+		"jti": UuidNewV4().String(),
 		"sig": hex.EncodeToString(sum[:]),
 	})
 

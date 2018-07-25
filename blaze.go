@@ -119,7 +119,7 @@ func SendMessage(ctx context.Context, mc *MessageContext, conversationId, recipi
 	params := map[string]interface{}{
 		"conversation_id":   conversationId,
 		"recipient_id":      recipientId,
-		"message_id":        NewV4().String(),
+		"message_id":        UuidNewV4().String(),
 		"representative_id": representativeId,
 		"category":          category,
 		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
@@ -134,7 +134,7 @@ func SendPlainText(ctx context.Context, mc *MessageContext, msg MessageView, con
 	params := map[string]interface{}{
 		"conversation_id": msg.ConversationId,
 		"recipient_id":    msg.UserId,
-		"message_id":      NewV4().String(),
+		"message_id":      UuidNewV4().String(),
 		"category":        "PLAIN_TEXT",
 		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
 	}
@@ -150,7 +150,7 @@ func SendContact(ctx context.Context, mc *MessageContext, conversationId, recipi
 	params := map[string]interface{}{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
-		"message_id":      NewV4().String(),
+		"message_id":      UuidNewV4().String(),
 		"category":        "PLAIN_CONTACT",
 		"data":            base64.StdEncoding.EncodeToString(contactData),
 	}
@@ -172,7 +172,7 @@ func SendAppButton(ctx context.Context, mc *MessageContext, conversationId, reci
 	params := map[string]interface{}{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
-		"message_id":      NewV4().String(),
+		"message_id":      UuidNewV4().String(),
 		"category":        "APP_BUTTON_GROUP",
 		"data":            base64.StdEncoding.EncodeToString(btns),
 	}
@@ -263,7 +263,7 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *MessageContext) er
 
 func writeMessageAndWait(ctx context.Context, mc *MessageContext, action string, params map[string]interface{}) error {
 	var resp = make(chan BlazeMessage, 1)
-	var id = NewV4().String()
+	var id = UuidNewV4().String()
 	mc.transactions.set(id, func(t BlazeMessage) error {
 		select {
 		case resp <- t:

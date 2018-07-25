@@ -3,23 +3,23 @@ package bot
 import (
 	"log"
 
-	_uuid "github.com/satori/go.uuid"
+	"github.com/satori/go.uuid"
 )
 
-var Nil = _uuid.Nil
+var Nil = uuid.Nil
 
-func NewV4() _uuid.UUID {
-	id, err := _uuid.NewV4()
+func UuidNewV4() uuid.UUID {
+	id, err := uuid.NewV4()
 	if err != nil {
 		log.Panicln(err)
 	}
 	return id
 }
 
-func FromString(id string) (_uuid.UUID, error) {
-	return _uuid.FromString(id)
+func UuidFromString(id string) (uuid.UUID, error) {
+	return uuid.FromString(id)
 }
 
-func FromBytes(input []byte) string {
-	return _uuid.FromBytesOrNil(input).String()
+func UuidFromBytes(input []byte) string {
+	return uuid.FromBytesOrNil(input).String()
 }
