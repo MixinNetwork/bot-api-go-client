@@ -3,7 +3,6 @@ package bot
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"time"
 
 	"github.com/MixinNetwork/go-number"
@@ -55,7 +54,7 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid string, ses
 		return err
 	}
 	if resp.Error.Code > 0 {
-		return errors.New(resp.Error.Description)
+		return resp.Error
 	}
 	return nil
 }
