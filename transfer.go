@@ -16,7 +16,7 @@ type TransferInput struct {
 	Memo        string
 }
 
-func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid string, sessionKey, pin, pinToken string) error {
+func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) error {
 	if in.Amount.Exhausted() {
 		return nil
 	}
