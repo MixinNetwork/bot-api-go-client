@@ -24,6 +24,7 @@ func main() {
 	user, userSessionKey, err := createUser(ctx)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	fmt.Println(user)
 	fmt.Println(userSessionKey)
@@ -31,6 +32,7 @@ func main() {
 	err = setupPin(ctx, "123456", user, userSessionKey)
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	fmt.Println("Setup PIN successful")
 }
