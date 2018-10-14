@@ -35,6 +35,13 @@ func main() {
 		return
 	}
 	fmt.Println("Setup PIN successful")
+	ethAssetId := "43d61dcd-e413-450d-80b8-101d5e903357"
+	asset, err := getAsset(ctx, user, userSessionKey, ethAssetId)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(asset)
 }
 
 func createUser(ctx context.Context) (*bot.User, string, error) {
@@ -68,4 +75,13 @@ func setupPin(ctx context.Context, pin string, user *bot.User, userSessionKey st
 		return err
 	}
 	return nil
+}
+
+func getAsset(ctx context.Context, user *bot.User, userSessionKey, assetId string) (*bot.Asset, error) {
+	token, err := bot.SignAuthenticationToken(user.UserId, user.SessionId, userSessionKey, "GET", "/assets/"+assetId, "")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(token)
+	return bot.AssetShow(ctx, assetId, token)
 }
