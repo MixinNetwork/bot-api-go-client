@@ -15,10 +15,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-const keepAlivePeriod = 3 * time.Second
-const writeWait = 10 * time.Second
-const pongWait = 10 * time.Second
-const pingPeriod = (pongWait * 9) / 10
+const (
+	keepAlivePeriod = 3 * time.Second
+	writeWait       = 10 * time.Second
+	pongWait        = 10 * time.Second
+	pingPeriod      = (pongWait * 9) / 10
+)
 
 type MessageListener interface {
 	OnMessage(ctx context.Context, mc *MessageContext, msg MessageView, userId string) error
