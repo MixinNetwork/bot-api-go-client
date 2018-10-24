@@ -27,5 +27,8 @@ func Request(ctx context.Context, method, path string, body []byte, accessToken 
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode >= 500 {
+		return nil, ServerError(ctx, nil)
+	}
 	return ioutil.ReadAll(resp.Body)
 }
