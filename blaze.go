@@ -328,10 +328,7 @@ func writeGzipToConn(conn *websocket.Conn, msg []byte) error {
 	if err := gzWriter.Close(); err != nil {
 		return err
 	}
-	if err := wsWriter.Close(); err != nil {
-		return err
-	}
-	return nil
+	return wsWriter.Close()
 }
 
 func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) error {
