@@ -3,7 +3,7 @@ package bot
 import (
 	"log"
 
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 )
 
 var Nil = uuid.Nil
