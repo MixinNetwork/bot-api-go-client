@@ -17,7 +17,7 @@ func main() {
 	app.Version = "1.0.0"
 	app.Commands = []cli.Command{
 		{
-			Name:    "transfer",
+			Name:    "transaction",
 			Aliases: []string{"t"},
 			Usage:   "Transfer asset to Mixin Mainnet",
 			Action:  transferCmd,
