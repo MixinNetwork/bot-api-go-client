@@ -77,7 +77,7 @@ func transferCmd(c *cli.Context) error {
 		OpponentKey: opponentKey,
 		Amount:      number.FromString(amount),
 	}
-	err := bot.CreateTransfer(context.Background(), in, uid, sid, private, pin, pinToken)
+	err := bot.CreateTransaction(context.Background(), in, uid, sid, private, pin, pinToken)
 	if err != nil {
 		return err
 	}
