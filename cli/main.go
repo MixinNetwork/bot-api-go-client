@@ -77,10 +77,11 @@ func transferCmd(c *cli.Context) error {
 		OpponentKey: opponentKey,
 		Amount:      number.FromString(amount),
 	}
-	err := bot.CreateTransaction(context.Background(), in, uid, sid, private, pin, pinToken)
+	transaction, err := bot.CreateTransaction(context.Background(), in, uid, sid, private, pin, pinToken)
 	if err != nil {
 		return err
 	}
-	fmt.Println("Mixin transfer success")
+	s := fmt.Sprintf("Mixin transfer success snapshotId: %s, transaction hash: %s", transaction.SnapshotId, transaction.TransactionHash)
+	fmt.Println(s)
 	return nil
 }
