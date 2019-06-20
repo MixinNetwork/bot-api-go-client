@@ -8,14 +8,16 @@ import (
 	"strings"
 )
 
-func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, clientId, sessionId, secret string) error {
-	msg, err := json.Marshal(map[string]interface{}{
-		"conversation_id": conversationId,
-		"recipient_id":    recipientId,
-		"message_id":      messageId,
-		"category":        category,
-		"data":            data,
-	})
+type MessageRequest struct {
+	ConversationId string `json:"conversation_id"`
+	RecipientId    string `json:"recipient_id"`
+	MessageId      string `json:"message_id"`
+	Category       string `json:"category"`
+	Data           string `json:"data"`
+}
+
+func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, sessionId, secret string) error {
+	msg, err := json.Marshal(messages)
 	if err != nil {
 		return err
 	}
@@ -40,6 +42,17 @@ func PostMessage(ctx context.Context, conversationId, recipientId, messageId, ca
 	return nil
 }
 
+func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, clientId, sessionId, secret string) error {
+	request := MessageRequest{
+		ConversationId: conversationId,
+		RecipientId:    recipientId,
+		MessageId:      messageId,
+		Category:       category,
+		Data:           data,
+	}
+	return PostMessages(ctx, []*MessageRequest{&request}, clientId, sessionId, secret)
+}
+
 func UniqueConversationId(userId, recipientId string) string {
 	minId, maxId := userId, recipientId
 	if strings.Compare(userId, recipientId) > 0 {
@@ -52,4 +65,18 @@ func UniqueConversationId(userId, recipientId string) string {
 	sum[6] = (sum[6] & 0x0f) | 0x30
 	sum[8] = (sum[8] & 0x3f) | 0x80
 	return UuidFromBytes(sum)
+}
+
+func Chunked(source []interface{}, size int) [][]interface{} {
+	var result [][]interface{}
+	index := 0
+	for index < len(source) {
+		end := index + size
+		if end >= len(source) {
+			end = len(source)
+		}
+		result = append(result, source[index:end])
+		index += size
+	}
+	return result
 }
