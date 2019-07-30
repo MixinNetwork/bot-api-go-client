@@ -9,11 +9,13 @@ import (
 )
 
 type MessageRequest struct {
-	ConversationId string `json:"conversation_id"`
-	RecipientId    string `json:"recipient_id"`
-	MessageId      string `json:"message_id"`
-	Category       string `json:"category"`
-	Data           string `json:"data"`
+	ConversationId   string `json:"conversation_id"`
+	RecipientId      string `json:"recipient_id"`
+	MessageId        string `json:"message_id"`
+	Category         string `json:"category"`
+	Data             string `json:"data"`
+	RepresentativeId string `json:"representative_id"`
+	QuoteMessageId   string `json:"quote_message_id"`
 }
 
 func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, sessionId, secret string) error {
