@@ -137,11 +137,11 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 	}
 }
 
-func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipientId, category, content, representativeId string) error {
+func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipientId, messageId, category, content, representativeId string) error {
 	params := map[string]interface{}{
 		"conversation_id":   conversationId,
 		"recipient_id":      recipientId,
-		"message_id":        UuidNewV4().String(),
+		"message_id":        messageId,
 		"category":          category,
 		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
 		"representative_id": representativeId,
