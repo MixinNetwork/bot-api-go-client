@@ -42,15 +42,17 @@ type BlazeMessage struct {
 }
 
 type MessageView struct {
-	ConversationId string    `json:"conversation_id"`
-	UserId         string    `json:"user_id"`
-	MessageId      string    `json:"message_id"`
-	Category       string    `json:"category"`
-	Data           string    `json:"data"`
-	Status         string    `json:"status"`
-	Source         string    `json:"source"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ConversationId   string    `json:"conversation_id"`
+	UserId           string    `json:"user_id"`
+	MessageId        string    `json:"message_id"`
+	Category         string    `json:"category"`
+	Data             string    `json:"data"`
+	RepresentativeId string    `json:"representative_id"`
+	QuoteMessageId   string    `json:"quote_message_id"`
+	Status           string    `json:"status"`
+	Source           string    `json:"source"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type TransferView struct {
@@ -139,9 +141,9 @@ func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipient
 		"conversation_id":   conversationId,
 		"recipient_id":      recipientId,
 		"message_id":        UuidNewV4().String(),
-		"representative_id": representativeId,
 		"category":          category,
 		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
+		"representative_id": representativeId,
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
 		return BlazeServerError(ctx, err)
