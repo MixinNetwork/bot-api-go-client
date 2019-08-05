@@ -8,6 +8,10 @@ import (
 	"strings"
 )
 
+type RecallMessage struct {
+	MessageId string `json:"message_id"`
+}
+
 type MessageRequest struct {
 	ConversationId   string `json:"conversation_id"`
 	RecipientId      string `json:"recipient_id"`

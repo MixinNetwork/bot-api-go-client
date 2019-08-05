@@ -31,6 +31,7 @@ const (
 	MessageCategoryPlainSticker          = "PLAIN_STICKER"
 	MessageCategorySystemConversation    = "SYSTEM_CONVERSATION"
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
+	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
 )
 
 type BlazeMessage struct {
