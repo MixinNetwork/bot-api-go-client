@@ -8,6 +8,13 @@ import (
 	"strings"
 )
 
+type LiveMessageData struct {
+	Width    int    `json:"width"`
+	Height   int    `json:"height"`
+	ThumbUrl string `json:"thumb_url"`
+	Url      string `json:"url"`
+}
+
 type RecallMessage struct {
 	MessageId string `json:"message_id"`
 }
