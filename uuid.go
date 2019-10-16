@@ -20,6 +20,6 @@ func UuidFromString(id string) (uuid.UUID, error) {
 	return uuid.FromString(id)
 }
 
-func UuidFromBytes(input []byte) string {
-	return uuid.FromBytesOrNil(input).String()
+func UuidFromBytes(input []byte) (uuid.UUID, error) {
+	return uuid.FromBytes(input)
 }
