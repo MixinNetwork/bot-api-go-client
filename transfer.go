@@ -20,7 +20,7 @@ type TransferInput struct {
 
 type RawTransaction struct {
 	Type            string    `json:"type"`
-	SnapshotId      string    `json:"snapshot"`
+	SnapshotId      string    `json:"snapshot_id"`
 	OpponentKey     string    `json:"opponent_key"`
 	AssetId         string    `json:"asset_id"`
 	Amount          string    `json:"amount"`
