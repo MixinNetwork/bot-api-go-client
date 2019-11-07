@@ -39,7 +39,7 @@ type BlazeMessage struct {
 	Id     string                 `json:"id"`
 	Action string                 `json:"action"`
 	Params map[string]interface{} `json:"params,omitempty"`
-	Data   interface{}            `json:"data,omitempty"`
+	Data   json.RawMessage        `json:"data,omitempty"`
 	Error  *Error                 `json:"error,omitempty"`
 }
 
@@ -352,12 +352,9 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if message.Action != "CREATE_MESSAGE" {
 		return nil
 	}
-	data, err := json.Marshal(message.Data)
-	if err != nil {
-		return err
-	}
+
 	var msg MessageView
-	if err = json.Unmarshal(data, &msg); err != nil {
+	if err = json.Unmarshal(message.Data, &msg); err != nil {
 		return err
 	}
 	select {
