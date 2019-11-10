@@ -10,6 +10,7 @@ type User struct {
 	SessionId      string `json:"session_id"`
 	PinToken       string `json:"pin_token"`
 	IdentityNumber string `json:"identity_number"`
+	Phone          string `json:"phone"`
 	FullName       string `json:"full_name"`
 	AvatarURL      string `json:"avatar_url"`
 	CreatedAt      string `json:"created_at"`
