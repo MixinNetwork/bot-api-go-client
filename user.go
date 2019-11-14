@@ -13,6 +13,7 @@ type User struct {
 	Phone          string `json:"phone"`
 	FullName       string `json:"full_name"`
 	AvatarURL      string `json:"avatar_url"`
+	DeviceStatus   string `json:"device_status"`
 	CreatedAt      string `json:"created_at"`
 }
 
