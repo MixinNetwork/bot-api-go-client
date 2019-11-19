@@ -89,3 +89,33 @@ func UserMe(ctx context.Context, accessToken string) (*User, error) {
 	}
 	return resp.Data, nil
 }
+
+func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageSource, conversationSource, currency string, threshold float64) (*User, error) {
+	data, err := json.Marshal(map[string]interface{}{
+		"receive_message_source":          messageSource,
+		"accept_conversation_source":      conversationSource,
+		"fiat_currency":                   currency,
+		"transfer_notification_threshold": threshold,
+	})
+	if err != nil {
+		return nil, err
+	}
+	path := "/me/preferences"
+	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
