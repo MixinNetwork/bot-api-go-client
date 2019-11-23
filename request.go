@@ -18,7 +18,6 @@ func Request(ctx context.Context, method, path string, body []byte, accessToken 
 	if err != nil {
 		return nil, err
 	}
-	req.Close = true
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	resp, err := httpClient.Do(req)
