@@ -9,18 +9,6 @@ import (
 	"github.com/MixinNetwork/go-number"
 )
 
-type Withdrawal struct {
-	Type            string    `json:"type"`
-	SnapshotId      string    `json:"snapshot_id"`
-	Receiver        string    `json:"receiver"`
-	TransactionHash string    `json:"transaction_hash"`
-	AssetId         string    `json:"asset_id"`
-	Amount          string    `json:"amount"`
-	TraceId         string    `json:"trace_id"`
-	Memo            string    `json:"memo"`
-	CreatedAt       time.Time `json:"created_at"`
-}
-
 type WithdrawalInput struct {
 	AddressId string
 	Amount    number.Decimal
@@ -28,7 +16,7 @@ type WithdrawalInput struct {
 	Memo      string
 }
 
-func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Withdrawal, error) {
+func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
 	if in.Amount.Exhausted() {
 		return nil, fmt.Errorf("Amount negative")
 	}
@@ -58,8 +46,8 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 	}
 
 	var resp struct {
-		Error Error      `json:"error"`
-		Data  Withdrawal `json:"data,omitempty"`
+		Error Error    `json:"error"`
+		Data  Snapshot `json:"data,omitempty"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
