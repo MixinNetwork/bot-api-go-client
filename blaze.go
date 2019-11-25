@@ -30,9 +30,11 @@ const (
 	MessageCategoryPlainData             = "PLAIN_DATA"
 	MessageCategoryPlainSticker          = "PLAIN_STICKER"
 	MessageCategoryPlainLive             = "PLAIN_LIVE"
+	MessageCategoryPlainContact          = "PLAIN_CONTACT"
 	MessageCategorySystemConversation    = "SYSTEM_CONVERSATION"
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
+	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 )
 
 type BlazeMessage struct {
@@ -158,7 +160,7 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 		"conversation_id": msg.ConversationId,
 		"recipient_id":    msg.UserId,
 		"message_id":      UuidNewV4().String(),
-		"category":        "PLAIN_TEXT",
+		"category":        MessageCategoryPlainText,
 		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
@@ -174,7 +176,7 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
-		"category":        "PLAIN_CONTACT",
+		"category":        MessageCategoryPlainText,
 		"data":            base64.StdEncoding.EncodeToString(contactData),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
@@ -196,7 +198,7 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
-		"category":        "APP_BUTTON_GROUP",
+		"category":        MessageCategoryAppButtonGroup,
 		"data":            base64.StdEncoding.EncodeToString(btns),
 	}
 	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
