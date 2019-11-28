@@ -90,6 +90,35 @@ func UserMe(ctx context.Context, accessToken string) (*User, error) {
 	return resp.Data, nil
 }
 
+func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBase64 string) (*User, error) {
+	data, err := json.Marshal(map[string]interface{}{
+		"full_name": fullName,
+		"avatar_base64": avatarBase64,
+	})
+	if err != nil {
+		return nil , err
+	}
+
+	path := "/me"
+	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageSource, conversationSource, currency string, threshold float64) (*User, error) {
 	data, err := json.Marshal(map[string]interface{}{
 		"receive_message_source":          messageSource,
