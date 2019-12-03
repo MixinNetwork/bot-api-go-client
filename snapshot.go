@@ -13,5 +13,6 @@ type Snapshot struct {
 	ClosingBalance  string    `json:"closing_balance"`
 	TraceId         string    `json:"trace_id"`
 	Memo            string    `json:"memo"`
+	Confirmations   int64     `json:"confirmations,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
 }
