@@ -9,18 +9,16 @@ import (
 type AddressInput struct {
 	AssetId     string
 	Label       string
-	PublicKey   string
-	AccountName string
-	AccountTag  string
+	Destination string
+	Tag         string
 }
 
 type Address struct {
 	AddressId   string `json:"address_id"`
 	AssetId     string `json:"asset_id"`
 	Label       string `json:"label"`
-	PublicKey   string `json:"public_key,omitempty"`
-	AccountName string `json:"account_name,omitempty"`
-	AccountTag  string `json:"account_tag,omitempty"`
+	Destination string `json:"destination"`
+	Tag         string `json:"tag"`
 	Fee         string `json:"fee"`
 	Reserve     string `json:"reserve"`
 	UpdatedAt   string `json:"updated_at"`
@@ -32,12 +30,11 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 		return nil, err
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"asset_id":     in.AssetId,
-		"label":        in.Label,
-		"public_key":   in.PublicKey,
-		"account_name": in.AccountName,
-		"account_tag":  in.AccountTag,
-		"pin":          encryptedPIN,
+		"asset_id":    in.AssetId,
+		"label":       in.Label,
+		"destination": in.Destination,
+		"tag":         in.Tag,
+		"pin":         encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
