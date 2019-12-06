@@ -16,10 +16,7 @@ type Asset struct {
 	Balance       string `json:"balance"`
 	Destination   string `json:"destination"`
 	Tag           string `json:"tag"`
-	Confirmations int    `json:"confirmations"`
-	PublicKey     string `json:"public_key"`
-	AccountName   string `json:"account_name"`
-	AccountTag    string `json:"account_tag"`
+	Confirmations int64  `json:"confirmations"`
 }
 
 func AssetList(ctx context.Context, accessToken string) ([]Asset, error) {
