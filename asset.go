@@ -16,7 +16,7 @@ type Asset struct {
 	Balance       string `json:"balance"`
 	Destination   string `json:"destination"`
 	Tag           string `json:"tag"`
-	Confirmations int64  `json:"confirmations"`
+	Confirmations int    `json:"confirmations"`
 }
 
 func AssetList(ctx context.Context, accessToken string) ([]Asset, error) {
