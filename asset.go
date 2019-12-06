@@ -6,17 +6,20 @@ import (
 )
 
 type Asset struct {
-	AssetId     string `json:"asset_id"`
-	ChainId     string `json:"chain_id"`
-	Symbol      string `json:"symbol"`
-	Name        string `json:"name"`
-	IconURL     string `json:"icon_url"`
-	PriceBTC    string `json:"price_btc"`
-	PriceUSD    string `json:"price_usd"`
-	Balance     string `json:"balance"`
-	PublicKey   string `json:"public_key"`
-	AccountName string `json:"account_name"`
-	AccountTag  string `json:"account_tag"`
+	AssetId       string `json:"asset_id"`
+	ChainId       string `json:"chain_id"`
+	Symbol        string `json:"symbol"`
+	Name          string `json:"name"`
+	IconURL       string `json:"icon_url"`
+	PriceBTC      string `json:"price_btc"`
+	PriceUSD      string `json:"price_usd"`
+	Balance       string `json:"balance"`
+	Destination   string `json:"destination"`
+	Tag           string `json:"tag"`
+	Confirmations int    `json:"confirmations"`
+	PublicKey     string `json:"public_key"`
+	AccountName   string `json:"account_name"`
+	AccountTag    string `json:"account_tag"`
 }
 
 func AssetList(ctx context.Context, accessToken string) ([]Asset, error) {
