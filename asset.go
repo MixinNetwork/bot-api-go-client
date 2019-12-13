@@ -19,14 +19,14 @@ type Asset struct {
 	Confirmations int    `json:"confirmations"`
 }
 
-func AssetList(ctx context.Context, accessToken string) ([]Asset, error) {
+func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
 	body, err := Request(ctx, "GET", "/assets", nil, accessToken)
 	if err != nil {
 		return nil, err
 	}
 	var resp struct {
-		Data  []Asset `json:"data"`
-		Error Error   `json:"error"`
+		Data  []*Asset `json:"data"`
+		Error Error    `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
