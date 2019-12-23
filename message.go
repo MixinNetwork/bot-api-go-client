@@ -29,6 +29,11 @@ type MessageRequest struct {
 	QuoteMessageId   string `json:"quote_message_id"`
 }
 
+type ReceiptAcknowledgementRequest struct {
+	MessageId string `json:"message_id"`
+	Status    string `json:"status"`
+}
+
 func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, sessionId, secret string) error {
 	msg, err := json.Marshal(messages)
 	if err != nil {
@@ -64,6 +69,33 @@ func PostMessage(ctx context.Context, conversationId, recipientId, messageId, ca
 		Data:           data,
 	}
 	return PostMessages(ctx, []*MessageRequest{&request}, clientId, sessionId, secret)
+}
+
+func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgementRequest, clientId, sessionId, secret string) error {
+	array, err := json.Marshal(requests)
+	if err != nil {
+		return err
+	}
+	path := "/acknowledgements"
+	accessToken, err := SignAuthenticationToken(clientId, sessionId, secret, "POST", path, string(array))
+	if err != nil {
+		return err
+	}
+	body, err := Request(ctx, "POST", path, array, accessToken)
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error.Code > 0 {
+		return resp.Error
+	}
+	return nil
 }
 
 func UniqueConversationId(userId, recipientId string) string {
