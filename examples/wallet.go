@@ -21,12 +21,13 @@ const (
 
 func main() {
 	ctx := context.Background()
+
 	user, userSessionKey, err := createUser(ctx)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(user)
+	fmt.Println(user.UserId)
 	fmt.Println(userSessionKey)
 
 	err = setupPin(ctx, "123456", user, userSessionKey)
@@ -35,13 +36,21 @@ func main() {
 		return
 	}
 	fmt.Println("Setup PIN successful")
-	ethAssetId := "43d61dcd-e413-450d-80b8-101d5e903357"
+	ethAssetId := "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
 	asset, err := getAsset(ctx, user, userSessionKey, ethAssetId)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(asset)
+	assets, err := getAssets(ctx, user, userSessionKey)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	for _, a := range assets {
+		fmt.Println(a.AssetId)
+	}
 }
 
 func createUser(ctx context.Context) (*bot.User, string, error) {
@@ -84,4 +93,13 @@ func getAsset(ctx context.Context, user *bot.User, userSessionKey, assetId strin
 	}
 	fmt.Println(token)
 	return bot.AssetShow(ctx, assetId, token)
+}
+
+func getAssets(ctx context.Context, user *bot.User, userSessionKey string) ([]*bot.Asset, error) {
+	token, err := bot.SignAuthenticationToken(user.UserId, user.SessionId, userSessionKey, "GET", "/assets", "")
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(token)
+	return bot.AssetList(ctx, token)
 }
