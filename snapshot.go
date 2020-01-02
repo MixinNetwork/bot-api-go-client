@@ -1,6 +1,10 @@
 package bot
 
-import "time"
+import (
+	"context"
+	"encoding/json"
+	"time"
+)
 
 type Snapshot struct {
 	Type            string    `json:"type"`
@@ -19,4 +23,25 @@ type Snapshot struct {
 		Amount  string `json:"amount"`
 		AssetId string `json:"asset_id"`
 	} `json:"fee,omitempty"`
+}
+
+func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
+	path := "/network/snapshots/" + snapshotId
+	body, err := Request(ctx, "GET", path, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Snapshot `json:"data"`
+		Error Error     `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }
