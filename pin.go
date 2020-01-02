@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"io"
@@ -54,4 +55,38 @@ func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey string) (*User, error) {
+	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"pin": encryptedPIN,
+	})
+	if err != nil {
+		return nil, err
+	}
+	path := "/pin/verify"
+	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }

@@ -121,3 +121,28 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 	}
 	return nil
 }
+
+func ReadTransferByTrace(ctx context.Context, traceId, uid, sid, sessionKey string) (*Snapshot, error) {
+	path := "/transfers/trace/" + traceId
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "GET", path, nil, token)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Snapshot `json:"data"`
+		Error Error     `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
