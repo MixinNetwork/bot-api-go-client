@@ -26,8 +26,11 @@ type Snapshot struct {
 }
 
 func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
+	return NetworkSnapshotByToken(ctx, snapshotId, "")
+}
+func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
 	path := "/network/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, "")
+	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
 		return nil, err
 	}
