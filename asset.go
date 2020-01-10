@@ -66,3 +66,22 @@ func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset,
 	}
 	return &resp.Data, nil
 }
+
+func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
+	body, err := Request(ctx, "GET", "/network/assets/search/"+name, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  []*Asset `json:"data"`
+		Error Error    `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
