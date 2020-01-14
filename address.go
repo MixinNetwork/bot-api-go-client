@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -61,4 +62,64 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*Address, error) {
+	endpoint := fmt.Sprintf("/addresses/%s", addressId)
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", endpoint, "")
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "GET", endpoint, nil, token)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Address `json:"data"`
+		Error Error    `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pinToken string) error {
+	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	if err != nil {
+		return err
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"pin": encryptedPIN,
+	})
+	if err != nil {
+		return err
+	}
+
+	endpoint := fmt.Sprintf("/addresses/%s/delete", addressId)
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", endpoint, string(data))
+	if err != nil {
+		return err
+	}
+	body, err := Request(ctx, "POST", endpoint, data, token)
+	if err != nil {
+		return err
+	}
+
+	var resp struct {
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return resp.Error
+	}
+	return nil
 }
