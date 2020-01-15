@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"time"
 )
 
@@ -30,6 +31,40 @@ func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) 
 }
 func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
 	path := "/network/snapshots/" + snapshotId
+	body, err := Request(ctx, "GET", path, nil, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Snapshot `json:"data"`
+		Error Error     `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func NetworkSnapshots(ctx context.Context, limit int, offset, asset, order string) (*Snapshot, error) {
+	return NetworkSnapshotsByToken(ctx, limit, offset, asset, order, "")
+}
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, asset, order, accessToken string) (*Snapshot, error) {
+	v := url.Values{}
+	v.Set("limit", string(limit))
+	v.Set("offset", offset)
+	if asset != "" {
+		v.Set("asset", asset)
+	}
+	if order == "ASC" || order == "DESC" {
+		v.Set("order", order)
+	}
+
+	path := "/network/snapshots?" + v.Encode()
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
 		return nil, err
