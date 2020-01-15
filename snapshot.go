@@ -50,15 +50,15 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshots(ctx context.Context, limit int, offset, asset, order string) ([]*Snapshot, error) {
-	return NetworkSnapshotsByToken(ctx, limit, offset, asset, order, "")
+func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*Snapshot, error) {
+	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "")
 }
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, asset, order, accessToken string) ([]*Snapshot, error) {
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", string(limit))
 	v.Set("offset", offset)
-	if asset != "" {
-		v.Set("asset", asset)
+	if assetId != "" {
+		v.Set("asset", assetId)
 	}
 	if order == "ASC" || order == "DESC" {
 		v.Set("order", order)
