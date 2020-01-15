@@ -123,3 +123,28 @@ func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pi
 	}
 	return nil
 }
+
+func GetAddressesByAssetId(ctx context.Context, assetId, uid, sid, sessionKey string) ([]*Address, error) {
+	endpoint := fmt.Sprintf("/assets/%s/addresses", assetId)
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", endpoint, "")
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "GET", endpoint, nil, token)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  []*Address `json:"data"`
+		Error Error      `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
