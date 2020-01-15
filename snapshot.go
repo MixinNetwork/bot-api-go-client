@@ -50,10 +50,10 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshots(ctx context.Context, limit int, offset, asset, order string) (*Snapshot, error) {
+func NetworkSnapshots(ctx context.Context, limit int, offset, asset, order string) ([]*Snapshot, error) {
 	return NetworkSnapshotsByToken(ctx, limit, offset, asset, order, "")
 }
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, asset, order, accessToken string) (*Snapshot, error) {
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, asset, order, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", string(limit))
 	v.Set("offset", offset)
@@ -71,8 +71,8 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, asset, orde
 	}
 
 	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
+		Data  []*Snapshot `json:"data"`
+		Error Error       `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
