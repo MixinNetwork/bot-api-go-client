@@ -56,7 +56,9 @@ func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order str
 func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", string(limit))
-	v.Set("offset", offset)
+	if offset != "" {
+		v.Set("offset", offset)
+	}
 	if assetId != "" {
 		v.Set("asset", assetId)
 	}
