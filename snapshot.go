@@ -75,7 +75,16 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessTok
 	return resp.Data, nil
 }
 
-func SnapshotById(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
+func SnapshotById(ctx context.Context, snapshotId string, uid, sid, key string) (*Snapshot, error) {
+	path := "/snapshots/" + snapshotId
+	token, err := SignAuthenticationToken(uid, sid, key, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	return SnapshotByToken(ctx, snapshotId, token)
+}
+
+func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
 	path := "/snapshots/" + snapshotId
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
