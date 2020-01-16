@@ -27,6 +27,36 @@ type Snapshot struct {
 	} `json:"fee,omitempty"`
 }
 
+func Snapshots(ctx context.Context, limit int, offset, assetId, accessToken string) ([]*Snapshot, error) {
+	v := url.Values{}
+	v.Set("limit", strconv.Itoa(limit))
+	if offset != "" {
+		v.Set("offset", offset)
+	}
+	if assetId != "" {
+		v.Set("asset", assetId)
+	}
+
+	path := "/snapshots?" + v.Encode()
+	body, err := Request(ctx, "GET", path, nil, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  []*Snapshot `json:"data"`
+		Error Error       `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
 	return NetworkSnapshotByToken(ctx, snapshotId, "")
 }
@@ -54,6 +84,7 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*Snapshot, error) {
 	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "")
 }
+
 func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
