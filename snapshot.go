@@ -27,7 +27,25 @@ type Snapshot struct {
 	} `json:"fee,omitempty"`
 }
 
-func Snapshots(ctx context.Context, limit int, offset, assetId, accessToken string) ([]*Snapshot, error) {
+func Snapshots(ctx context.Context, limit int, offset, assetId, uid, sid, key string) ([]*Snapshot, error) {
+	v := url.Values{}
+	v.Set("limit", strconv.Itoa(limit))
+	if offset != "" {
+		v.Set("offset", offset)
+	}
+	if assetId != "" {
+		v.Set("asset", assetId)
+	}
+
+	path := "/snapshots?" + v.Encode()
+	token, err := SignAuthenticationToken(uid, sid, key, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	return SnapshotsByToken(ctx, limit, offset, assetId, token)
+}
+
+func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -81,6 +99,7 @@ func SnapshotById(ctx context.Context, snapshotId string, accessToken string) (*
 func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
 	return NetworkSnapshotByToken(ctx, snapshotId, "")
 }
+
 func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
 	path := "/network/snapshots/" + snapshotId
 	body, err := Request(ctx, "GET", path, nil, accessToken)
