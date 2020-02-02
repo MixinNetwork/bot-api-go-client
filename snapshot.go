@@ -13,6 +13,7 @@ type Snapshot struct {
 	SnapshotId      string    `json:"snapshot_id"`
 	Receiver        string    `json:"receiver"`
 	TransactionHash string    `json:"transaction_hash"`
+	OutputIndex     int64     `json:"output_index"`
 	AssetId         string    `json:"asset_id"`
 	Amount          string    `json:"amount"`
 	OpeningBalance  string    `json:"opening_balance"`
