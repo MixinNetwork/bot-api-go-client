@@ -40,7 +40,7 @@ func CreateAttachment(ctx context.Context, uid, sid, key string) (*Attachment, e
 	return &resp.Data, nil
 }
 
-func AttachemntShow(ctx context.Context, uid, sid, key, id string) (*Attachment, error) {
+func AttachmentShow(ctx context.Context, uid, sid, key, id string) (*Attachment, error) {
 	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/attachments/"+id, "")
 	if err != nil {
 		return nil, err
