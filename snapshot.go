@@ -22,6 +22,7 @@ type Snapshot struct {
 	Memo            string    `json:"memo"`
 	Confirmations   int64     `json:"confirmations,omitempty"`
 	CreatedAt       time.Time `json:"created_at"`
+	State           string    `json:"state,omitempty"`     
 	Fee             struct {
 		Amount  string `json:"amount"`
 		AssetId string `json:"asset_id"`
