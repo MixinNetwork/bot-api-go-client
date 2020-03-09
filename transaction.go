@@ -21,13 +21,16 @@ type Transaction struct {
 	CreatedAt       string `json:"created_at"`
 }
 
-func ExternalTranactions(ctx context.Context, destination, tag string) ([]*Transaction, error) {
+func ExternalTranactions(ctx context.Context, asset, destination, tag string) ([]*Transaction, error) {
 	values := url.Values{}
 	if destination != "" {
 		values.Add("destination", destination)
 	}
 	if tag != "" {
 		values.Add("tag", tag)
+	}
+	if asset != "" {
+		values.Add("asset", asset)
 	}
 
 	endpoint := "/external/transactions?" + values.Encode()
