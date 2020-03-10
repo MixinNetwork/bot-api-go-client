@@ -176,7 +176,7 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
-		"category":        MessageCategoryPlainText,
+		"category":        MessageCategoryPlainContact,
 		"data":            base64.StdEncoding.EncodeToString(contactData),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
