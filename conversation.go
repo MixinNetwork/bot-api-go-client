@@ -24,10 +24,12 @@ type Conversation struct {
 	Participants []Participant `json:"participants"`
 }
 
-func CreateConversation(ctx context.Context, category, conversationId string, participants []Participant, uid, sid, key string) (*Conversation, error) {
+func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, uid, sid, key string) (*Conversation, error) {
 	params, err := json.Marshal(map[string]interface{}{
 		"category":        category,
 		"conversation_id": conversationId,
+		"name":            name,
+		"announcement":    announcement,
 		"participants":    participants,
 	})
 	if err != nil {
