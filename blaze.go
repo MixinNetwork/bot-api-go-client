@@ -31,6 +31,7 @@ const (
 	MessageCategoryPlainSticker          = "PLAIN_STICKER"
 	MessageCategoryPlainLive             = "PLAIN_LIVE"
 	MessageCategoryPlainContact          = "PLAIN_CONTACT"
+	MessageCategoryPlainPost             = "PLAIN_POST"
 	MessageCategorySystemConversation    = "SYSTEM_CONVERSATION"
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
