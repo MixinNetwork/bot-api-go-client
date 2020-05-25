@@ -170,6 +170,20 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 	return nil
 }
 
+func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content string) error {
+	params := map[string]interface{}{
+		"conversation_id": msg.ConversationId,
+		"recipient_id":    msg.UserId,
+		"message_id":      UuidNewV4().String(),
+		"category":        MessageCategoryPlainPost,
+		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
+	}
+	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
 func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipientId, contactId string) error {
 	contactMap := map[string]string{"user_id": contactId}
 	contactData, _ := json.Marshal(contactMap)
