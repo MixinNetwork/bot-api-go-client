@@ -11,9 +11,6 @@ import (
 var httpClient *http.Client
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
-	if httpClient == nil {
-		httpClient = &http.Client{Timeout: 10 * time.Second}
-	}
 	req, err := http.NewRequest(method, "https://mixin-api.zeromesh.net"+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
@@ -30,4 +27,8 @@ func Request(ctx context.Context, method, path string, body []byte, accessToken 
 		return nil, ServerError(ctx, nil)
 	}
 	return ioutil.ReadAll(resp.Body)
+}
+
+func init() {
+	httpClient = &http.Client{Timeout: 10 * time.Second}
 }
