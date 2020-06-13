@@ -197,3 +197,32 @@ func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageS
 	}
 	return resp.Data, nil
 }
+
+func Relationship(ctx context.Context, uid, sid, privateKey string, userId, action string) (*User, error) {
+	data, err := json.Marshal(map[string]interface{}{
+		"user_id": userId,
+		"action":  action,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	path := "/relationships"
+	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
