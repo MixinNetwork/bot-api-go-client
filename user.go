@@ -18,6 +18,14 @@ type User struct {
 	CreatedAt      string `json:"created_at"`
 }
 
+const (
+	RelationshipActionAdd     = "ADD"
+	RelationshipActionUpdate  = "UPDATE"
+	RelationshipActionRemove  = "REMOVE"
+	RelationshipActionBlock   = "BLOCK"
+	RelationshipActionUnblock = "UNBLOCK"
+)
+
 func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, sessionKey string) (*User, error) {
 	data, err := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
