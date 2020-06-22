@@ -10,7 +10,7 @@ type Fiat struct {
 	Rate float64 `json:"rate"`
 }
 
-func Fiats(ctx context.Context, uid, sid, sessionKey string) (*[]Fiat, error) {
+func Fiats(ctx context.Context, uid, sid, sessionKey string) ([]*Fiat, error) {
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", "/fiats", "")
 	if err != nil {
 		return nil, err
@@ -20,7 +20,7 @@ func Fiats(ctx context.Context, uid, sid, sessionKey string) (*[]Fiat, error) {
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *[]Fiat `json:"data"`
+		Data  []*Fiat `json:"data"`
 		Error Error   `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)

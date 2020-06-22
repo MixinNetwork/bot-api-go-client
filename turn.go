@@ -11,7 +11,7 @@ type Turn struct {
 	Credential string `json:"credential"`
 }
 
-func GetTurnServer(ctx context.Context, uid, sid, sessionKey string) (*[]Turn, error) {
+func GetTurnServer(ctx context.Context, uid, sid, sessionKey string) ([]*Turn, error) {
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", "/turn", "")
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func GetTurnServer(ctx context.Context, uid, sid, sessionKey string) (*[]Turn, e
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *[]Turn `json:"data"`
+		Data  []*Turn `json:"data"`
 		Error Error   `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
