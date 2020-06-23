@@ -2,8 +2,10 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/sha256"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -33,39 +35,68 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	return token.SignedString(key)
 }
 
-func OAuthGetAccessToken(ctx context.Context, clientId, clientSecret string, authorizationCode string, codeVerifier string) (string, string, error) {
+func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string) (string, error) {
+	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
+	sum := sha256.Sum256([]byte(method + uri + body))
+	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
+		"iss": appID,
+		"aid": authorizationID,
+		"iat": time.Now().UTC().Unix(),
+		"exp": expire.Unix(),
+		"sig": hex.EncodeToString(sum[:]),
+		"scp": scp,
+		"jti": "",
+	})
+
+	kb, err := base64.RawURLEncoding.DecodeString(privateKey)
+	if err != nil {
+		return "", err
+	}
+	priv := ed25519.PrivateKey(kb)
+	return token.SignedString(priv)
+}
+
+// OAuthGetAccessToken get the access token of a user
+// ed25519 is optional, only use it when you want to sign OAuth access token locally
+func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, authorizationCode string, codeVerifier string, ed25519 string) (string, string, string, error) {
 	params, err := json.Marshal(map[string]string{
-		"client_id":     clientId,
+		"client_id":     clientID,
 		"client_secret": clientSecret,
 		"code":          authorizationCode,
 		"code_verifier": codeVerifier,
+		"ed25519":       ed25519,
 	})
 	if err != nil {
-		return "", "", BadDataError(ctx)
+		return "", "", "", BadDataError(ctx)
 	}
 	body, err := Request(ctx, "POST", "/oauth/token", params, "")
 	if err != nil {
-		return "", "", ServerError(ctx, err)
+		return "", "", "", ServerError(ctx, err)
 	}
 	var resp struct {
 		Data struct {
-			AccessToken string `json:"access_token"`
-			Scope       string `json:"scope"`
+			Scope           string `json:"scope"`
+			AccessToken     string `json:"access_token"`
+			Ed25519         string `json:"ed25519"`
+			AuthorizationID string `json:"authorization_id"`
 		} `json:"data"`
 		Error Error `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		return "", "", BadDataError(ctx)
+		return "", "", "", BadDataError(ctx)
 	}
 	if resp.Error.Code > 0 {
 		if resp.Error.Code == 401 {
-			return "", "", AuthorizationError(ctx)
+			return "", "", "", AuthorizationError(ctx)
 		}
 		if resp.Error.Code == 403 {
-			return "", "", ForbiddenError(ctx)
+			return "", "", "", ForbiddenError(ctx)
 		}
-		return "", "", ServerError(ctx, resp.Error)
+		return "", "", "", ServerError(ctx, resp.Error)
 	}
-	return resp.Data.AccessToken, resp.Data.Scope, nil
+	if ed25519 == "" {
+		return resp.Data.AccessToken, resp.Data.Scope, "", nil
+	}
+	return resp.Data.Ed25519, resp.Data.Scope, resp.Data.AuthorizationID, nil
 }
