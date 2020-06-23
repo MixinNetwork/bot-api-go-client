@@ -35,7 +35,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	return token.SignedString(key)
 }
 
-func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string) (string, error) {
+func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
@@ -45,7 +45,7 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		"exp": expire.Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": scp,
-		"jti": "",
+		"jti": requestID,
 	})
 
 	kb, err := base64.RawURLEncoding.DecodeString(privateKey)
