@@ -16,7 +16,7 @@ func GetTurnServer(ctx context.Context, uid, sid, sessionKey string) ([]*Turn, e
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", "/turn", nil, token)
+	body, err := Request(ctx, "GET", "/turn", nil, token, UuidNewV4().String())
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

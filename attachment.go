@@ -17,7 +17,7 @@ func CreateAttachment(ctx context.Context, uid, sid, key string) (*Attachment, e
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/attachments", nil, token)
+	body, err := Request(ctx, "POST", "/attachments", nil, token, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func AttachmentShow(ctx context.Context, uid, sid, key, id string) (*Attachment,
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", "/attachments/"+id, nil, token)
+	body, err := Request(ctx, "GET", "/attachments/"+id, nil, token, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}

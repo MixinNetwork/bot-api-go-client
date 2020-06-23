@@ -62,7 +62,7 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessTok
 	}
 
 	path := "/snapshots?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := Request(ctx, "GET", path, nil, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey s
 
 func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
 	path := "/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := Request(ctx, "GET", path, nil, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) 
 
 func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
 	path := "/network/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := Request(ctx, "GET", path, nil, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +154,7 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	path := "/network/snapshots?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := Request(ctx, "GET", path, nil, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}

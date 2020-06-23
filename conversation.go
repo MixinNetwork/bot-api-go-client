@@ -39,7 +39,7 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/conversations", params, accessToken)
+	body, err := Request(ctx, "POST", "/conversations", params, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 }
 
 func ConversationShow(ctx context.Context, conversationId string, accessToken string) (*Conversation, error) {
-	body, err := Request(ctx, "GET", "/conversations/"+conversationId, nil, accessToken)
+	body, err := Request(ctx, "GET", "/conversations/"+conversationId, nil, accessToken, UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}

@@ -34,7 +34,7 @@ func ExternalTranactions(ctx context.Context, asset, destination, tag string) ([
 	}
 
 	endpoint := "/external/transactions?" + values.Encode()
-	body, err := Request(ctx, "GET", endpoint, nil, "")
+	body, err := Request(ctx, "GET", endpoint, nil, "", UuidNewV4().String())
 	if err != nil {
 		return nil, err
 	}

@@ -11,13 +11,14 @@ import (
 var httpClient *http.Client
 var uri string
 
-func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
+func Request(ctx context.Context, method, path string, body []byte, accessToken, requestID string) ([]byte, error) {
 	req, err := http.NewRequest(method, uri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("X-Request-Id", requestID)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
