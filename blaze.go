@@ -257,6 +257,8 @@ func readPump(ctx context.Context, conn *websocket.Conn, mc *messageContext) err
 		return nil
 	})
 
+	drained := false
+	timer := time.NewTimer(time.Second)
 	for {
 		err := conn.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {
@@ -269,7 +271,7 @@ func readPump(ctx context.Context, conn *websocket.Conn, mc *messageContext) err
 		if messageType != websocket.BinaryMessage {
 			return BlazeServerError(ctx, fmt.Errorf("invalid message type %d", messageType))
 		}
-		err = parseMessage(ctx, mc, wsReader)
+		err = parseMessage(ctx, mc, wsReader, timer, &drained)
 		if err != nil {
 			return BlazeServerError(ctx, err)
 		}
@@ -305,9 +307,10 @@ func writeMessageAndWait(ctx context.Context, mc *messageContext, action string,
 	var resp = make(chan BlazeMessage, 1)
 	var id = UuidNewV4().String()
 	mc.transactions.set(id, func(t BlazeMessage) error {
+		timer := time.NewTimer(time.Second)
 		select {
 		case resp <- t:
-		case <-time.After(1 * time.Second):
+		case <-timer.C:
 			return fmt.Errorf("timeout to hook %s %s", action, id)
 		}
 		return nil
@@ -316,13 +319,24 @@ func writeMessageAndWait(ctx context.Context, mc *messageContext, action string,
 	if err != nil {
 		return err
 	}
+
+	drained := false
+	timer := time.NewTimer(keepAlivePeriod)
 	select {
-	case <-time.After(keepAlivePeriod):
+	case <-timer.C:
+		drained = true
 		return fmt.Errorf("timeout to write %s %v", action, params)
 	case mc.writeBuffer <- blazeMessage:
 	}
+
+	if !drained && !timer.Stop() {
+		<-timer.C
+	}
+	drained = false
+	timer.Reset(keepAlivePeriod)
 	select {
-	case <-time.After(keepAlivePeriod):
+	case <-timer.C:
+		drained = true
 		return fmt.Errorf("timeout to wait %s %v", action, params)
 	case t := <-resp:
 		if t.Error != nil && t.Error.Code != 403 {
@@ -352,7 +366,13 @@ func writeGzipToConn(conn *websocket.Conn, msg []byte) error {
 	return wsWriter.Close()
 }
 
-func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) error {
+func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader, timer *time.Timer, drained *bool) error {
+	if !*drained && !timer.Stop() {
+		<-timer.C
+	}
+	*drained = false
+	timer.Reset(keepAlivePeriod)
+
 	var message BlazeMessage
 	gzReader, err := gzip.NewReader(wsReader)
 	if err != nil {
@@ -375,7 +395,8 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 		return err
 	}
 	select {
-	case <-time.After(keepAlivePeriod):
+	case <-timer.C:
+		*drained = true
 		return fmt.Errorf("timeout to handle %s %s", msg.Category, msg.MessageId)
 	case mc.readBuffer <- msg:
 	}
