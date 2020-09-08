@@ -33,7 +33,7 @@ type Snapshot struct {
 	} `json:"fee,omitempty"`
 }
 
-func Snapshots(ctx context.Context, limit int, offset, assetId, uid, sid, sessionKey string) ([]*Snapshot, error) {
+func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -42,13 +42,16 @@ func Snapshots(ctx context.Context, limit int, offset, assetId, uid, sid, sessio
 	if assetId != "" {
 		v.Set("asset", assetId)
 	}
+	if order != "" {
+		v.Set("order", order)
+	}
 
 	path := "/snapshots?" + v.Encode()
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
 	if err != nil {
 		return nil, err
 	}
-	return SnapshotsByToken(ctx, limit, offset, assetId, token)
+	return SnapshotsByToken(ctx, limit, offset, assetId, order, token)
 }
 
 func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessToken string) ([]*Snapshot, error) {
@@ -59,6 +62,9 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessTok
 	}
 	if assetId != "" {
 		v.Set("asset", assetId)
+	}
+	if order != "" {
+		v.Set("order", order)
 	}
 
 	path := "/snapshots?" + v.Encode()
