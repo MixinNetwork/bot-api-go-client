@@ -54,7 +54,7 @@ func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid,
 	return SnapshotsByToken(ctx, limit, offset, assetId, order, token)
 }
 
-func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, accessToken string) ([]*Snapshot, error) {
+func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
