@@ -374,8 +374,12 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if err = json.Unmarshal(message.Data, &msg); err != nil {
 		return err
 	}
+	timer := time.NewTimer(keepAlivePeriod)
+	defer timer.Stop()
+
 	select {
-	case <-time.After(keepAlivePeriod):
+	case <-timer.C:
+		timer.Reset(keepAlivePeriod)
 		return fmt.Errorf("timeout to handle %s %s", msg.Category, msg.MessageId)
 	case mc.readBuffer <- msg:
 	}
