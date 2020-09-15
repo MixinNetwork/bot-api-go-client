@@ -22,11 +22,13 @@ type Snapshot struct {
 	Sender          string `json:"sender,omitempty"`
 	Receiver        string `json:"receiver,omitempty"`
 	// transfer
-	OpponentId    string `json:"opponent_id,omitempty"`
-	TraceId       string `json:"trace_id,omitempty"`
-	Memo          string `json:"memo,omitempty"`
-	Confirmations int64  `json:"confirmations,omitempty"`
-	State         string `json:"state,omitempty"`
+	SnapshotHash  string    `json:"snapshot_hash,omitempty"`
+	SnapshotAt    time.Time `json:"snapshot_at,omitempty"`
+	OpponentId    string    `json:"opponent_id,omitempty"`
+	TraceId       string    `json:"trace_id,omitempty"`
+	Memo          string    `json:"memo,omitempty"`
+	Confirmations int64     `json:"confirmations,omitempty"`
+	State         string    `json:"state,omitempty"`
 	Fee           struct {
 		Amount  string `json:"amount"`
 		AssetId string `json:"asset_id"`
