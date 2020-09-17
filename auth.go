@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -28,6 +29,9 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	})
 
 	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return "", fmt.Errorf("Bad private pem format %s", privateKey)
+	}
 	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
 		return "", err
