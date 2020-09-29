@@ -73,6 +73,7 @@ type MultisigRequest struct {
 	CodeId          string    `json:"code_id"`
 }
 
+// CreateMultisig create a multisigs request which action is `unlock` or `sign`
 func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKey string) (*MultisigRequest, error) {
 	data, err := json.Marshal(map[string]string{
 		"action": action,
