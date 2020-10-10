@@ -40,7 +40,7 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/withdrawals", data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/withdrawals", data, token)
 	if err != nil {
 		return nil, err
 	}

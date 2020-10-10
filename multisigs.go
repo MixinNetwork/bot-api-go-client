@@ -36,7 +36,7 @@ func ReadMultisigs(ctx context.Context, limit int, offset, uid, sid, sessionKey 
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, nil, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -87,7 +87,7 @@ func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKe
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -117,7 +117,7 @@ func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey stri
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -141,7 +141,7 @@ func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string)
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, method, path, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, nil, token)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
@@ -164,7 +164,7 @@ func UnlockMultisig(ctx context.Context, id string, uid, sid, sessionKey string)
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, method, path, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, nil, token)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
@@ -196,7 +196,7 @@ func ReadGhostKeys(ctx context.Context, receivers []string, index int, uid, sid,
 		return nil, err
 	}
 	method, path := "POST", "/outputs"
-	body, err := Request(ctx, method, path, data, "", UuidNewV4().String())
+	body, err := Request(ctx, method, path, data, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

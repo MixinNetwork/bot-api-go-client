@@ -63,7 +63,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func ReadTransferByTrace(ctx context.Context, traceId, uid, sid, sessionKey stri
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", path, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", path, nil, token)
 	if err != nil {
 		return nil, err
 	}

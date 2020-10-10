@@ -73,7 +73,7 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, err
 	}

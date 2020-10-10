@@ -15,7 +15,7 @@ func Fiats(ctx context.Context, uid, sid, sessionKey string) ([]*Fiat, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", "/fiats", nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/fiats", nil, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

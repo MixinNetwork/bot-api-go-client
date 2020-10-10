@@ -12,7 +12,7 @@ var httpClient *http.Client
 var uri string
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
-	return RequestWithId(ctx, method, path, body, accessToken, "")
+	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
 }
 func RequestWithId(ctx context.Context, method, path string, body []byte, accessToken, requestID string) ([]byte, error) {
 	req, err := http.NewRequest(method, uri+path, bytes.NewReader(body))

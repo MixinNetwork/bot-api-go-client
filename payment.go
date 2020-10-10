@@ -41,7 +41,7 @@ func CreatePaymentRequest(ctx context.Context, payment *PaymentRequest, uid, sid
 		return nil, err
 	}
 
-	body, err := Request(ctx, method, path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, method, path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -60,7 +60,7 @@ func CreatePaymentRequest(ctx context.Context, payment *PaymentRequest, uid, sid
 }
 
 func ReadPaymentByCode(ctx context.Context, codeId string) (*Payment, error) {
-	body, err := Request(ctx, "GET", "/codes/"+codeId, nil, "", UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/codes/"+codeId, nil, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

@@ -35,7 +35,7 @@ func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, sessionK
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/users", data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/users", data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -59,7 +59,7 @@ func GetUser(ctx context.Context, userId, uid, sid, sessionKey string) (*User, e
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", url, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", url, nil, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -83,7 +83,7 @@ func SearchUser(ctx context.Context, mixinId, uid, sid, sessionKey string) (*Use
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", url, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", url, nil, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -111,7 +111,7 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, ses
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", "/pin/update", data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/pin/update", data, token)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
@@ -129,7 +129,7 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, ses
 }
 
 func UserMe(ctx context.Context, accessToken string) (*User, error) {
-	body, err := Request(ctx, "GET", "/me", nil, accessToken, UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/me", nil, accessToken)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -158,7 +158,7 @@ func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBas
 
 	path := "/me"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -188,7 +188,7 @@ func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageS
 	}
 	path := "/me/preferences"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -217,7 +217,7 @@ func Relationship(ctx context.Context, uid, sid, privateKey string, userId, acti
 
 	path := "/relationships"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
-	body, err := Request(ctx, "POST", path, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

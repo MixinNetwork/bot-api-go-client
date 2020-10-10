@@ -77,7 +77,7 @@ func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, aut
 	if err != nil {
 		return "", "", "", BadDataError(ctx)
 	}
-	body, err := Request(ctx, "POST", "/oauth/token", params, "", UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/oauth/token", params, "")
 	if err != nil {
 		return "", "", "", ServerError(ctx, err)
 	}

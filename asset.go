@@ -20,7 +20,7 @@ type Asset struct {
 }
 
 func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
-	body, err := Request(ctx, "GET", "/assets", nil, accessToken, UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/assets", nil, accessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
 }
 
 func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset, error) {
-	body, err := Request(ctx, "GET", "/assets/"+assetId, nil, accessToken, UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/assets/"+assetId, nil, accessToken)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset,
 }
 
 func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
-	body, err := Request(ctx, "GET", "/network/assets/search/"+name, nil, "", UuidNewV4().String())
+	body, err := Request(ctx, "GET", "/network/assets/search/"+name, nil, "")
 	if err != nil {
 		return nil, err
 	}

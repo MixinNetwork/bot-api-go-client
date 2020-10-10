@@ -43,7 +43,7 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, ses
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", "/messages", msg, accessToken, UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/messages", msg, accessToken)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgemen
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", path, array, accessToken, UuidNewV4().String())
+	body, err := Request(ctx, "POST", path, array, accessToken)
 	if err != nil {
 		return err
 	}

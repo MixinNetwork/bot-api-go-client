@@ -45,7 +45,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/addresses", data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", "/addresses", data, token)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", endpoint, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", endpoint, nil, token)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pi
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", endpoint, data, token, UuidNewV4().String())
+	body, err := Request(ctx, "POST", endpoint, data, token)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func GetAddressesByAssetId(ctx context.Context, assetId, uid, sid, sessionKey st
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", endpoint, nil, token, UuidNewV4().String())
+	body, err := Request(ctx, "GET", endpoint, nil, token)
 	if err != nil {
 		return nil, err
 	}
