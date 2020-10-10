@@ -15,6 +15,10 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+func SignAuthenticationTokenWithoutBody(uid, sid, privateKey, method, uri string) (string, error) {
+	return SignAuthenticationToken(uid, sid, privateKey, method, uri, "")
+}
+
 func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
