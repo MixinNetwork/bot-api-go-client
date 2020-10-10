@@ -158,13 +158,19 @@ func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string)
 	return nil
 }
 
-func UnlockMultisig(ctx context.Context, id string, uid, sid, sessionKey string) error {
+func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey string) error {
+	data, err := json.Marshal(map[string]string{
+		"pin": pin,
+	})
+	if err != nil {
+		return nil, err
+	}
 	method, path := "POST", "/multisigs/"+id+"/unlock"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := Request(ctx, method, path, data, token)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
