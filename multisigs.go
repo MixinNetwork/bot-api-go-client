@@ -163,7 +163,7 @@ func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey st
 		"pin": pin,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
 	method, path := "POST", "/multisigs/"+id+"/unlock"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
@@ -175,8 +175,7 @@ func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey st
 		return ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *MultisigRequest `json:"data"`
-		Error Error            `json:"error"`
+		Error Error `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
