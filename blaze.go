@@ -36,6 +36,7 @@ const (
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
+	MessageCategoryAppCard               = "APP_CARD"
 )
 
 type BlazeMessage struct {
