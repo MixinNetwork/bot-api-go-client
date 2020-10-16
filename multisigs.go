@@ -82,7 +82,7 @@ func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKe
 	if err != nil {
 		return nil, err
 	}
-	method, path := "POST", "/multisigs"
+	method, path := "POST", "/multisigs/requests"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey stri
 	if err != nil {
 		return nil, err
 	}
-	method, path := "POST", "/multisigs/"+id+"/sign"
+	method, path := "POST", "/multisigs/requests/"+id+"/sign"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey stri
 }
 
 func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string) error {
-	method, path := "POST", "/multisigs/"+id+"/cancel"
+	method, path := "POST", "/multisigs/requests/"+id+"/cancel"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
 	if err != nil {
 		return err
@@ -165,7 +165,7 @@ func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey st
 	if err != nil {
 		return err
 	}
-	method, path := "POST", "/multisigs/"+id+"/unlock"
+	method, path := "POST", "/multisigs/requests/"+id+"/unlock"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
 	if err != nil {
 		return err
