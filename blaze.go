@@ -208,9 +208,8 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 		"action":      action,
 		"icon_url":    iconUrl,
 	})
-
 	if err != nil {
-		return BlazeServerError(ctx, err)
+		return err
 	}
 	params := map[string]interface{}{
 		"conversation_id": conversationId,
@@ -233,7 +232,7 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"color":  color,
 	}})
 	if err != nil {
-		return BlazeServerError(ctx, err)
+		return err
 	}
 	params := map[string]interface{}{
 		"conversation_id": conversationId,
