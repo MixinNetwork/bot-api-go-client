@@ -201,6 +201,31 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 	return nil
 }
 
+func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipientId, title, description, action, iconUrl string) error {
+	data, err := json.Marshal(map[string]string{
+		"title":       title,
+		"description": description,
+		"action":      action,
+		"icon_url":    iconUrl,
+	})
+
+	if err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	params := map[string]interface{}{
+		"conversation_id": conversationId,
+		"recipient_id":    recipientId,
+		"message_id":      UuidNewV4().String(),
+		"category":        MessageCategoryAppCard,
+		"data":            base64.StdEncoding.EncodeToString(data),
+	}
+	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
+	if err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
 func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipientId, label, action, color string) error {
 	btns, err := json.Marshal([]interface{}{map[string]string{
 		"label":  label,
