@@ -3,8 +3,8 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -25,13 +25,44 @@ type MultisigUTXO struct {
 	SignedTx        string    `json:"signed_tx"`
 }
 
-func ReadMultisigs(ctx context.Context, limit int, offset, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+func ReadMultisigsLegacy(ctx context.Context, limit int, offset, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
 	v := url.Values{}
-	v.Set("limit", strconv.Itoa(limit))
+	v.Set("limit", fmt.Sprint(limit))
 	if offset != "" {
 		v.Set("offset", offset)
 	}
 	method, path := "GET", "/multisigs?"+v.Encode()
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, nil, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*MultisigUTXO `json:"data"`
+		Error Error           `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+// state: spent, unspent, signed
+func ReadMultisigs(ctx context.Context, limit int, offset, state, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+	v := url.Values{}
+	v.Set("limit", fmt.Sprint(limit))
+	if offset != "" {
+		v.Set("offset", offset)
+	}
+	v.Set("state", state)
+	method, path := "GET", "/multisigs/outputs?"+v.Encode()
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
 	if err != nil {
 		return nil, err
