@@ -14,18 +14,11 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 )
 
-var nonce uint64
-
 func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
-	if iterator <= nonce {
-		return "", fmt.Errorf("Duplicate iterator %d", iterator)
-	}
-	nonce = iterator
 	privBlock, _ := pem.Decode([]byte(privateKey))
 	if privBlock == nil {
 		return "", errors.New("invalid pem private key")
