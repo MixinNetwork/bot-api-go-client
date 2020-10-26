@@ -19,17 +19,13 @@ import (
 	"time"
 )
 
-var (
-	nonce   uint64
-	session string
-)
+var nonce uint64
 
 func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
-	if session == sessionId && iterator <= nonce {
+	if iterator <= nonce {
 		return "", fmt.Errorf("Duplicate iterator %d", iterator)
 	}
 	nonce = iterator
-	session = sessionId
 	privBlock, _ := pem.Decode([]byte(privateKey))
 	if privBlock == nil {
 		return "", errors.New("invalid pem private key")
