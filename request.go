@@ -8,14 +8,17 @@ import (
 	"time"
 )
 
-var httpClient *http.Client
-var uri string
+var (
+	httpClient *http.Client
+	httpUri    string
+	blazeUri   string
+)
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
 	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
 }
 func RequestWithId(ctx context.Context, method, path string, body []byte, accessToken, requestID string) ([]byte, error) {
-	req, err := http.NewRequest(method, uri+path, bytes.NewReader(body))
+	req, err := http.NewRequest(method, httpUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +39,14 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 
 func init() {
 	httpClient = &http.Client{Timeout: 10 * time.Second}
-	uri = "https://mixin-api.zeromesh.net"
+	httpUri = "https://mixin-api.zeromesh.net"
+	blazeUri = "mixin-blaze.zeromesh.net"
 }
 
 func SetBaseUri(base string) {
-	uri = base
+	httpUri = base
+}
+
+func SetBlazeUri(blaze string) {
+	blazeUri = blaze
 }
