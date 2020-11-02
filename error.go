@@ -61,7 +61,6 @@ func createError(ctx context.Context, status, code int, description string, err 
 			trace = trace + "\n" + err.Error()
 		}
 	}
-	fmt.Println(funcName, trace)
 
 	return Error{
 		Status:      status,
