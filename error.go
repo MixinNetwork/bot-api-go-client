@@ -52,7 +52,7 @@ func ForbiddenError(ctx context.Context) Error {
 
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
-	funcName := runtime.FuncForPC(pc).Name()
+	_ = runtime.FuncForPC(pc).Name()
 	trace := fmt.Sprintf("[ERROR %d] %s\n%s:%d", code, description, file, line)
 	if err != nil {
 		if sessionError, ok := err.(Error); ok {
