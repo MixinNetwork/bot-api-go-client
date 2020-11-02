@@ -43,6 +43,27 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	return token.SignedString(key)
 }
 
+func SignEd25519AuthenticationToken(uid, sid, secret string, method, uri, body string) (string, error) {
+	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
+	sum := sha256.Sum256([]byte(method + uri + body))
+
+	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
+		"uid": uid,
+		"sid": sid,
+		"iat": time.Now().Unix(),
+		"exp": expire.Unix(),
+		"jti": UuidNewV4().String(),
+		"sig": hex.EncodeToString(sum[:]),
+		"scp": "FULL",
+	})
+
+	priv, err := base64.StdEncoding.DecodeString(secret)
+	if err != nil {
+		return "", err
+	}
+	return token.SignedString(ed25519.PrivateKey(priv))
+}
+
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
