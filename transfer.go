@@ -127,14 +127,14 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 	return &resp.Data, nil
 }
 
-func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) error {
+func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
 	if in.Amount.Exhausted() {
-		return fmt.Errorf("Amount exhausted")
+		return nil, fmt.Errorf("Amount exhausted")
 	}
 
 	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	data, err := json.Marshal(map[string]interface{}{
 		"asset_id":    in.AssetId,
@@ -145,30 +145,31 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 		"pin":         encryptedPIN,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	path := "/transfers"
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", path, string(data))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var resp struct {
-		Error Error `json:"error"`
+		Data  *Snapshot `json:"data"`
+		Error Error     `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if resp.Error.Code > 0 {
-		return resp.Error
+		return nil, resp.Error
 	}
-	return nil
+	return resp.Data, nil
 }
 
 func ReadTransferByTrace(ctx context.Context, traceId, uid, sid, sessionKey string) (*Snapshot, error) {
