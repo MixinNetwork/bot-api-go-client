@@ -35,6 +35,27 @@ type Snapshot struct {
 	} `json:"fee,omitempty"`
 }
 
+type SnapshotShort struct {
+	Type       string `json:"type"`
+	SnapshotId string `json:"snapshot_id"`
+	Source     string `json:"source"`
+	Amount     string `json:"amount"`
+	Asset      struct {
+		Type     string `json:"type"`
+		AssetId  string `json:"asset_id"`
+		ChainId  string `json:"chain_id"`
+		MixinId  string `json:"mixin_id"`
+		Symbol   string `json:"symbol"`
+		Name     string `json:"name"`
+		AssetKey string `json:"asset_key"`
+		IconUrl  string `json:"icon_url"`
+	} `json:"asset"`
+	CreatedAt  time.Time `json:"created_at"`
+	TraceId    string    `json:"trace_id"`
+	OpponentId string    `json:"opponent_id"`
+	Memo       string    `json:"data"`
+}
+
 func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
@@ -144,11 +165,11 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*Snapshot, error) {
+func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*SnapshotShort, error) {
 	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "")
 }
 
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*SnapshotShort, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -168,8 +189,8 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	var resp struct {
-		Data  []*Snapshot `json:"data"`
-		Error Error       `json:"error"`
+		Data  []*SnapshotShort `json:"data"`
+		Error Error            `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
