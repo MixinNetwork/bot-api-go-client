@@ -62,13 +62,13 @@ func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string
 }
 
 func EncryptEd25519PIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
-	privateBytes, err := base64.StdEncoding.DecodeString(privateKey)
+	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
 
 	private := ed25519.PrivateKey(privateBytes)
-	public, err := base64.StdEncoding.DecodeString(pinToken)
+	public, err := base64.RawURLEncoding.DecodeString(pinToken)
 	if err != nil {
 		return "", err
 	}
@@ -99,7 +99,7 @@ func EncryptEd25519PIN(ctx context.Context, pin, pinToken, sessionId, privateKey
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	return base64.RawURLEncoding.EncodeToString(ciphertext), nil
 }
 
 func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey string) (*User, error) {

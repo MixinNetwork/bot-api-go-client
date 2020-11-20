@@ -57,7 +57,7 @@ func SignEd25519AuthenticationToken(uid, sid, secret string, method, uri, body s
 		"scp": "FULL",
 	})
 
-	priv, err := base64.StdEncoding.DecodeString(secret)
+	priv, err := base64.RawURLEncoding.DecodeString(secret)
 	if err != nil {
 		return "", err
 	}
