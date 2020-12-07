@@ -65,7 +65,7 @@ func createUser(ctx context.Context) (*bot.User, string, error) {
 }
 
 func setupPin(ctx context.Context, pin string, user *bot.User, userSessionKey string) error {
-	encryptedPIN, err := bot.EncryptEd25519PIN(ctx, pin, user.PINTokenBas64, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := bot.EncryptEd25519PIN(ctx, pin, user.PINTokenBase64, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}
