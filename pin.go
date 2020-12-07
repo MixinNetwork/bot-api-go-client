@@ -149,7 +149,7 @@ func VerifyEd25519PIN(ctx context.Context, uid, pin, pinToken, sessionId, privat
 		return nil, err
 	}
 	path := "/pin/verify"
-	token, err := SignEd25519AuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
 	if err != nil {
 		return nil, err
 	}

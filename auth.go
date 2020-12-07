@@ -22,30 +22,6 @@ func SignAuthenticationTokenWithoutBody(uid, sid, privateKey, method, uri string
 func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
-	token := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-		"uid": uid,
-		"sid": sid,
-		"iat": time.Now().UTC().Unix(),
-		"exp": expire.Unix(),
-		"jti": UuidNewV4().String(),
-		"sig": hex.EncodeToString(sum[:]),
-		"scp": "FULL",
-	})
-
-	block, _ := pem.Decode([]byte(privateKey))
-	if block == nil {
-		return "", fmt.Errorf("Bad private pem format %s", privateKey)
-	}
-	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		return "", err
-	}
-	return token.SignedString(key)
-}
-
-func SignEd25519AuthenticationToken(uid, sid, secret string, method, uri, body string) (string, error) {
-	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
-	sum := sha256.Sum256([]byte(method + uri + body))
 
 	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
 		"uid": uid,
@@ -56,12 +32,23 @@ func SignEd25519AuthenticationToken(uid, sid, secret string, method, uri, body s
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	})
-
-	priv, err := base64.RawURLEncoding.DecodeString(secret)
+	priv, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
-	return token.SignedString(ed25519.PrivateKey(priv))
+	if len(priv) == 63 {
+		// should valid more
+		return token.SignedString(ed25519.PrivateKey(priv))
+	}
+	block, _ := pem.Decode([]byte(privateKey))
+	if block == nil {
+		return "", fmt.Errorf("Bad RSA private pem format %s", privateKey)
+	}
+	key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return "", err
+	}
+	return token.SignedString(key)
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
