@@ -61,14 +61,14 @@ func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func EncryptEd25519PIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
+func EncryptEd25519PIN(ctx context.Context, pin, pinTokenBase64, sessionId, privateKey string, iterator uint64) (string, error) {
 	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
 
 	private := ed25519.PrivateKey(privateBytes)
-	public, err := base64.RawURLEncoding.DecodeString(pinToken)
+	public, err := base64.RawURLEncoding.DecodeString(pinTokenBase64)
 	if err != nil {
 		return "", err
 	}
