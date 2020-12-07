@@ -103,42 +103,14 @@ func EncryptEd25519PIN(ctx context.Context, pin, pinTokenBase64, sessionId, priv
 }
 
 func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey string) (*User, error) {
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
-	if err != nil {
-		return nil, err
+	var err error
+	var encryptedPIN string
+	pt, err := base64.RawURLEncoding.DecodeString(pinToken)
+	if err == nil && len(pt) == 32 {
+		encryptedPIN, err = EncryptEd25519PIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
+	} else {
+		encryptedPIN, err = EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
 	}
-	data, err := json.Marshal(map[string]interface{}{
-		"pin": encryptedPIN,
-	})
-	if err != nil {
-		return nil, err
-	}
-	path := "/pin/verify"
-	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", path, data, token)
-	if err != nil {
-		return nil, err
-	}
-	var resp struct {
-		Data  *User `json:"data"`
-		Error Error `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, BadDataError(ctx)
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-// TODO
-func VerifyEd25519PIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey string) (*User, error) {
-	encryptedPIN, err := EncryptEd25519PIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
