@@ -23,23 +23,25 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
-	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
-		"uid": uid,
-		"sid": sid,
-		"iat": time.Now().Unix(),
-		"exp": expire.Unix(),
-		"jti": UuidNewV4().String(),
-		"sig": hex.EncodeToString(sum[:]),
-		"scp": "FULL",
-	})
 	priv, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
+	claims := jwt.MapClaims{
+		"uid": uid,
+		"sid": sid,
+		"iat": time.Now().UTC().Unix(),
+		"exp": expire.Unix(),
+		"jti": UuidNewV4().String(),
+		"sig": hex.EncodeToString(sum[:]),
+		"scp": "FULL",
+	}
 	if len(priv) == 63 {
-		// should valid more
+		// more validate the private key
+		token := jwt.NewWithClaims(Ed25519SigningMethod, claims)
 		return token.SignedString(ed25519.PrivateKey(priv))
 	}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 	block, _ := pem.Decode([]byte(privateKey))
 	if block == nil {
 		return "", fmt.Errorf("Bad RSA private pem format %s", privateKey)
