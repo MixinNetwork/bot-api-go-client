@@ -45,10 +45,10 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
 		return token.SignedString(key)
 	}
-	if len(priv) != 63 {
+	// more validate the private key
+	if len(priv) != 64 {
 		return "", fmt.Errorf("Bad ed25519 private key %s", priv)
 	}
-	// more validate the private key
 	token := jwt.NewWithClaims(Ed25519SigningMethod, claims)
 	return token.SignedString(ed25519.PrivateKey(priv))
 }
