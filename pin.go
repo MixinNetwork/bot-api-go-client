@@ -23,6 +23,10 @@ import (
 )
 
 func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
+	_, err := base64.RawURLEncoding.DecodeString(privateKey)
+	if err == nil {
+		return EncryptEd25519PIN(ctx, pin, pinToken, sessionId, privateKey, iterator)
+	}
 	privBlock, _ := pem.Decode([]byte(privateKey))
 	if privBlock == nil {
 		return "", errors.New("invalid pem private key")
