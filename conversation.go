@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+type ParticipantSessionView struct {
+	Type      string `json:"type"`
+	UserId    string `json:"user_id"`
+	SessionId string `json:"session_id"`
+	PublicKey string `json:"public_key"`
+}
+
 type Participant struct {
 	UserId    string    `json:"user_id"`
 	Role      string    `json:"role"`
@@ -21,7 +28,8 @@ type Conversation struct {
 	Announcement   string    `json:"announcement"`
 	CreatedAt      time.Time `json:"created_at"`
 
-	Participants []Participant `json:"participants"`
+	Participants        []Participant            `json:"participants"`
+	ParticipantSessions []ParticipantSessionView `json:"participant_sessions"`
 }
 
 func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, uid, sid, key string) (*Conversation, error) {
