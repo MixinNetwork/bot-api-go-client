@@ -2,8 +2,13 @@ package bot
 
 import (
 	"crypto/ed25519"
+	"errors"
 
 	"github.com/dgrijalva/jwt-go"
+)
+
+var (
+	ErrEdDSAVerification = errors.New("crypto/eddsa: verification error")
 )
 
 var Ed25519SigningMethod *EdDSASigningMethod
@@ -25,7 +30,7 @@ func (sm *EdDSASigningMethod) Verify(signingString, signature string, key interf
 			return err
 		}
 		if !ed25519.Verify(k, []byte(signingString), sig) {
-			return jwt.ErrECDSAVerification
+			return ErrEdDSAVerification
 		}
 	default:
 		return jwt.ErrInvalidKeyType
