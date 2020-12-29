@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -164,4 +166,32 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (*co
 	}
 	raw.Node = node
 	return SignTransaction(account, raw)
+}
+
+func SentTransaction(node string, raw string) error {
+	content, err := json.Marshal(map[string]interface{}{"method": "sendrawtransaction", "params": []interface{}{raw}})
+	if err != nil {
+		return err
+	}
+	log.Println(raw)
+	data, err := callRPC(node, "POST", bytes.NewReader(content))
+	log.Println(string(data), err)
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Data struct {
+			Hash string `json:"hash"`
+		} `json:"data"`
+		Error *string `json:"error,omitempty"`
+	}
+	err = json.Unmarshal(data, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error != nil {
+		return errors.New(*resp.Error)
+	}
+	log.Println(resp.Data.Hash)
+	return nil
 }
