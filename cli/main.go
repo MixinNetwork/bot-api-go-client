@@ -19,7 +19,7 @@ func main() {
 		{
 			Name:    "transaction",
 			Aliases: []string{"t"},
-			Usage:   "Transfer asset to Mixin Mainnet",
+			Usage:   "Transfer asset to Mixin Mainnet address",
 			Action:  transferCmd,
 			Flags: []cli.Flag{
 				cli.StringFlag{
