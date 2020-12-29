@@ -219,14 +219,22 @@ func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey st
 }
 
 type GhostKeys struct {
+	Type string   `json:"type"`
 	Mask string   `json:"mask"`
 	Keys []string `json:"keys"`
 }
 
-func ReadGhostKeys(ctx context.Context, receivers []string, index int, uid, sid, sessionKey string) (*GhostKeys, error) {
+type GhostKeyRequest struct {
+	Receivers []string `json:"receivers"`
+	Index     int      `json:"index"`
+	Hint      string   `json:"hint"`
+}
+
+func ReadGhostKeys(ctx context.Context, receivers []string, index int, hint string, uid, sid, sessionKey string) (*GhostKeys, error) {
 	data, err := json.Marshal(map[string]interface{}{
 		"receivers": receivers,
 		"index":     index,
+		"hint":      hint,
 	})
 	if err != nil {
 		return nil, err
