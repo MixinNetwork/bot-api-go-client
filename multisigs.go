@@ -230,12 +230,8 @@ type GhostKeyRequest struct {
 	Hint      string   `json:"hint"`
 }
 
-func ReadGhostKeys(ctx context.Context, receivers []string, index int, hint string, uid, sid, sessionKey string) (*GhostKeys, error) {
-	data, err := json.Marshal(map[string]interface{}{
-		"receivers": receivers,
-		"index":     index,
-		"hint":      hint,
-	})
+func ReadGhostKeys(ctx context.Context, gkr []GhostKeyRequest, uid, sid, sessionKey string) ([]*GhostKeys, error) {
+	data, err := json.Marshal(gkr)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +241,8 @@ func ReadGhostKeys(ctx context.Context, receivers []string, index int, hint stri
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *GhostKeys `json:"data"`
-		Error Error      `json:"error"`
+		Data  []*GhostKeys `json:"data"`
+		Error Error        `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -256,4 +252,19 @@ func ReadGhostKeys(ctx context.Context, receivers []string, index int, hint stri
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func ReadGhostKey(ctx context.Context, receivers []string, index int, hint string, uid, sid, sessionKey string) (*GhostKeys, error) {
+	r := GhostKeyRequest{
+		Receivers: receivers,
+		Index:     index,
+		Hint:      hint,
+	}
+
+	result, err := ReadGhostKeys(ctx, []GhostKeyRequest{r}, uid, sid, sessionKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return result[0], nil
 }
