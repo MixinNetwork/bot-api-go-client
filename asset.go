@@ -5,18 +5,24 @@ import (
 	"encoding/json"
 )
 
+type DepositEntry struct {
+	Destination string `json:"destination"`
+	Tag         string `json:"tag"`
+}
+
 type Asset struct {
-	AssetId       string `json:"asset_id"`
-	ChainId       string `json:"chain_id"`
-	Symbol        string `json:"symbol"`
-	Name          string `json:"name"`
-	IconURL       string `json:"icon_url"`
-	PriceBTC      string `json:"price_btc"`
-	PriceUSD      string `json:"price_usd"`
-	Balance       string `json:"balance"`
-	Destination   string `json:"destination"`
-	Tag           string `json:"tag"`
-	Confirmations int    `json:"confirmations"`
+	AssetId        string         `json:"asset_id"`
+	ChainId        string         `json:"chain_id"`
+	Symbol         string         `json:"symbol"`
+	Name           string         `json:"name"`
+	IconURL        string         `json:"icon_url"`
+	PriceBTC       string         `json:"price_btc"`
+	PriceUSD       string         `json:"price_usd"`
+	Balance        string         `json:"balance"`
+	Destination    string         `json:"destination"`
+	Tag            string         `json:"tag"`
+	Confirmations  int            `json:"confirmations"`
+	DepositEntries []DepositEntry `json:"deposit_entries"`
 }
 
 func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
