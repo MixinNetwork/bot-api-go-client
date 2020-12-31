@@ -260,11 +260,9 @@ func ReadGhostKey(ctx context.Context, receivers []string, index int, hint strin
 		Index:     index,
 		Hint:      hint,
 	}
-
 	result, err := ReadGhostKeys(ctx, []GhostKeyRequest{r}, uid, sid, sessionKey)
 	if err != nil {
 		return nil, err
 	}
-
 	return result[0], nil
 }
