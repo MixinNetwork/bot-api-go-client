@@ -16,11 +16,10 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"io"
 	"time"
 
-	"github.com/MixinNetwork/mixin/crypto/edwards25519"
+	"filippo.io/edwards25519"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -161,32 +160,10 @@ func PrivateKeyToCurve25519(curve25519Private *[32]byte, privateKey ed25519.Priv
 	copy(curve25519Private[:], digest)
 }
 
-func PublicKeyToCurve25519(curve25519Public *[32]byte, publicKey ed25519.PublicKey) error {
-	var k [32]byte
-	copy(k[:], publicKey[:])
-	var A edwards25519.ExtendedGroupElement
-	if !A.FromBytes(&k) {
-		return fmt.Errorf("Invalid public key %x", publicKey)
+func PublicKeyToCurve25519(publicKey ed25519.PublicKey) ([]byte, error) {
+	p, err := (&edwards25519.Point{}).SetBytes(publicKey[:])
+	if err != nil {
+		return nil, err
 	}
-
-	// A.Z = 1 as a postcondition of FromBytes.
-	var x edwards25519.FieldElement
-	edwardsToMontgomeryX(&x, &A.Y)
-	edwards25519.FeToBytes(curve25519Public, &x)
-	return nil
-}
-
-func edwardsToMontgomeryX(outX, y *edwards25519.FieldElement) {
-	// We only need the x-coordinate of the curve25519 point, which I'll
-	// call u. The isomorphism is u=(y+1)/(1-y), since y=Y/Z, this gives
-	// u=(Y+Z)/(Z-Y). We know that Z=1, thus u=(Y+1)/(1-Y).
-	var oneMinusY edwards25519.FieldElement
-	edwards25519.FeOne(&oneMinusY)
-	edwards25519.FeSub(&oneMinusY, &oneMinusY, y)
-	edwards25519.FeInvert(&oneMinusY, &oneMinusY)
-
-	edwards25519.FeOne(outX)
-	edwards25519.FeAdd(outX, outX, y)
-
-	edwards25519.FeMul(outX, outX, &oneMinusY)
+	return p.BytesMontgomery(), nil
 }
