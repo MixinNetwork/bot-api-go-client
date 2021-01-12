@@ -9,7 +9,6 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
-	"crypto/sha512"
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
@@ -19,7 +18,6 @@ import (
 	"io"
 	"time"
 
-	"filippo.io/edwards25519"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -146,24 +144,4 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 		return nil, resp.Error
 	}
 	return resp.Data, nil
-}
-
-func PrivateKeyToCurve25519(curve25519Private *[32]byte, privateKey ed25519.PrivateKey) {
-	h := sha512.New()
-	h.Write(privateKey.Seed())
-	digest := h.Sum(nil)
-
-	digest[0] &= 248
-	digest[31] &= 127
-	digest[31] |= 64
-
-	copy(curve25519Private[:], digest)
-}
-
-func PublicKeyToCurve25519(publicKey ed25519.PublicKey) ([]byte, error) {
-	p, err := (&edwards25519.Point{}).SetBytes(publicKey[:])
-	if err != nil {
-		return nil, err
-	}
-	return p.BytesMontgomery(), nil
 }
