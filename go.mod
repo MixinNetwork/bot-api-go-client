@@ -3,7 +3,7 @@ module github.com/MixinNetwork/bot-api-go-client
 go 1.15
 
 require (
-	filippo.io/edwards25519 v1.0.0-beta.2
+	filippo.io/edwards25519 v1.0.0-beta.3
 	github.com/MixinNetwork/go-number v0.0.0-20180814121220-f48e2574d9ef
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gofrs/uuid v3.4.0+incompatible
