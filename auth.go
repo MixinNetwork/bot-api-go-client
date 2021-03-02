@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/kataras/jwt"
 )
 
 func SignAuthenticationTokenWithoutBody(uid, sid, privateKey, method, uri string) (string, error) {
@@ -23,7 +23,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
-	claims := jwt.MapClaims{
+	claims := map[string]interface{}{
 		"uid": uid,
 		"sid": sid,
 		"iat": time.Now().UTC().Unix(),
@@ -42,21 +42,21 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		if err != nil {
 			return "", err
 		}
-		token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-		return token.SignedString(key)
+		token, err := jwt.Sign(jwt.RS512, key, claims)
+		return string(token), err
 	}
 	// more validate the private key
 	if len(priv) != 64 {
 		return "", fmt.Errorf("Bad ed25519 private key %s", priv)
 	}
-	token := jwt.NewWithClaims(Ed25519SigningMethod, claims)
-	return token.SignedString(ed25519.PrivateKey(priv))
+	token, err := jwt.Sign(jwt.EdDSA, ed25519.PrivateKey(priv), claims)
+	return string(token), err
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
-	token := jwt.NewWithClaims(Ed25519SigningMethod, jwt.MapClaims{
+	claims := map[string]interface{}{
 		"iss": appID,
 		"aid": authorizationID,
 		"iat": time.Now().UTC().Unix(),
@@ -64,14 +64,15 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": scp,
 		"jti": requestID,
-	})
+	}
 
 	kb, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
 	priv := ed25519.PrivateKey(kb)
-	return token.SignedString(priv)
+	token, err := jwt.Sign(jwt.EdDSA, priv, claims)
+	return string(token), err
 }
 
 // OAuthGetAccessToken get the access token of a user
