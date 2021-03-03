@@ -11,6 +11,7 @@ github.com/gorilla/websocket v1.4.3-0.20200912193213-c3dd95aea977 h1:a5PtLMWJYzu
 github.com/gorilla/websocket v1.4.3-0.20200912193213-c3dd95aea977/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/kataras/jwt v0.1.1 h1:EGmWUHYPHGUk/BstfHZU+2nnOPtekVpbUwrKbDYX6h8=
 github.com/kataras/jwt v0.1.1/go.mod h1:4ss3aGJi58q3YGmhLUiOvNJnL7UlTXD7+Wf+skgsTmQ=
+github.com/kataras/jwt v0.1.2/go.mod h1:4ss3aGJi58q3YGmhLUiOvNJnL7UlTXD7+Wf+skgsTmQ=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/shopspring/decimal v1.2.0/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
 github.com/shopspring/decimal v1.2.1-0.20210218223250-9328d16578e0 h1:murI/1b0VfF2/miSZYMbJ/WR9v7EYcgj4uBxLo6EGdI=
