@@ -171,6 +171,24 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 	return nil
 }
 
+func (b *BlazeClient) SendRecallMessage(ctx context.Context, msg MessageView, recallMessageId string) error {
+	c := RecallMessagePayload{
+		MessageId: recallMessageId,
+	}
+	a, _ := json.Marshal(c)
+	params := map[string]interface{}{
+		"conversation_id": msg.ConversationId,
+		"recipient_id":    msg.UserId,
+		"message_id":      UuidNewV4().String(),
+		"category":        MessageCategoryMessageRecall,
+		"data":            base64.StdEncoding.EncodeToString(a),
+	}
+	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
 func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content string) error {
 	params := map[string]interface{}{
 		"conversation_id": msg.ConversationId,
