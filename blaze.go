@@ -96,6 +96,7 @@ type BlazeClient struct {
 
 type BlazeListener interface {
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
+	SyncAck() bool
 }
 
 func NewBlazeClient(uid, sid, key string) *BlazeClient {
@@ -134,9 +135,11 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 			if err != nil {
 				return err
 			}
-			params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
-			if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
-				return BlazeServerError(ctx, err)
+			if listener.SyncAck() {
+				params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
+				if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
+					return BlazeServerError(ctx, err)
+				}
 			}
 		}
 	}
