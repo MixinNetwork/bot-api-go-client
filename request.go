@@ -39,8 +39,8 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 
 func init() {
 	httpClient = &http.Client{Timeout: 10 * time.Second}
-	httpUri = "https://mixin-api.zeromesh.net"
-	blazeUri = "mixin-blaze.zeromesh.net"
+	httpUri = "https://api.mixin.one"
+	blazeUri = "blaze.mixin.one"
 }
 
 func SetBaseUri(base string) {
