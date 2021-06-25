@@ -75,7 +75,6 @@ type TransferView struct {
 
 type messageContext struct {
 	transactions *tmap
-	batchAck     *ackMap
 	readDone     chan bool
 	writeDone    chan bool
 	readBuffer   chan MessageView
@@ -106,7 +105,6 @@ func NewBlazeClient(uid, sid, key string) *BlazeClient {
 	client := BlazeClient{
 		mc: &messageContext{
 			transactions: newTmap(),
-			batchAck:     newAckMap(),
 			readDone:     make(chan bool, 1),
 			writeDone:    make(chan bool, 1),
 			readBuffer:   make(chan MessageView, 102400),
@@ -127,10 +125,6 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 	defer conn.Close()
 	go writePump(ctx, conn, b.mc)
 	go readPump(ctx, conn, b.mc)
-
-	if !listener.SyncAck() {
-		go b.batchAckMsg(ctx)
-	}
 
 	if err = writeMessageAndWait(ctx, b.mc, "LIST_PENDING_MESSAGES", nil); err != nil {
 		return BlazeServerError(ctx, err)
@@ -156,38 +150,8 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 					if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
 						return BlazeServerError(ctx, err)
 					}
-				} else {
-					b.mc.batchAck.set(msg.MessageId)
 				}
 			}
-		}
-	}
-}
-
-func (b *BlazeClient) batchAckMsg(ctx context.Context) {
-	for {
-		if len(b.mc.batchAck.m) == 0 {
-			time.Sleep(time.Second)
-			continue
-		}
-		req := make([]*ReceiptAcknowledgementRequest, 0)
-		msgIDs := make([]string, 0)
-		for msgID, _ := range b.mc.batchAck.m {
-			req = append(req, &ReceiptAcknowledgementRequest{
-				MessageId: msgID,
-				Status:    "READ",
-			})
-			msgIDs = append(msgIDs, msgID)
-		}
-		if len(req) > 100 {
-			req = req[0:100]
-			msgIDs = msgIDs[0:100]
-		}
-		if err := PostAcknowledgements(ctx, req, b.uid, b.sid, b.key); err == nil {
-			b.mc.batchAck.remove(msgIDs)
-		}
-		if len(req) != 100 {
-			time.Sleep(100 * time.Millisecond)
 		}
 	}
 }
@@ -511,29 +475,4 @@ func (m *tmap) set(key string, t mixinTransaction) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.m[key] = t
-}
-
-type ackMap struct {
-	mutex sync.Mutex
-	m     map[string]bool
-}
-
-func newAckMap() *ackMap {
-	return &ackMap{
-		m: make(map[string]bool),
-	}
-}
-
-func (m *ackMap) set(key string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	m.m[key] = true
-}
-
-func (m *ackMap) remove(keys []string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-	for _, key := range keys {
-		delete(m.m, key)
-	}
 }
