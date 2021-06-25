@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -96,6 +97,7 @@ type BlazeClient struct {
 
 type BlazeListener interface {
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
+	OnAckReceipt(ctx context.Context, msg MessageView, userID string) error
 	SyncAck() bool
 }
 
@@ -123,22 +125,31 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 	defer conn.Close()
 	go writePump(ctx, conn, b.mc)
 	go readPump(ctx, conn, b.mc)
+
 	if err = writeMessageAndWait(ctx, b.mc, "LIST_PENDING_MESSAGES", nil); err != nil {
 		return BlazeServerError(ctx, err)
 	}
+
 	for {
 		select {
 		case <-b.mc.readDone:
 			return nil
 		case msg := <-b.mc.readBuffer:
-			err = listener.OnMessage(ctx, msg, b.uid)
-			if err != nil {
-				return err
-			}
-			if listener.SyncAck() {
-				params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
-				if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
-					return BlazeServerError(ctx, err)
+			if msg.Source == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
+				err = listener.OnAckReceipt(ctx, msg, b.uid)
+				if err != nil {
+					return err
+				}
+			} else {
+				err = listener.OnMessage(ctx, msg, b.uid)
+				if err != nil {
+					return err
+				}
+				if listener.SyncAck() {
+					params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
+					if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
+						return BlazeServerError(ctx, err)
+					}
 				}
 			}
 		}
@@ -282,6 +293,13 @@ func connectMixinBlaze(uid, sid, key string) (*websocket.Conn, error) {
 	}
 	conn, _, err := dialer.Dial(u.String(), header)
 	if err != nil {
+		if strings.Contains(err.Error(), "timeout") {
+			if blazeUri == DefaultBlazeHost {
+				blazeUri = ZeromeshBlazeHost
+			} else {
+				blazeUri = DefaultBlazeHost
+			}
+		}
 		return nil, err
 	}
 	return conn, nil
@@ -412,7 +430,8 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if transaction != nil {
 		return transaction(message)
 	}
-	if message.Action != "CREATE_MESSAGE" {
+
+	if message.Action != "CREATE_MESSAGE" && message.Action != "ACKNOWLEDGE_MESSAGE_RECEIPT" {
 		return nil
 	}
 

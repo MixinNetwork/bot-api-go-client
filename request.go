@@ -5,13 +5,19 @@ import (
 	"context"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
 var (
-	httpClient *http.Client
-	httpUri    string
-	blazeUri   string
+	DefaultApiHost   = "https://api.mixin.one"
+	DefaultBlazeHost = "blaze.mixin.one"
+
+	ZeromeshApiHost   = "https://mixin-api.zeromesh.net"
+	ZeromeshBlazeHost = "mixin-blaze.zeromesh.net"
+	httpClient        *http.Client
+	httpUri           string
+	blazeUri          string
 )
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
@@ -27,6 +33,13 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	req.Header.Set("X-Request-Id", requestID)
 	resp, err := httpClient.Do(req)
 	if err != nil {
+		if strings.Contains(err.Error(), "Client.Timeout") {
+			if httpUri == DefaultApiHost {
+				httpUri = ZeromeshApiHost
+			} else {
+				httpUri = DefaultApiHost
+			}
+		}
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -39,8 +52,8 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 
 func init() {
 	httpClient = &http.Client{Timeout: 10 * time.Second}
-	httpUri = "https://api.mixin.one"
-	blazeUri = "blaze.mixin.one"
+	httpUri = DefaultApiHost
+	blazeUri = DefaultBlazeHost
 }
 
 func SetBaseUri(base string) {
