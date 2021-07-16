@@ -236,7 +236,11 @@ func ReadGhostKeys(ctx context.Context, gkr []GhostKeyRequest, uid, sid, session
 		return nil, err
 	}
 	method, path := "POST", "/outputs"
-	body, err := Request(ctx, method, path, data, "")
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
