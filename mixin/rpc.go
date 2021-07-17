@@ -61,24 +61,24 @@ type signerInput struct {
 		Hash    crypto.Hash         `json:"hash"`
 		Index   int                 `json:"index"`
 		Deposit *common.DepositData `json:"deposit,omitempty"`
-		Keys    []crypto.Key        `json:"keys"`
+		Keys    []*crypto.Key       `json:"keys"`
 		Mask    crypto.Key          `json:"mask"`
 	} `json:"inputs"`
 	Outputs []struct {
-		Type     uint8            `json:"type"`
-		Script   common.Script    `json:"script"`
-		Accounts []common.Address `json:"accounts,omitempty"`
-		Keys     []crypto.Key     `json:"keys,omitempty"`
-		Mask     crypto.Key       `json:"mask,omitempty"`
-		Amount   common.Integer   `json:"amount"`
+		Type     uint8             `json:"type"`
+		Script   common.Script     `json:"script"`
+		Accounts []*common.Address `json:"accounts,omitempty"`
+		Keys     []*crypto.Key     `json:"keys,omitempty"`
+		Mask     crypto.Key        `json:"mask,omitempty"`
+		Amount   common.Integer    `json:"amount"`
 	}
 	Asset crypto.Hash `json:"asset"`
 	Extra string      `json:"extra"`
 	Node  string      `json:"-"`
 }
 
-func (raw signerInput) ReadUTXO(hash crypto.Hash, index int) (*common.UTXOWithLock, error) {
-	utxo := &common.UTXOWithLock{}
+func (raw signerInput) ReadUTXOKeys(hash crypto.Hash, index int) (*common.UTXOKeys, error) {
+	utxo := &common.UTXOKeys{}
 
 	for _, in := range raw.Inputs {
 		if in.Hash == hash && in.Index == index && len(in.Keys) > 0 {
@@ -149,8 +149,8 @@ func SignTransaction(account common.Address, raw signerInput) (*common.SignedTra
 	tx.Extra = extra
 
 	signed := &common.SignedTransaction{Transaction: *tx}
-	for i, _ := range signed.Inputs {
-		err := signed.SignInput(raw, i, []common.Address{account})
+	for i := range signed.Inputs {
+		err := signed.SignInput(raw, i, []*common.Address{&account})
 		if err != nil {
 			return nil, err
 		}
@@ -169,13 +169,7 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (*co
 }
 
 func SentTransaction(node string, raw string) error {
-	content, err := json.Marshal(map[string]interface{}{"method": "sendrawtransaction", "params": []interface{}{raw}})
-	if err != nil {
-		return err
-	}
-	log.Println(raw)
-	data, err := callRPC(node, "POST", bytes.NewReader(content))
-	log.Println(string(data), err)
+	data, err := callRPC(node, "sendrawtransaction", []interface{}{raw})
 	if err != nil {
 		return err
 	}
