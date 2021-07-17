@@ -168,7 +168,7 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (*co
 	return SignTransaction(account, raw)
 }
 
-func SentTransaction(node string, raw string) error {
+func SentRawTransaction(node string, raw string) error {
 	data, err := callRPC(node, "sendrawtransaction", []interface{}{raw})
 	if err != nil {
 		return err
