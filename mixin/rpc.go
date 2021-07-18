@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -174,18 +172,11 @@ func SentRawTransaction(node string, raw string) error {
 		return err
 	}
 	var resp struct {
-		Data struct {
-			Hash string `json:"hash"`
-		} `json:"data"`
-		Error *string `json:"error,omitempty"`
+		Hash string `json:"hash"`
 	}
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
 		return err
 	}
-	if resp.Error != nil {
-		return errors.New(*resp.Error)
-	}
-	log.Println(resp.Data.Hash)
 	return nil
 }
