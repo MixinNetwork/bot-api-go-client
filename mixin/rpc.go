@@ -156,14 +156,19 @@ func SignTransaction(account common.Address, raw signerInput) (*common.SignedTra
 	return signed, nil
 }
 
-func SignTransactionRaw(node string, account common.Address, rawStr string) (*common.SignedTransaction, error) {
+func SignTransactionRaw(node string, account common.Address, rawStr string) (string, error) {
 	var raw signerInput
 	err := json.Unmarshal([]byte(rawStr), &raw)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	raw.Node = node
-	return SignTransaction(account, raw)
+	tx, err := SignTransaction(account, raw)
+	if err != nil {
+		return "", err
+	}
+	d := &common.VersionedTransaction{SignedTransaction: *tx}
+	return hex.EncodeToString(d.Marshal()), nil
 }
 
 func SentRawTransaction(node string, raw string) error {
