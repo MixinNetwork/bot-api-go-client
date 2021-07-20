@@ -8,8 +8,16 @@ import (
 	"testing"
 
 	"filippo.io/edwards25519"
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/curve25519"
 )
+
+func TestHashMember(t *testing.T) {
+	assert := assert.New(t)
+	mems := []string{"0355e4c0-ba3a-4ba6-82c0-6311e332f57a", "506694b3-0c16-4bd2-8ea0-ba3de6840a5a", "834c17e1-1427-434a-a280-1b3cfee05111"}
+	hash := HashMembers(mems)
+	assert.Equal(hash, "36972be0d8ef46deb3974334aa2242bfcdab044cbb99864ecc7f6ddbb9ee8ed9")
+}
 
 func TestCurve25519Conversion(t *testing.T) {
 	public, private, _ := ed25519.GenerateKey(rand.Reader)

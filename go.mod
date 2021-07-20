@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.4.3-0.20200912193213-c3dd95aea977
 	github.com/juju/testing v0.0.0-20210324180055-18c50b0c2098 // indirect
 	github.com/kataras/jwt v0.1.2
+	github.com/stretchr/testify v1.7.0 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97
 	gopkg.in/urfave/cli.v1 v1.20.0
 )
