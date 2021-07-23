@@ -55,12 +55,14 @@ func ReadMultisigsLegacy(ctx context.Context, limit int, offset, uid, sid, sessi
 }
 
 // state: spent, unspent, signed
-func ReadMultisigs(ctx context.Context, limit int, offset, state, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+func ReadMultisigs(ctx context.Context, limit int, offset, membersHash, threshold, state, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
 	v := url.Values{}
 	v.Set("limit", fmt.Sprint(limit))
 	if offset != "" {
 		v.Set("offset", offset)
 	}
+	v.Set("members", membersHash)
+	v.Set("threshold", threshold)
 	v.Set("state", state)
 	method, path := "GET", "/multisigs/outputs?"+v.Encode()
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
