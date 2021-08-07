@@ -166,10 +166,10 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 }
 
 func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*SnapshotShort, error) {
-	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "")
+	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "", "", "")
 }
 
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*SnapshotShort, error) {
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*SnapshotShort, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -183,6 +183,10 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	path := "/network/snapshots?" + v.Encode()
+	accessToken, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
 		return nil, err
