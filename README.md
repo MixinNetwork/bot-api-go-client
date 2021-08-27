@@ -42,11 +42,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	userSessionKey := string(pem.EncodeToMemory(&pem.Block{
-		Type:  "RSA PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
-	}))
-
+	userSessionKey := base64.RawURLEncoding.EncodeToString(privateKey)
 	// encrypt PIN
 	encryptedPIN, err := bot.EncryptEd25519PIN(ctx, pin, user.PINTokenBase64, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
