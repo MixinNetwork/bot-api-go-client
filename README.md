@@ -1,4 +1,3 @@
-
 ## Installation
 
 ```
@@ -32,17 +31,11 @@ const (
 func main() {
 	ctx := context.Background()
 	// Generate Ed25519 key pair.
-	privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
+	pub, privateKey, err := ed25519.GenerateKey(rand.Reader)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, "", err
 	}
-	publicKeyBytes, err := x509.MarshalPKIXPublicKey(privateKey.Public())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	sessionSecret := base64.StdEncoding.EncodeToString(publicKeyBytes)
+	sessionSecret := base64.RawURLEncoding.EncodeToString(pub[:])
 	// Rigster the user on the Mixin network
 	user, err := bot.CreateUser(ctx, sessionSecret, "fullname", appId, appSessionId, appPrivateKey)
 	if err != nil {
