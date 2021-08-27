@@ -48,10 +48,9 @@ func main() {
 	}))
 
 	// encrypt PIN
-	encryptedPIN, err := bot.EncryptPIN(ctx, "123456", user.PinToken, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := bot.EncryptEd25519PIN(ctx, pin, user.PINTokenBase64, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	fmt.Println(encryptedPIN)
 	// Set initial code.
