@@ -56,8 +56,8 @@ github.com/Masterminds/squirrel v1.5.0/go.mod h1:NNaOrjSoIDfDA40n7sr2tPNZRfjzjA4
 github.com/Microsoft/go-winio v0.4.14/go.mod h1:qXqCSQ3Xa7+6tgxaGTIe4Kpcdsi+P8jBhyzoq1bpyYA=
 github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d h1:vi28fNouiSHJDB1Nk5S4nkma6wtEHRW1TbDwNBjijMk=
 github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d/go.mod h1:N5G0zvYjtb/H9jaUovUbL6/ehYPlrAI9qeos/ezaBLk=
-github.com/MixinNetwork/mixin v0.13.0 h1:08ML0MbE/4sAIDWhv4hGya6srTnOggIz8xKGZEhIF0U=
-github.com/MixinNetwork/mixin v0.13.0/go.mod h1:VpQaCFJY7x+aW8OK62QJEy5H6AqhU8UTp19+DkAXooE=
+github.com/MixinNetwork/mixin v0.13.2 h1:hHycp8wJdrVk3P9mDXsp9DWd6s46kT6TI6ZOtM9FV5A=
+github.com/MixinNetwork/mixin v0.13.2/go.mod h1:VpQaCFJY7x+aW8OK62QJEy5H6AqhU8UTp19+DkAXooE=
 github.com/MixinNetwork/mobilecoin-go v0.0.0-20210622080237-fed5245fb80c h1:DjyegDVLrWeueasUd0UmpH2m0Th4JAL7a6d/oEFFLiM=
 github.com/MixinNetwork/mobilecoin-go v0.0.0-20210622080237-fed5245fb80c/go.mod h1:zJbaWyTX19cASJtIJFpsttKlIr99YRVGIx+Oy85M3QQ=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
