@@ -14,6 +14,7 @@ type WithdrawalInput struct {
 	Amount    number.Decimal
 	TraceId   string
 	Memo      string
+	Fee       string
 }
 
 func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
@@ -30,6 +31,7 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 		"amount":     in.Amount.Persist(),
 		"trace_id":   in.TraceId,
 		"memo":       in.Memo,
+		"fee":        in.Fee,
 		"pin":        encryptedPIN,
 	})
 	if err != nil {
