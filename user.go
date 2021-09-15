@@ -129,8 +129,8 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, ses
 	return nil
 }
 
-func UserMe(ctx context.Context, accessToken string) (*User, error) {
-	body, err := Request(ctx, "GET", "/me", nil, accessToken)
+func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*User, error) {
+	body, err := RequestWithId(ctx, "GET", "/me", nil, accessToken, requestID)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -146,6 +146,10 @@ func UserMe(ctx context.Context, accessToken string) (*User, error) {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func UserMe(ctx context.Context, accessToken string) (*User, error) {
+	return UserMeWithRequestID(ctx, accessToken, UuidNewV4().String())
 }
 
 func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBase64 string) (*User, error) {

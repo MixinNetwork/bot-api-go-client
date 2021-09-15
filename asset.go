@@ -25,8 +25,8 @@ type Asset struct {
 	DepositEntries []DepositEntry `json:"deposit_entries"`
 }
 
-func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
-	body, err := Request(ctx, "GET", "/assets", nil, accessToken)
+func AssetListWithRequestID(ctx context.Context, accessToken, requestID string) ([]*Asset, error) {
+	body, err := RequestWithId(ctx, "GET", "/assets", nil, accessToken, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +49,12 @@ func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
 	return resp.Data, nil
 }
 
-func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset, error) {
-	body, err := Request(ctx, "GET", "/assets/"+assetId, nil, accessToken)
+func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
+	return AssetListWithRequestID(ctx, accessToken, UuidNewV4().String())
+}
+
+func AssetShowWithRequestID(ctx context.Context, assetId string, accessToken, requestID string) (*Asset, error) {
+	body, err := RequestWithId(ctx, "GET", "/assets/"+assetId, nil, accessToken, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +75,9 @@ func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset,
 		return nil, resp.Error
 	}
 	return &resp.Data, nil
+}
+func AssetShow(ctx context.Context, assetId string, accessToken string) (*Asset, error) {
+	return AssetShowWithRequestID(ctx, assetId, accessToken, UuidNewV4().String())
 }
 
 func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
