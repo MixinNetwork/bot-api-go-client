@@ -23,6 +23,7 @@ const (
 	pingPeriod      = (pongWait * 9) / 10
 
 	createMessageAction = "CREATE_MESSAGE"
+	maximumButtons      = 6
 )
 
 const (
@@ -71,6 +72,12 @@ type TransferView struct {
 	TraceId       string    `json:"trace_id"`
 	Memo          string    `json:"memo"`
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+type AppButtonView struct {
+	Label  string `json:"label"`
+	Action string `json:"action"`
+	Color  string `json:"color"`
 }
 
 type messageContext struct {
@@ -263,6 +270,28 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"action": action,
 		"color":  color,
 	}})
+	if err != nil {
+		return err
+	}
+	params := map[string]interface{}{
+		"conversation_id": conversationId,
+		"recipient_id":    recipientId,
+		"message_id":      UuidNewV4().String(),
+		"category":        MessageCategoryAppButtonGroup,
+		"data":            base64.StdEncoding.EncodeToString(btns),
+	}
+	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
+	if err != nil {
+		return BlazeServerError(ctx, err)
+	}
+	return nil
+}
+
+func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, recipientId string, buttons []*AppButtonView) error {
+	if len(buttons) > maximumButtons {
+		return fmt.Errorf("too many buttons, maximum is six")
+	}
+	btns, err := json.Marshal(buttons)
 	if err != nil {
 		return err
 	}
