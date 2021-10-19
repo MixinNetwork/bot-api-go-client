@@ -104,7 +104,7 @@ type BlazeClient struct {
 }
 
 type BlazeListener interface {
-	OnTransfer(ctx context.Context, msg MessageView, userId string) error
+	OnSnapshotMessage(ctx context.Context, msg MessageView, userId string) error
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
 	OnAckReceipt(ctx context.Context, msg MessageView, userID string) error
 	SyncAck() bool
@@ -158,7 +158,7 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 				}
 
 				if msg.Category == MessageCategorySystemAccountSnapshot {
-					err = listener.OnTransfer(ctx, msg, b.uid)
+					err = listener.OnSnapshotMessage(ctx, msg, b.uid)
 					if err != nil {
 						return err
 					}
