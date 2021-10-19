@@ -2,12 +2,18 @@ package main
 
 import (
 	"context"
-	"log"
-
+	"encoding/base64"
 	"github.com/MixinNetwork/bot-api-go-client"
+	"log"
 )
 
 type mixinBlazeHandler func(ctx context.Context, msg bot.MessageView, clientID string) error
+
+func (f mixinBlazeHandler) OnTransfer(ctx context.Context, msg bot.MessageView, clientID string) error {
+	bytes, _ := base64.StdEncoding.DecodeString(msg.Data)
+	log.Println("onTransfer----------------", string(bytes))
+	return nil
+}
 
 func (f mixinBlazeHandler) OnMessage(ctx context.Context, msg bot.MessageView, clientID string) error {
 	return f(ctx, msg, clientID)

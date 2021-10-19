@@ -21,9 +21,7 @@ const (
 	writeWait       = 10 * time.Second
 	pongWait        = 10 * time.Second
 	pingPeriod      = (pongWait * 9) / 10
-
-	createMessageAction = "CREATE_MESSAGE"
-	maximumButtons      = 6
+	maximumButtons  = 6
 )
 
 const (
@@ -39,6 +37,9 @@ const (
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 	MessageCategoryAppCard               = "APP_CARD"
+
+	MessageActionCreate      = "CREATE_MESSAGE"
+	MessageActionAcknowledge = "ACKNOWLEDGE_MESSAGE_RECEIPT"
 )
 
 type BlazeMessage struct {
@@ -103,6 +104,7 @@ type BlazeClient struct {
 }
 
 type BlazeListener interface {
+	OnTransfer(ctx context.Context, msg MessageView, userId string) error
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
 	OnAckReceipt(ctx context.Context, msg MessageView, userID string) error
 	SyncAck() bool
@@ -142,20 +144,28 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 		case <-b.mc.readDone:
 			return nil
 		case msg := <-b.mc.readBuffer:
-			if msg.Source == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
+			if msg.Source == MessageActionAcknowledge {
 				err = listener.OnAckReceipt(ctx, msg, b.uid)
 				if err != nil {
 					return err
 				}
 			} else {
-				err = listener.OnMessage(ctx, msg, b.uid)
-				if err != nil {
-					return err
-				}
 				if listener.SyncAck() {
 					params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
-					if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
+					if err = writeMessageAndWait(ctx, b.mc, MessageActionAcknowledge, params); err != nil {
 						return BlazeServerError(ctx, err)
+					}
+				}
+
+				if msg.Category == MessageCategorySystemAccountSnapshot {
+					err = listener.OnTransfer(ctx, msg, b.uid)
+					if err != nil {
+						return err
+					}
+				} else {
+					err = listener.OnMessage(ctx, msg, b.uid)
+					if err != nil {
+						return err
 					}
 				}
 			}
@@ -172,7 +182,7 @@ func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipient
 		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
 		"representative_id": representativeId,
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+	if err := writeMessageAndWait(ctx, b.mc, MessageActionCreate, params); err != nil {
 		return BlazeServerError(ctx, err)
 	}
 	return nil
@@ -186,7 +196,7 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 		"category":        MessageCategoryPlainText,
 		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+	if err := writeMessageAndWait(ctx, b.mc, MessageActionCreate, params); err != nil {
 		return BlazeServerError(ctx, err)
 	}
 	return nil
@@ -204,7 +214,7 @@ func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, rec
 		"category":        MessageCategoryMessageRecall,
 		"data":            base64.StdEncoding.EncodeToString(a),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+	if err := writeMessageAndWait(ctx, b.mc, MessageActionCreate, params); err != nil {
 		return BlazeServerError(ctx, err)
 	}
 	return nil
@@ -218,7 +228,7 @@ func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content str
 		"category":        MessageCategoryPlainPost,
 		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+	if err := writeMessageAndWait(ctx, b.mc, MessageActionCreate, params); err != nil {
 		return BlazeServerError(ctx, err)
 	}
 	return nil
@@ -234,7 +244,7 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 		"category":        MessageCategoryPlainContact,
 		"data":            base64.StdEncoding.EncodeToString(contactData),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
+	if err := writeMessageAndWait(ctx, b.mc, MessageActionCreate, params); err != nil {
 		return BlazeServerError(ctx, err)
 	}
 	return nil
@@ -257,7 +267,7 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 		"category":        MessageCategoryAppCard,
 		"data":            base64.StdEncoding.EncodeToString(data),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
+	err = writeMessageAndWait(ctx, b.mc, MessageActionCreate, params)
 	if err != nil {
 		return BlazeServerError(ctx, err)
 	}
@@ -280,7 +290,7 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"category":        MessageCategoryAppButtonGroup,
 		"data":            base64.StdEncoding.EncodeToString(btns),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
+	err = writeMessageAndWait(ctx, b.mc, MessageActionCreate, params)
 	if err != nil {
 		return BlazeServerError(ctx, err)
 	}
@@ -302,7 +312,7 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 		"category":        MessageCategoryAppButtonGroup,
 		"data":            base64.StdEncoding.EncodeToString(btns),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
+	err = writeMessageAndWait(ctx, b.mc, MessageActionCreate, params)
 	if err != nil {
 		return BlazeServerError(ctx, err)
 	}
