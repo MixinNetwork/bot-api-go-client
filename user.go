@@ -2,8 +2,12 @@ package bot
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"sort"
 )
 
 type User struct {
@@ -238,4 +242,25 @@ func Relationship(ctx context.Context, uid, sid, privateKey string, userId, acti
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+type Session struct {
+	UserID    string
+	SessionID string
+	PublicKey string
+}
+
+func GenerateUserChecksum(sessions []*Session) string {
+	if len(sessions) < 1 {
+		return ""
+	}
+	sort.Slice(sessions, func(i, j int) bool {
+		return sessions[i].SessionID < sessions[j].SessionID
+	})
+	h := md5.New()
+	for _, s := range sessions {
+		io.WriteString(h, s.SessionID)
+	}
+	sum := h.Sum(nil)
+	return hex.EncodeToString(sum[:])
 }

@@ -1,11 +1,20 @@
 package bot
 
 import (
+	"bytes"
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/ed25519"
 	"crypto/md5"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"io"
 	"strings"
+
+	"golang.org/x/crypto/curve25519"
 )
 
 type LiveMessagePayload struct {
@@ -125,4 +134,143 @@ func Chunked(source []interface{}, size int) [][]interface{} {
 		index += size
 	}
 	return result
+}
+
+func EncryptMessageData(data string, sessions []*Session) (string, error) {
+	dataBytes, err := base64.RawURLEncoding.DecodeString(data)
+	if err != nil {
+		return "", err
+	}
+
+	key := make([]byte, 16)
+	_, err = rand.Read(key)
+	if err != nil {
+		return "", err
+	}
+	nonce := make([]byte, 12)
+	_, err = rand.Read(nonce)
+	if err != nil {
+		return "", err
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	ciphertext := aesgcm.Seal(nil, nonce, dataBytes, nil)
+
+	var sessionLen [2]byte
+	binary.LittleEndian.PutUint16(sessionLen[:], uint16(len(sessions)))
+
+	mixin := config.AppConfig.Mixin
+	privateBytes, err := base64.RawURLEncoding.DecodeString(mixin.SessionKey)
+	if err != nil {
+		return "", err
+	}
+
+	private := ed25519.PrivateKey(privateBytes)
+	pub, _ := bot.PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
+
+	var sessionsBytes []byte
+	for _, s := range sessions {
+		clientPublic, err := base64.RawURLEncoding.DecodeString(s.PublicKey)
+		if err != nil {
+			return "", err
+		}
+		var dst, priv, clientPub [32]byte
+		copy(clientPub[:], clientPublic[:])
+		bot.PrivateKeyToCurve25519(&priv, private)
+		curve25519.ScalarMult(&dst, &priv, &clientPub)
+
+		block, err := aes.NewCipher(dst[:])
+		if err != nil {
+			return "", err
+		}
+		padding := aes.BlockSize - len(key)%aes.BlockSize
+		padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+		shared := make([]byte, len(key))
+		copy(shared[:], key[:])
+		shared = append(shared, padtext...)
+		ciphertext := make([]byte, aes.BlockSize+len(shared))
+		iv := ciphertext[:aes.BlockSize]
+		_, err = rand.Read(iv)
+		if err != nil {
+			return "", err
+		}
+		mode := cipher.NewCBCEncrypter(block, iv)
+		mode.CryptBlocks(ciphertext[aes.BlockSize:], shared)
+		id, err := bot.UuidFromString(s.SessionID)
+		if err != nil {
+			return "", err
+		}
+		sessionsBytes = append(sessionsBytes, id.Bytes()...)
+		sessionsBytes = append(sessionsBytes, ciphertext...)
+	}
+
+	result := []byte{1}
+	result = append(result, sessionLen[:]...)
+	result = append(result, pub[:]...)
+	result = append(result, sessionsBytes...)
+	result = append(result, nonce[:]...)
+	result = append(result, ciphertext...)
+	return base64.RawURLEncoding.EncodeToString(result), nil
+}
+
+func DecryptMessageData(data string) (string, error) {
+	bytes, err := base64.RawURLEncoding.DecodeString(data)
+	if err != nil {
+		return "", err
+	}
+	size := 16 + 48 // session id bytes + encypted key bytes size
+	total := len(bytes)
+	if total < 1+2+32+size+12 {
+		return "", nil
+	}
+	sessionLen := int(binary.LittleEndian.Uint16(bytes[1:3]))
+	mixin := config.AppConfig.Mixin
+	prefixSize := 35 + sessionLen*size
+	var key []byte
+	for i := 35; i < prefixSize; i += size {
+		if uid, _ := bot.UuidFromBytes(bytes[i : i+16]); uid.String() == mixin.SessionId {
+			private, err := base64.RawURLEncoding.DecodeString(mixin.SessionKey)
+			if err != nil {
+				return "", err
+			}
+			var dst, priv, pub [32]byte
+			copy(pub[:], bytes[3:35])
+			bot.PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
+			curve25519.ScalarMult(&dst, &priv, &pub)
+
+			block, err := aes.NewCipher(dst[:])
+			if err != nil {
+				return "", err
+			}
+			iv := bytes[i+16 : i+16+aes.BlockSize]
+			key = bytes[i+16+aes.BlockSize : i+size]
+			mode := cipher.NewCBCDecrypter(block, iv)
+			mode.CryptBlocks(key, key)
+			key = key[:16]
+			break
+		}
+	}
+	if len(key) != 16 {
+		return "", nil
+	}
+	nonce := bytes[prefixSize : prefixSize+12]
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", nil // TODO
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", nil // TODO
+	}
+	plaintext, err := aesgcm.Open(nil, nonce, bytes[prefixSize+12:], nil)
+	if err != nil {
+		return "", nil // TODO
+	}
+	return base64.RawURLEncoding.EncodeToString(plaintext), nil
 }
