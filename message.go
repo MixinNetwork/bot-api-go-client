@@ -136,7 +136,7 @@ func Chunked(source []interface{}, size int) [][]interface{} {
 	return result
 }
 
-func EncryptMessageData(data string, sessions []*Session) (string, error) {
+func EncryptMessageData(data string, sessions []*Session, privateKey string) (string, error) {
 	dataBytes, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
@@ -165,14 +165,13 @@ func EncryptMessageData(data string, sessions []*Session) (string, error) {
 	var sessionLen [2]byte
 	binary.LittleEndian.PutUint16(sessionLen[:], uint16(len(sessions)))
 
-	mixin := config.AppConfig.Mixin
-	privateBytes, err := base64.RawURLEncoding.DecodeString(mixin.SessionKey)
+	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
 	}
 
 	private := ed25519.PrivateKey(privateBytes)
-	pub, _ := bot.PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
+	pub, _ := PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
 
 	var sessionsBytes []byte
 	for _, s := range sessions {
@@ -182,7 +181,7 @@ func EncryptMessageData(data string, sessions []*Session) (string, error) {
 		}
 		var dst, priv, clientPub [32]byte
 		copy(clientPub[:], clientPublic[:])
-		bot.PrivateKeyToCurve25519(&priv, private)
+		PrivateKeyToCurve25519(&priv, private)
 		curve25519.ScalarMult(&dst, &priv, &clientPub)
 
 		block, err := aes.NewCipher(dst[:])
@@ -202,7 +201,7 @@ func EncryptMessageData(data string, sessions []*Session) (string, error) {
 		}
 		mode := cipher.NewCBCEncrypter(block, iv)
 		mode.CryptBlocks(ciphertext[aes.BlockSize:], shared)
-		id, err := bot.UuidFromString(s.SessionID)
+		id, err := UuidFromString(s.SessionID)
 		if err != nil {
 			return "", err
 		}
@@ -219,7 +218,7 @@ func EncryptMessageData(data string, sessions []*Session) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(result), nil
 }
 
-func DecryptMessageData(data string) (string, error) {
+func DecryptMessageData(data string, sessionId, private string) (string, error) {
 	bytes, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
@@ -230,18 +229,17 @@ func DecryptMessageData(data string) (string, error) {
 		return "", nil
 	}
 	sessionLen := int(binary.LittleEndian.Uint16(bytes[1:3]))
-	mixin := config.AppConfig.Mixin
 	prefixSize := 35 + sessionLen*size
 	var key []byte
 	for i := 35; i < prefixSize; i += size {
-		if uid, _ := bot.UuidFromBytes(bytes[i : i+16]); uid.String() == mixin.SessionId {
-			private, err := base64.RawURLEncoding.DecodeString(mixin.SessionKey)
+		if uid, _ := UuidFromBytes(bytes[i : i+16]); uid.String() == sessionId {
+			private, err := base64.RawURLEncoding.DecodeString(private)
 			if err != nil {
 				return "", err
 			}
 			var dst, priv, pub [32]byte
 			copy(pub[:], bytes[3:35])
-			bot.PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
+			PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
 			curve25519.ScalarMult(&dst, &priv, &pub)
 
 			block, err := aes.NewCipher(dst[:])
