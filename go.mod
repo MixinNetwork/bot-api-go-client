@@ -5,7 +5,7 @@ go 1.15
 require (
 	filippo.io/edwards25519 v1.0.0-rc.1
 	github.com/MixinNetwork/go-number v0.0.0-20210302140654-71a9f2b7e10d
-	github.com/MixinNetwork/mixin v0.13.7
+	github.com/MixinNetwork/mixin v0.13.8
 	github.com/btcsuite/btcutil v1.0.3-0.20210527170813-e2ba6805a890 // indirect
 	github.com/gofrs/uuid v4.1.0+incompatible
 	github.com/google/go-cmp v0.5.6 // indirect
