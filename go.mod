@@ -10,7 +10,7 @@ require (
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/websocket v1.4.3-0.20200912193213-c3dd95aea977
-	github.com/kataras/jwt v0.1.3
+	github.com/kataras/jwt v0.1.5
 	github.com/kr/text v0.2.0 // indirect
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
