@@ -102,7 +102,7 @@ type BlazeClient struct {
 	uid    string
 	sid    string
 	key    string
-	option *websocket.Dialer
+	dailer *websocket.Dialer
 }
 
 type BlazeListener interface {
@@ -120,21 +120,26 @@ func NewBlazeClient(uid, sid, key string) *BlazeClient {
 			readBuffer:   make(chan MessageView, 102400),
 			writeBuffer:  make(chan []byte, 102400),
 		},
-		uid:    uid,
-		sid:    sid,
-		key:    key,
-		option: &websocket.Dialer{},
+		uid: uid,
+		sid: sid,
+		key: key,
 	}
+	client.SetupDailer(nil)
 	return &client
 }
 
-func (b *BlazeClient) WsOptionWithContext(ctx context.Context, option *websocket.Dialer) {
-	if option != nil {
-		b.option = option
+func (b *BlazeClient) SetupDailer(dailer *websocket.Dialer) {
+	if dailer == nil {
+		dailer = &websocket.Dialer{}
 	}
+	dailer.Subprotocols = []string{"Mixin-Blaze-1"}
+	if dailer.HandshakeTimeout == 0 {
+		dailer.HandshakeTimeout = time.Second * 5
+	}
+	b.dailer = dailer
 }
 
-func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener, ops ...*websocket.Dialer) error {
+func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 	conn, err := b.connectMixinBlaze()
 	if err != nil {
 		return err
@@ -327,14 +332,7 @@ func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
 	header := make(http.Header)
 	header.Add("Authorization", "Bearer "+token)
 	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
-	opt := b.option
-	if opt.Subprotocols == nil {
-		opt.Subprotocols = []string{"Mixin-Blaze-1"}
-	}
-	if opt.HandshakeTimeout == 0 {
-		opt.HandshakeTimeout = time.Second * 5
-	}
-	conn, _, err := opt.Dial(u.String(), header)
+	conn, _, err := b.dailer.Dial(u.String(), header)
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout") {
 			if blazeUri == DefaultBlazeHost {
