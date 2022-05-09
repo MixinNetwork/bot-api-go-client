@@ -98,10 +98,11 @@ type systemConversationPayload struct {
 }
 
 type BlazeClient struct {
-	mc  *messageContext
-	uid string
-	sid string
-	key string
+	mc     *messageContext
+	uid    string
+	sid    string
+	key    string
+	dailer *websocket.Dialer
 }
 
 type BlazeListener interface {
@@ -123,11 +124,23 @@ func NewBlazeClient(uid, sid, key string) *BlazeClient {
 		sid: sid,
 		key: key,
 	}
+	client.SetupDailer(nil)
 	return &client
 }
 
+func (b *BlazeClient) SetupDailer(dailer *websocket.Dialer) {
+	if dailer == nil {
+		dailer = &websocket.Dialer{}
+	}
+	dailer.Subprotocols = []string{"Mixin-Blaze-1"}
+	if dailer.HandshakeTimeout == 0 {
+		dailer.HandshakeTimeout = time.Second * 5
+	}
+	b.dailer = dailer
+}
+
 func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
-	conn, err := connectMixinBlaze(b.uid, b.sid, b.key)
+	conn, err := b.connectMixinBlaze()
 	if err != nil {
 		return err
 	}
@@ -311,18 +324,15 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 	return nil
 }
 
-func connectMixinBlaze(uid, sid, key string) (*websocket.Conn, error) {
-	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/", "")
+func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
+	token, err := SignAuthenticationToken(b.uid, b.sid, b.key, "GET", "/", "")
 	if err != nil {
 		return nil, err
 	}
 	header := make(http.Header)
 	header.Add("Authorization", "Bearer "+token)
 	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
-	dialer := &websocket.Dialer{
-		Subprotocols: []string{"Mixin-Blaze-1"},
-	}
-	conn, _, err := dialer.Dial(u.String(), header)
+	conn, _, err := b.dailer.Dial(u.String(), header)
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout") {
 			if blazeUri == DefaultBlazeHost {
