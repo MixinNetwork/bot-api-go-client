@@ -98,10 +98,11 @@ type systemConversationPayload struct {
 }
 
 type BlazeClient struct {
-	mc  *messageContext
-	uid string
-	sid string
-	key string
+	mc     *messageContext
+	uid    string
+	sid    string
+	key    string
+	option *websocket.Dialer
 }
 
 type BlazeListener interface {
@@ -119,15 +120,22 @@ func NewBlazeClient(uid, sid, key string) *BlazeClient {
 			readBuffer:   make(chan MessageView, 102400),
 			writeBuffer:  make(chan []byte, 102400),
 		},
-		uid: uid,
-		sid: sid,
-		key: key,
+		uid:    uid,
+		sid:    sid,
+		key:    key,
+		option: &websocket.Dialer{},
 	}
 	return &client
 }
 
+func (b *BlazeClient) WsOptionWithContext(ctx context.Context, option *websocket.Dialer) {
+	if option != nil {
+		b.option = option
+	}
+}
+
 func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener, ops ...*websocket.Dialer) error {
-	conn, err := connectMixinBlaze(b.uid, b.sid, b.key, ops...)
+	conn, err := b.connectMixinBlaze()
 	if err != nil {
 		return err
 	}
@@ -311,18 +319,15 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 	return nil
 }
 
-func connectMixinBlaze(uid, sid, key string, ops ...*websocket.Dialer) (*websocket.Conn, error) {
-	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/", "")
+func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
+	token, err := SignAuthenticationToken(b.uid, b.sid, b.key, "GET", "/", "")
 	if err != nil {
 		return nil, err
 	}
 	header := make(http.Header)
 	header.Add("Authorization", "Bearer "+token)
 	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
-	opt := &websocket.Dialer{}
-	if len(ops) == 1 {
-		opt = ops[0]
-	}
+	opt := b.option
 	if opt.Subprotocols == nil {
 		opt.Subprotocols = []string{"Mixin-Blaze-1"}
 	}
