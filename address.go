@@ -77,7 +77,7 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 
 	var resp struct {
 		Data  *Address `json:"data"`
-		Error Error    `json:"error"`
+		Error *Error   `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -137,13 +137,13 @@ func GetAddressesByAssetId(ctx context.Context, assetId, uid, sid, sessionKey st
 
 	var resp struct {
 		Data  []*Address `json:"data"`
-		Error Error      `json:"error"`
+		Error *Error     `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, BadDataError(ctx)
 	}
-	if resp.Error.Code > 0 {
+	if resp.Error != nil {
 		return nil, resp.Error
 	}
 	return resp.Data, nil

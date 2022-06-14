@@ -40,11 +40,14 @@ func ExternalTranactions(ctx context.Context, asset, destination, tag string) ([
 	}
 	var resp struct {
 		Data  []*Transaction `json:"data"`
-		Error Error          `json:"error"`
+		Error *Error         `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, BadDataError(ctx)
 	}
-	return resp.Data, resp.Error
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }

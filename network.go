@@ -48,5 +48,8 @@ func ExternalAdddressCheck(ctx context.Context, asset, destination, tag string) 
 	if err != nil {
 		return nil, BadDataError(ctx)
 	}
-	return resp.Data, resp.Error
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }
