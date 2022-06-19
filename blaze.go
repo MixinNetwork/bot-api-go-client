@@ -39,6 +39,7 @@ const (
 	MessageCategorySystemConversation    = "SYSTEM_CONVERSATION"
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
+	MessageCategoryMessagePin            = "MESSAGE_PIN"
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 	MessageCategoryAppCard               = "APP_CARD"
 )
