@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kataras/jwt"
+	"github.com/golang-jwt/jwt"
 )
 
 func SignAuthenticationTokenWithoutBody(uid, sid, privateKey, method, uri string) (string, error) {
@@ -23,7 +23,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
-	claims := map[string]interface{}{
+	claims := jwt.MapClaims{
 		"uid": uid,
 		"sid": sid,
 		"iat": time.Now().UTC().Unix(),
@@ -42,21 +42,21 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		if err != nil {
 			return "", err
 		}
-		token, err := jwt.Sign(jwt.RS512, key, claims)
-		return string(token), err
+		token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+		return token.SignedString(key)
 	}
 	// more validate the private key
 	if len(priv) != 64 {
 		return "", fmt.Errorf("Bad ed25519 private key %s", priv)
 	}
-	token, err := jwt.Sign(jwt.EdDSA, ed25519.PrivateKey(priv), claims)
-	return string(token), err
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	return token.SignedString(priv)
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
-	claims := map[string]interface{}{
+	claims := jwt.MapClaims{
 		"iss": appID,
 		"aid": authorizationID,
 		"iat": time.Now().UTC().Unix(),
@@ -71,8 +71,8 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		return "", err
 	}
 	priv := ed25519.PrivateKey(kb)
-	token, err := jwt.Sign(jwt.EdDSA, priv, claims)
-	return string(token), err
+	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	return token.SignedString(priv)
 }
 
 // OAuthGetAccessToken get the access token of a user
