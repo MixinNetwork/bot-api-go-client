@@ -50,7 +50,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		return "", fmt.Errorf("Bad ed25519 private key %s", priv)
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	return token.SignedString(priv)
+	return token.SignedString(ed25519.PrivateKey(priv))
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
