@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/websocket v1.5.1-0.20220417130117-78cf1bc733a9
 	github.com/kataras/jwt v0.1.8
 	github.com/kr/text v0.2.0 // indirect
-	github.com/stretchr/testify v1.7.2
+	github.com/stretchr/testify v1.7.5
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
