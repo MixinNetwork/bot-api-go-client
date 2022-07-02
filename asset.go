@@ -6,8 +6,9 @@ import (
 )
 
 type DepositEntry struct {
-	Destination string `json:"destination"`
-	Tag         string `json:"tag"`
+	Destination string   `json:"destination"`
+	Tag         string   `json:"tag"`
+	Properties  []string `json:"properties"`
 }
 
 type Asset struct {
