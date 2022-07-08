@@ -8,6 +8,7 @@ require (
 	github.com/MixinNetwork/mixin v0.13.10
 	github.com/btcsuite/btcutil v1.0.3-0.20210527170813-e2ba6805a890 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/websocket v1.5.1-0.20220417130117-78cf1bc733a9
 	github.com/kataras/jwt v0.1.8
