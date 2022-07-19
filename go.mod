@@ -8,10 +8,9 @@ require (
 	github.com/MixinNetwork/mixin v0.13.10
 	github.com/btcsuite/btcutil v1.0.3-0.20210527170813-e2ba6805a890 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/gorilla/websocket v1.5.1-0.20220417130117-78cf1bc733a9
-	github.com/kataras/jwt v0.1.8
 	github.com/kr/text v0.2.0 // indirect
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3

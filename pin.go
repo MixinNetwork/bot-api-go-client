@@ -21,10 +21,10 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
+func EncryptPIN(pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
 	_, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err == nil {
-		return EncryptEd25519PIN(ctx, pin, pinToken, privateKey, iterator)
+		return EncryptEd25519PIN(pin, pinToken, privateKey, iterator)
 	}
 	privBlock, _ := pem.Decode([]byte(privateKey))
 	if privBlock == nil {
@@ -64,7 +64,7 @@ func EncryptPIN(ctx context.Context, pin, pinToken, sessionId, privateKey string
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func EncryptEd25519PIN(ctx context.Context, pin, pinTokenBase64, privateKey string, iterator uint64) (string, error) {
+func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) (string, error) {
 	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err
@@ -75,10 +75,13 @@ func EncryptEd25519PIN(ctx context.Context, pin, pinTokenBase64, privateKey stri
 	if err != nil {
 		return "", err
 	}
-	var keyBytes, curvePriv, pub [32]byte
+	var curvePriv, pub [32]byte
 	PrivateKeyToCurve25519(&curvePriv, private)
 	copy(pub[:], public[:])
-	curve25519.ScalarMult(&keyBytes, &curvePriv, &pub)
+	keyBytes, err := curve25519.X25519(curvePriv[:], pub[:])
+	if err != nil {
+		return "", err
+	}
 
 	pinByte := []byte(pin)
 	timeBytes := make([]byte, 8)
@@ -110,9 +113,9 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 	var encryptedPIN string
 	pt, err := base64.RawURLEncoding.DecodeString(pinToken)
 	if err == nil && len(pt) == 32 {
-		encryptedPIN, err = EncryptEd25519PIN(ctx, pin, pinToken, privateKey, uint64(time.Now().UnixNano()))
+		encryptedPIN, err = EncryptEd25519PIN(pin, pinToken, privateKey, uint64(time.Now().UnixNano()))
 	} else {
-		encryptedPIN, err = EncryptPIN(ctx, pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
+		encryptedPIN, err = EncryptPIN(pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
 	}
 	if err != nil {
 		return nil, err

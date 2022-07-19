@@ -42,7 +42,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 		return nil, fmt.Errorf("Amount exhausted")
 	}
 
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 		return nil, fmt.Errorf("Amount exhausted")
 	}
 
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 		return nil, fmt.Errorf("Amount exhausted")
 	}
 
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}

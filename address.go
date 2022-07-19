@@ -26,7 +26,7 @@ type Address struct {
 }
 
 func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, pin, pinToken string) (*Address, error) {
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 }
 
 func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pinToken string) error {
-	encryptedPIN, err := EncryptPIN(ctx, pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}
