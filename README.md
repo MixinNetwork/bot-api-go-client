@@ -44,7 +44,7 @@ func main() {
 	}
 	userSessionKey := base64.RawURLEncoding.EncodeToString(privateKey)
 	// encrypt PIN
-	encryptedPIN, err := bot.EncryptEd25519PIN(ctx, pin, user.PINTokenBase64, user.SessionId, userSessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := bot.EncryptEd25519PIN(pin, user.PINTokenBase64, userSessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}
