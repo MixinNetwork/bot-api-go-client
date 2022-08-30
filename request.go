@@ -3,10 +3,13 @@ package bot
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 var (
@@ -46,7 +49,7 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 500 {
-		return nil, ServerError(ctx, nil)
+		return nil, errors.Wrap(ServerError(ctx, nil), fmt.Sprintf("response status code %d", resp.StatusCode))
 	}
 	return ioutil.ReadAll(resp.Body)
 }
