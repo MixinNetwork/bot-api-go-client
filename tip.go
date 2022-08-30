@@ -11,9 +11,9 @@ type TipNodeData struct {
 	Identity    string   `json:"identity"`
 }
 
-func GetTipNodeByPath(ctx context.Context, path string) (*TipNodeData, error) {
+func GetTipNodeByPathWithRequestId(ctx context.Context, path, requestId string) (*TipNodeData, error) {
 	url := fmt.Sprintf("/external/tip/%s", path)
-	body, err := RequestWithId(ctx, "GET", url, nil, "", UuidNewV4().String())
+	body, err := RequestWithId(ctx, "GET", url, nil, "", requestId)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -29,4 +29,8 @@ func GetTipNodeByPath(ctx context.Context, path string) (*TipNodeData, error) {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func GetTipNodeByPath(ctx context.Context, path string) (*TipNodeData, error) {
+	return GetTipNodeByPathWithRequestId(ctx, path, UuidNewV4().String())
 }
