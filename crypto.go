@@ -7,6 +7,7 @@ import (
 
 	"filippo.io/edwards25519"
 	"github.com/MixinNetwork/mixin/crypto"
+	"golang.org/x/crypto/curve25519"
 )
 
 func PrivateKeyToCurve25519(curve25519Private *[32]byte, privateKey ed25519.PrivateKey) {
@@ -27,6 +28,23 @@ func PublicKeyToCurve25519(publicKey ed25519.PublicKey) ([]byte, error) {
 		return nil, err
 	}
 	return p.BytesMontgomery(), nil
+}
+
+func SharedKey(public ed25519.PublicKey, private ed25519.PrivateKey) ([32]byte, error) {
+	var dst, priv, pub [32]byte
+	curve25519Public, err := PublicKeyToCurve25519(public)
+	if err != nil {
+		return [32]byte{}, err
+	}
+
+	PrivateKeyToCurve25519(&priv, private.Seed())
+	copy(pub[:], curve25519Public[:])
+	d, err := curve25519.X25519(priv[:], pub[:])
+	if err != nil {
+		return [32]byte{}, err
+	}
+	copy(dst[:], d)
+	return dst, nil
 }
 
 func HashMembers(ids []string) string {
