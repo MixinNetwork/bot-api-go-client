@@ -34,14 +34,14 @@ func SharedKey(public ed25519.PublicKey, private ed25519.PrivateKey) ([32]byte, 
 	var dst, priv, pub [32]byte
 	curve25519Public, err := PublicKeyToCurve25519(public)
 	if err != nil {
-		return [32]byte{}, err
+		return dst, err
 	}
 
 	PrivateKeyToCurve25519(&priv, private.Seed())
 	copy(pub[:], curve25519Public[:])
 	d, err := curve25519.X25519(priv[:], pub[:])
 	if err != nil {
-		return [32]byte{}, err
+		return dst, err
 	}
 	copy(dst[:], d)
 	return dst, nil
