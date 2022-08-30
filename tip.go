@@ -13,11 +13,10 @@ type TipNodeData struct {
 
 func GetTipNodeByPath(ctx context.Context, path string) (*TipNodeData, error) {
 	url := fmt.Sprintf("/external/tip/%s", path)
-	body, err := Request(ctx, "GET", url, nil, "")
+	body, err := RequestWithId(ctx, "GET", url, nil, "", UuidNewV4().String())
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
-	fmt.Println(string(body))
 	var resp struct {
 		Data  *TipNodeData `json:"data"`
 		Error Error        `json:"error"`
