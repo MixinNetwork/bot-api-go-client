@@ -100,14 +100,14 @@ func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
 	return resp.Data, nil
 }
 
-func ReadNetworkAsset(ctx context.Context, name string) (*Asset, error) {
+func ReadNetworkAsset(ctx context.Context, name string) (*NetworkAsset, error) {
 	body, err := Request(ctx, "GET", "/network/assets/"+name, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	var resp struct {
-		Data  *Asset `json:"data"`
-		Error Error  `json:"error"`
+		Data  *NetworkAsset `json:"data"`
+		Error Error         `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
