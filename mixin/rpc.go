@@ -112,7 +112,7 @@ func (raw signerInput) ReadLastMintDistribution(group string) (*common.MintDistr
 }
 
 func SignTransaction(account common.Address, raw signerInput) (*common.SignedTransaction, error) {
-	tx := common.NewTransaction(raw.Asset)
+	tx := common.NewTransactionV2(raw.Asset)
 	for _, in := range raw.Inputs {
 		if in.Deposit != nil {
 			tx.AddDepositInput(in.Deposit)
