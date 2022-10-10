@@ -14,6 +14,7 @@ type DepositEntry struct {
 type Asset struct {
 	AssetId        string         `json:"asset_id"`
 	ChainId        string         `json:"chain_id"`
+	FeeAssetId     string         `json:"fee_asset_id"`
 	Symbol         string         `json:"symbol"`
 	Name           string         `json:"name"`
 	IconURL        string         `json:"icon_url"`
