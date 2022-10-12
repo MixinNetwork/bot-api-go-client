@@ -171,17 +171,17 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (str
 	return hex.EncodeToString(d.Marshal()), nil
 }
 
-func SentRawTransaction(node string, raw string) error {
+func SentRawTransaction(node string, raw string) (string, error) {
 	data, err := callRPC(node, "sendrawtransaction", []interface{}{raw})
 	if err != nil {
-		return err
+		return "", err
 	}
 	var resp struct {
 		Hash string `json:"hash"`
 	}
 	err = json.Unmarshal(data, &resp)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return resp.Hash, nil
 }
