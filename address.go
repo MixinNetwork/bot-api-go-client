@@ -78,7 +78,7 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 
 	var resp struct {
 		Data  *Address `json:"data"`
-		Error *Error   `json:"error"`
+		Error Error   `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
