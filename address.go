@@ -23,6 +23,7 @@ type Address struct {
 	Tag         string `json:"tag"`
 	Fee         string `json:"fee"`
 	Reserve     string `json:"reserve"`
+	Dust        string `json:"dust"`
 	UpdatedAt   string `json:"updated_at"`
 }
 
@@ -78,7 +79,7 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 
 	var resp struct {
 		Data  *Address `json:"data"`
-		Error Error   `json:"error"`
+		Error Error    `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
