@@ -9,26 +9,31 @@ import (
 )
 
 type Snapshot struct {
-	Type           string    `json:"type"`
-	SnapshotId     string    `json:"snapshot_id"`
-	AssetId        string    `json:"asset_id"`
-	Amount         string    `json:"amount"`
-	OpeningBalance string    `json:"opening_balance"`
-	ClosingBalance string    `json:"closing_balance"`
-	CreatedAt      time.Time `json:"created_at"`
+	Type            string    `json:"type"`
+	SnapshotId      string    `json:"snapshot_id"`
+	AssetId         string    `json:"asset_id"`
+	Amount          string    `json:"amount"`
+	OpeningBalance  string    `json:"opening_balance"`
+	ClosingBalance  string    `json:"closing_balance"`
+	TransactionHash string    `json:"transaction_hash,omitempty"`
+	SnapshotHash    string    `json:"snapshot_hash,omitempty"`
+	SnapshotAt      time.Time `json:"snapshot_at,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+
 	// deposit &  withdrawal
-	TransactionHash string `json:"transaction_hash,omitempty"`
-	OutputIndex     int64  `json:"output_index,omitempty"`
-	Sender          string `json:"sender,omitempty"`
-	Receiver        string `json:"receiver,omitempty"`
-	// transfer
-	SnapshotHash  string    `json:"snapshot_hash,omitempty"`
-	SnapshotAt    time.Time `json:"snapshot_at,omitempty"`
-	OpponentId    string    `json:"opponent_id,omitempty"`
-	TraceId       string    `json:"trace_id,omitempty"`
-	Memo          string    `json:"memo,omitempty"`
-	Confirmations int64     `json:"confirmations,omitempty"`
-	State         string    `json:"state,omitempty"`
+	OutputIndex int64  `json:"output_index,omitempty"` // deposit
+	Sender      string `json:"sender,omitempty"`       // deposit
+	OpponentId  string `json:"opponent_id,omitempty"`  // transfer
+	TraceId     string `json:"trace_id,omitempty"`     // transfer & raw & withdrawal
+	Memo        string `json:"memo,omitempty"`         // transfer & raw & withdrawal
+
+	OpponentKey               string   `json:"opponent_key"`       // raw
+	OpponentMultisigReceivers []string `json:"opponent_receivers"` // raw
+	OpponentMultisigThreshold int64    `json:"opponent_threshold"` // raw
+	State                     string   `json:"state"`              // raw & withdrawal
+	// withdrawal
+	Receiver      string `json:"receiver,omitempty"`
+	Confirmations int64  `json:"confirmations,omitempty"`
 	Fee           struct {
 		Amount  string `json:"amount"`
 		AssetId string `json:"asset_id"`
