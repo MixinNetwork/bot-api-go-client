@@ -6,8 +6,8 @@ github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599 h1:uOOXlMkB
 github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599/go.mod h1:TASJGXNi4CK9bh2AOQFpVe7r3//CBuZJTNlJYzTXRUk=
 github.com/MixinNetwork/mixin v0.14.15 h1:4V+6VF4EYWKU0EBZc+yzuEwfnFH6sb5RbAKqtGi6JuE=
 github.com/MixinNetwork/mixin v0.14.15/go.mod h1:PxRW0yz74JPELxYNJfuPzmciArZTOdENDh1hdAndCvc=
-github.com/MixinNetwork/nfo v0.1.2 h1:JhC99sQB/Va7NR18YAK5mtRcI6sxCfck7JI4ujZGp3c=
-github.com/MixinNetwork/nfo v0.1.2/go.mod h1:tjUPjOObF5h2Xr8fDVlP/4OzQeULIa61Nl9f6DYU8/Q=
+github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1 h1:wceqyyRfgMY/iFWzrRauJpA6jKW28FRRKkO5mhJljtc=
+github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1/go.mod h1:9QG8Xh+694xnJN98z2mOIpOEiw0LQPeTiijwLVTX1hI=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
 github.com/btcsuite/btcd v0.20.1-beta/go.mod h1:wVuoA8VJLEcwgqHBwHmzLRazpKxTv13Px/pDuV7OomQ=
 github.com/btcsuite/btclog v0.0.0-20170628155309-84c8d2346e9f/go.mod h1:TdznJufoqS23FtqVCzL0ZqgP5MqXbb4fg/WgDys70nA=
