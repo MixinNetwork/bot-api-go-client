@@ -12,7 +12,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.1
-	golang.org/x/crypto v0.2.0
+	golang.org/x/crypto v0.3.0
 	gopkg.in/urfave/cli.v1 v1.20.0
 )
 
