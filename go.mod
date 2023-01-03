@@ -5,7 +5,7 @@ go 1.19
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599
-	github.com/MixinNetwork/mixin v0.14.16-0.20221113134535-6999a3097fec
+	github.com/MixinNetwork/mixin v0.14.18
 	github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1
 	github.com/gofrs/uuid v4.3.1+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
@@ -17,7 +17,7 @@ require (
 )
 
 require (
-	github.com/MixinNetwork/mobilecoin-account v0.0.1 // indirect
+	github.com/MixinNetwork/mobilecoin-account v0.0.2 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/bwesterb/go-ristretto v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -26,8 +26,8 @@ require (
 	github.com/fox-one/msgpack v1.0.0 // indirect
 	github.com/go-resty/resty/v2 v2.7.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/klauspost/compress v1.15.11 // indirect
-	github.com/klauspost/cpuid/v2 v2.0.12 // indirect
+	github.com/klauspost/compress v1.15.13 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
 	github.com/oxtoacart/bpool v0.0.0-20190530202638-03653db5a59c // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
