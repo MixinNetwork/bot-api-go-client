@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.5.0
 	gopkg.in/urfave/cli.v1 v1.20.0
+	nhooyr.io/websocket v1.8.7
 )
 
 require (
