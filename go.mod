@@ -7,7 +7,7 @@ require (
 	github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599
 	github.com/MixinNetwork/mixin v0.14.18
 	github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1
-	github.com/gofrs/uuid v4.3.1+incompatible
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/pkg/errors v0.9.1
