@@ -24,6 +24,15 @@ type LiveMessagePayload struct {
 	Url      string `json:"url"`
 }
 
+type ImageMessagePayload struct {
+	AttachmentId string `json:"attachment_id"`
+	Width        int    `json:"width"`
+	Height       int    `json:"height"`
+	MimeType     string `json:"mime_type"`
+	Thumbnail    string `json:"thumbnail"`
+	Size         int64  `json:"size"`
+}
+
 type RecallMessagePayload struct {
 	MessageId string `json:"message_id"`
 }
