@@ -12,12 +12,16 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"io"
+	"log"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -84,6 +88,12 @@ func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) 
 	}
 
 	pinByte := []byte(pin)
+	if len(pin) > 6 {
+		pinByte, err = hex.DecodeString(pin)
+		if err != nil {
+			return "", err
+		}
+	}
 	timeBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
 	pinByte = append(pinByte, timeBytes...)
@@ -132,6 +142,51 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 		return nil, err
 	}
 	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func VerifyPINTip(ctx context.Context, uid, pinToken, sessionId, privateKey, privateTip string) (*User, error) {
+	TIPVerify := "TIP:VERIFY:"
+	timestamp := time.Now().UnixNano()
+	tb := []byte(fmt.Sprintf("%s%032d", TIPVerify, timestamp))
+	privateTipBuf, err := hex.DecodeString(privateTip)
+	if err != nil {
+		return nil, err
+	}
+	sig := ed25519.Sign(ed25519.PrivateKey(privateTipBuf), tb)
+	source, err := EncryptEd25519PIN(hex.EncodeToString(sig), pinToken, privateKey, uint64(timestamp))
+	if err != nil {
+		return nil, err
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"pin_base64": source,
+		"timestamp":  timestamp,
+	})
+	if err != nil {
+		return nil, err
+	}
+	path := "/pin/verify"
+	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	id := uuid.Must(uuid.NewV4()).String()
+	log.Println(id)
+	body, err := RequestWithId(ctx, "POST", path, data, token, id)
 	if err != nil {
 		return nil, err
 	}
