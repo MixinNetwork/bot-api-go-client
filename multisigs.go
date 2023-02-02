@@ -20,6 +20,7 @@ type MultisigUTXO struct {
 	Members         []string  `json:"members"`
 	Memo            string    `json:"memo"`
 	State           string    `json:"state"`
+	Sender          string    `json:"sender"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 	SignedBy        string    `json:"signed_by"`
