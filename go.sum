@@ -4,8 +4,8 @@ filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5E
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599 h1:uOOXlMkBy67dhzuAHMYgfu5Y+8roipnSeCKCEXC1HMo=
 github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599/go.mod h1:TASJGXNi4CK9bh2AOQFpVe7r3//CBuZJTNlJYzTXRUk=
-github.com/MixinNetwork/mixin v0.14.19 h1:b8e+l8tvg8v/gfRISA1un2tUTAVj3cf79nPbNG7FLw4=
-github.com/MixinNetwork/mixin v0.14.19/go.mod h1:1hLiDh8gs/yhsoFG2/ocAcvO7AEiVYYMLO+cW5QmgbI=
+github.com/MixinNetwork/mixin v0.14.20 h1:9917D7LYazt4RjxOIHwwBHIyA+vMrwAI9OSvgj7tFVo=
+github.com/MixinNetwork/mixin v0.14.20/go.mod h1:WdSGoWlDnkvNGBI2LarTe42ZaeNcx1xF6AG/FzUV66Q=
 github.com/MixinNetwork/mobilecoin-account v0.0.2 h1:2Ib8UQft6KySAFhGU5kjQNOvVIENlH6QXgW6uC+od0I=
 github.com/MixinNetwork/mobilecoin-account v0.0.2/go.mod h1:53/Dnb+RQttRjnSEK0RKD28A1326P8lpw8Ydl50lk1g=
 github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1 h1:wceqyyRfgMY/iFWzrRauJpA6jKW28FRRKkO5mhJljtc=
@@ -88,7 +88,7 @@ github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.4/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
-github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
+github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=

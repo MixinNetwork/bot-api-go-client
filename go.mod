@@ -5,7 +5,7 @@ go 1.19
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599
-	github.com/MixinNetwork/mixin v0.14.19
+	github.com/MixinNetwork/mixin v0.14.20
 	github.com/MixinNetwork/nfo v0.1.3-0.20221031144236-95c762b92fd1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
