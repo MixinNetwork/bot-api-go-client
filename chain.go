@@ -1,5 +1,11 @@
 package bot
 
+import (
+	"context"
+	"encoding/json"
+	"time"
+)
+
 const (
 	BitcoinChainId         = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	BitcoinCashChainId     = "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0"
@@ -50,3 +56,57 @@ const (
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
 )
+
+type NetworkChain struct {
+	Type                   string    `json:"type"`
+	ChainId                string    `json:"chain_id"`
+	Name                   string    `json:"name"`
+	Symbol                 string    `json:"symbol"`
+	IconURL                string    `json:"icon_url"`
+	ManagedBlockHeight     int64     `json:"managed_block_height"`
+	DepositBlockHeight     int64     `json:"deposit_block_height"`
+	ExternalBlockHeight    int64     `json:"external_block_height"`
+	Threshold              int       `json:"threshold"`
+	WithdrawalTimestamp    time.Time `json:"withdrawal_timestamp"`
+	WithdrawalPendingCount int64     `json:"withdrawal_pending_count"`
+	WithdrawalFee          string    `json:"withdrawal_fee"`
+	IsSynchronized         bool      `json:"is_synchronized"`
+}
+
+func ReadNetworkChainById(ctx context.Context, chainId string) (*NetworkChain, error) {
+	body, err := Request(ctx, "GET", "/network/chains/"+chainId, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *NetworkChain `json:"data"`
+		Error Error         `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func ReadNetworkChains(ctx context.Context, chainId string) ([]*NetworkChain, error) {
+	body, err := Request(ctx, "GET", "/network/chains", nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  []*NetworkChain `json:"data"`
+		Error Error           `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
