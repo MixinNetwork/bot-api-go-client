@@ -188,12 +188,13 @@ func EncryptMessageData(data string, sessions []*Session, privateKey string) (st
 		if err != nil {
 			return "", err
 		}
-		var dst, priv, clientPub [32]byte
-		copy(clientPub[:], clientPublic[:])
+		var priv [32]byte
 		PrivateKeyToCurve25519(&priv, private)
-		curve25519.ScalarMult(&dst, &priv, &clientPub)
-
-		block, err := aes.NewCipher(dst[:])
+		dst, err := curve25519.X25519(priv[:], clientPublic)
+		if err != nil {
+			return "", err
+		}
+		block, err := aes.NewCipher(dst)
 		if err != nil {
 			return "", err
 		}
@@ -246,10 +247,14 @@ func DecryptMessageData(data string, sessionId, private string) (string, error) 
 			if err != nil {
 				return "", err
 			}
-			var dst, priv, pub [32]byte
+			var priv [32]byte
+			var pub []byte
 			copy(pub[:], bytes[3:35])
 			PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
-			curve25519.ScalarMult(&dst, &priv, &pub)
+			dst, err := curve25519.X25519(priv[:], pub)
+			if err != nil {
+				return "", err
+			}
 
 			block, err := aes.NewCipher(dst[:])
 			if err != nil {
