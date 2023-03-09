@@ -1,7 +1,7 @@
 filippo.io/edwards25519 v1.0.0 h1:0wAIcmJUqRdI8IJ/3eGi5/HwXZWPujYXXlkrQogz0Ek=
 filippo.io/edwards25519 v1.0.0/go.mod h1:N1IkdkCkiLB6tki+MYJoSx2JTY9NUlxZE7eHn5EwJns=
-github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599 h1:uOOXlMkBy67dhzuAHMYgfu5Y+8roipnSeCKCEXC1HMo=
-github.com/MixinNetwork/go-number v0.0.0-20221017091207-edbf8b54c599/go.mod h1:TASJGXNi4CK9bh2AOQFpVe7r3//CBuZJTNlJYzTXRUk=
+github.com/MixinNetwork/go-number v0.1.0 h1:rxXG00MFa6w+1dyduacZQsbmHPR3duZNSgAXgXtkMBw=
+github.com/MixinNetwork/go-number v0.1.0/go.mod h1:TASJGXNi4CK9bh2AOQFpVe7r3//CBuZJTNlJYzTXRUk=
 github.com/MixinNetwork/mixin v0.14.20 h1:9917D7LYazt4RjxOIHwwBHIyA+vMrwAI9OSvgj7tFVo=
 github.com/MixinNetwork/mixin v0.14.20/go.mod h1:WdSGoWlDnkvNGBI2LarTe42ZaeNcx1xF6AG/FzUV66Q=
 github.com/MixinNetwork/mobilecoin-account v0.0.2 h1:2Ib8UQft6KySAFhGU5kjQNOvVIENlH6QXgW6uC+od0I=
