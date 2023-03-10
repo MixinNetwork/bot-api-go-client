@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -42,6 +43,11 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 	})
 	if err != nil {
 		return nil, err
+	}
+	if category == "CONTACT" {
+		if len(participants) != 1 {
+			return nil, fmt.Errorf("bad particpants members length %d", len(participants))
+		}
 	}
 	accessToken, err := SignAuthenticationToken(uid, sid, key, "POST", "/conversations", string(params))
 	if err != nil {
