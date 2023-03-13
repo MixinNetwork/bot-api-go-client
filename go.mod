@@ -5,7 +5,7 @@ go 1.19
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.1.0
-	github.com/MixinNetwork/mixin v0.14.20
+	github.com/MixinNetwork/mixin v0.14.21
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
@@ -17,12 +17,12 @@ require (
 )
 
 require (
-	github.com/MixinNetwork/mobilecoin-account v0.0.2 // indirect
+	github.com/MixinNetwork/mobilecoin-account v0.0.3 // indirect
 	github.com/bwesterb/go-ristretto v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/blake2b v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/klauspost/compress v1.15.15 // indirect
+	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
