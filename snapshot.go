@@ -55,10 +55,12 @@ type SnapshotShort struct {
 		AssetKey string `json:"asset_key"`
 		IconUrl  string `json:"icon_url"`
 	} `json:"asset"`
-	CreatedAt  time.Time `json:"created_at"`
-	TraceId    string    `json:"trace_id"`
-	OpponentId string    `json:"opponent_id"`
-	Memo       string    `json:"data"`
+	State        string    `json:"state"`
+	SnapshotHash string    `json:"snapshot_hash"`
+	CreatedAt    time.Time `json:"created_at"`
+	TraceId      string    `json:"trace_id"`
+	OpponentId   string    `json:"opponent_id"`
+	Memo         string    `json:"data"`
 }
 
 func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
