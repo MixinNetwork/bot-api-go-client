@@ -190,9 +190,13 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	path := "/network/snapshots?" + v.Encode()
-	accessToken, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
-	if err != nil {
-		return nil, err
+	accessToken := ""
+	if sessionKey != "" {
+		var err error
+		accessToken, err = SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+		if err != nil {
+			return nil, err
+		}
 	}
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
