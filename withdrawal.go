@@ -12,9 +12,13 @@ import (
 type WithdrawalInput struct {
 	AddressId string
 	Amount    number.Decimal
+	Fee       string
 	TraceId   string
 	Memo      string
-	Fee       string
+
+	AssetId     string
+	Destination string
+	Tag         string
 }
 
 func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
@@ -33,6 +37,10 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 		"memo":       in.Memo,
 		"fee":        in.Fee,
 		"pin":        encryptedPIN,
+
+		"asset_id":    in.AssetId,
+		"destination": in.Destination,
+		"tag":         in.Tag,
 	})
 	if err != nil {
 		return nil, err
