@@ -72,7 +72,7 @@ func TIPBodyForVerify(timestamp int64) []byte {
 	return []byte(fmt.Sprintf("%s%032d", TIPVerify, timestamp))
 }
 
-func tipBodyForRawTransactionCreate(assetId string, opponentKey string, opponentReceivers []string, opponentThreshold int64, amount number.Decimal, traceId, memo string) []byte {
+func TipBodyForRawTransactionCreate(assetId string, opponentKey string, opponentReceivers []string, opponentThreshold int64, amount number.Decimal, traceId, memo string) []byte {
 	body := assetId + opponentKey
 	for _, or := range opponentReceivers {
 		body = body + or
@@ -80,42 +80,42 @@ func tipBodyForRawTransactionCreate(assetId string, opponentKey string, opponent
 	body = body + fmt.Sprint(opponentThreshold)
 	body = body + amount.Persist()
 	body = body + traceId + memo
-	return tipBody(TIPRawTransactionCreate + body)
+	return TipBody(TIPRawTransactionCreate + body)
 }
 
-func tipBodyForWithdrawalCreate(addressId string, amount, fee number.Decimal, traceId, memo string) []byte {
+func TipBodyForWithdrawalCreate(addressId string, amount, fee number.Decimal, traceId, memo string) []byte {
 	body := addressId + amount.Persist() + fee.Persist()
 	body = body + traceId + memo
-	return tipBody(TIPWithdrawalCreate + body)
+	return TipBody(TIPWithdrawalCreate + body)
 }
 
-func tipBodyForTransfer(assetId string, counterUserId string, amount number.Decimal, traceId, memo string) []byte {
+func TipBodyForTransfer(assetId string, counterUserId string, amount number.Decimal, traceId, memo string) []byte {
 	body := assetId + counterUserId + amount.Persist()
 	body = body + traceId + memo
-	return tipBody(TIPTransferCreate + body)
+	return TipBody(TIPTransferCreate + body)
 }
 
-func tipBodyForPhoneNumberUpdate(verificationId, code string) []byte {
+func TipBodyForPhoneNumberUpdate(verificationId, code string) []byte {
 	body := verificationId + code
-	return tipBody(TIPPhoneNumberUpdate + body)
+	return TipBody(TIPPhoneNumberUpdate + body)
 }
 
-func tipBodyForEmergencyContactCreate(verificationId, code string) []byte {
+func TipBodyForEmergencyContactCreate(verificationId, code string) []byte {
 	body := verificationId + code
-	return tipBody(TIPEmergencyContactCreate + body)
+	return TipBody(TIPEmergencyContactCreate + body)
 }
 
-func tipBodyForAddressAdd(assetId string, publicKey, keyTag, name string) []byte {
+func TipBodyForAddressAdd(assetId string, publicKey, keyTag, name string) []byte {
 	body := assetId + publicKey + keyTag + name
-	return tipBody(TIPAddressAdd + body)
+	return TipBody(TIPAddressAdd + body)
 }
 
-func tipBodyForProvisioningUpdate(deviceId string, secret string) []byte {
+func TipBodyForProvisioningUpdate(deviceId string, secret string) []byte {
 	body := deviceId + secret
-	return tipBody(TIPProvisioningUpdate + body)
+	return TipBody(TIPProvisioningUpdate + body)
 }
 
-func tipBody(s string) []byte {
+func TipBody(s string) []byte {
 	sum := sha256.Sum256([]byte(s))
 	return sum[:]
 }

@@ -23,7 +23,7 @@ type WithdrawalInput struct {
 
 func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
 	if in.Amount.Exhausted() {
-		return nil, fmt.Errorf("Amount negative")
+		return nil, fmt.Errorf("amount negative")
 	}
 
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))

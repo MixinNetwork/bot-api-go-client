@@ -32,7 +32,7 @@ const (
 )
 
 func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, sessionKey string) (*User, error) {
-	data, err := json.Marshal(map[string]string{
+	data, _ := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
 		"full_name":      fullName,
 	})
@@ -107,7 +107,7 @@ func SearchUser(ctx context.Context, mixinId, uid, sid, sessionKey string) (*Use
 }
 
 func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, sessionKey string) error {
-	data, err := json.Marshal(map[string]string{
+	data, _ := json.Marshal(map[string]string{
 		"old_pin": oldEncryptedPin,
 		"pin":     encryptedPin,
 	})
@@ -167,6 +167,9 @@ func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBas
 
 	path := "/me"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
@@ -197,6 +200,9 @@ func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageS
 	}
 	path := "/me/preferences"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
@@ -226,6 +232,9 @@ func Relationship(ctx context.Context, uid, sid, privateKey string, userId, acti
 
 	path := "/relationships"
 	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)

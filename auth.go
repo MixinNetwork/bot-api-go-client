@@ -36,7 +36,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	if err != nil {
 		block, _ := pem.Decode([]byte(privateKey))
 		if block == nil {
-			return "", fmt.Errorf("Bad RSA private pem format %s", privateKey)
+			return "", fmt.Errorf("bad RSA private pem format %s", privateKey)
 		}
 		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err != nil {
@@ -47,7 +47,7 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 	}
 	// more validate the private key
 	if len(priv) != 64 {
-		return "", fmt.Errorf("Bad ed25519 private key %s", priv)
+		return "", fmt.Errorf("bad ed25519 private key %s", priv)
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	return token.SignedString(ed25519.PrivateKey(priv))

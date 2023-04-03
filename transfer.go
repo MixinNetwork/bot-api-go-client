@@ -39,7 +39,7 @@ type RawTransaction struct {
 
 func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) (*RawTransaction, error) {
 	if in.Amount.Exhausted() {
-		return nil, fmt.Errorf("Amount exhausted")
+		return nil, fmt.Errorf("amount exhausted")
 	}
 
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
@@ -84,7 +84,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 
 func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) (*RawTransaction, error) {
 	if in.Amount.Exhausted() {
-		return nil, fmt.Errorf("Amount exhausted")
+		return nil, fmt.Errorf("amount exhausted")
 	}
 
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
@@ -129,7 +129,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 
 func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
 	if in.Amount.Exhausted() {
-		return nil, fmt.Errorf("Amount exhausted")
+		return nil, fmt.Errorf("amount exhausted")
 	}
 
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
