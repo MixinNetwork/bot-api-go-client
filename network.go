@@ -16,7 +16,7 @@ func CallMixinRPC(ctx context.Context, method string, params ...interface{}) ([]
 		return nil, err
 	}
 
-	body, err := Request(ctx, "GET", "/external/proxy", b, "")
+	body, err := Request(ctx, "POST", "/external/proxy", b, "")
 	if err != nil {
 		return nil, err
 	}
