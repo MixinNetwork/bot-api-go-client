@@ -126,6 +126,31 @@ func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey s
 	return SnapshotByToken(ctx, snapshotId, token)
 }
 
+func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey string) (*Snapshot, error) {
+	path := "/snapshots/trace/" + traceId
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := Request(ctx, "GET", path, nil, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *Snapshot `json:"data"`
+		Error Error     `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
 	path := "/snapshots/" + snapshotId
 	body, err := Request(ctx, "GET", path, nil, accessToken)
