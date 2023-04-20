@@ -1,12 +1,17 @@
 package bot
 
 import (
+	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
 
 	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/mixin/common"
+	"github.com/gofrs/uuid"
+	"github.com/vmihailenco/msgpack/v4"
 )
 
 type ObjectInput struct {
@@ -40,7 +45,9 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token)
+
+	id := UuidNewV4().String()
+	body, err := RequestWithId(ctx, "POST", path, data, token, id)
 	if err != nil {
 		return nil, err
 	}
@@ -57,4 +64,46 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func EstimateObjectFee(memo string) number.Decimal {
+	extra := EncodeMixinExtra(uuid.Nil.String(), memo)
+	return number.FromString(fmt.Sprint(len(extra)/1024 + 2)).Mul(number.FromString("0.001"))
+}
+
+type MixinExtraPack struct {
+	T uuid.UUID
+	M string `msgpack:",omitempty"`
+}
+
+func EncodeMixinExtra(traceId, memo string) []byte {
+	id, err := uuid.FromString(traceId)
+	if err != nil {
+		panic(err)
+	}
+	p := &MixinExtraPack{T: id, M: memo}
+	b := MsgpackMarshalPanic(p)
+	if len(b) < common.ExtraSizeGeneralLimit {
+		return b
+	}
+	p.M = ""
+	return MsgpackMarshalPanic(p)
+}
+
+func MsgpackMarshalPanic(val interface{}) []byte {
+	var buf bytes.Buffer
+	enc := msgpack.NewEncoder(&buf).UseCompactEncoding(true).SortMapKeys(true)
+	err := enc.Encode(val)
+	if err != nil {
+		panic(fmt.Errorf("MsgpackMarshalPanic: %#v %s", val, err.Error()))
+	}
+	return buf.Bytes()
+}
+
+func MsgpackUnmarshal(data []byte, val interface{}) error {
+	err := msgpack.Unmarshal(data, val)
+	if err == nil {
+		return err
+	}
+	return fmt.Errorf("MsgpackUnmarshal: %s %s", hex.EncodeToString(data), err.Error())
 }
