@@ -6,17 +6,21 @@ import (
 	"net/url"
 )
 
-func CallMixinRPC(ctx context.Context, method string, params ...interface{}) ([]byte, error) {
+func CallMixinRPC(ctx context.Context, uid, sid, sessionKey, method string, params ...interface{}) ([]byte, error) {
 	p := map[string]interface{}{
 		"method": method,
 		"params": params,
 	}
-	b, err := json.Marshal(p)
+	data, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := Request(ctx, "POST", "/external/proxy", b, "")
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/external/proxy", string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", "/external/proxy", data, token)
 	if err != nil {
 		return nil, err
 	}
