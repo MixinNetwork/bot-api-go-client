@@ -10,7 +10,8 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
+	github.com/vmihailenco/msgpack/v4 v4.3.12
 	golang.org/x/crypto v0.8.0
 	gopkg.in/urfave/cli.v1 v1.20.0
 	nhooyr.io/websocket v1.8.7
@@ -28,7 +29,6 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/vmihailenco/msgpack/v4 v4.3.12 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
 	golang.org/x/net v0.9.0 // indirect
