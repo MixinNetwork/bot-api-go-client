@@ -52,6 +52,6 @@ func testTransfer() {
 		return
 	}
 	fmt.Println(tx)
-	err = SentRawTransaction(nodes[rand.Intn(len(nodes))], tx)
-	fmt.Println(err)
+	hash, err = SendRawTransaction(nodes[rand.Intn(len(nodes))], tx)
+	fmt.Println(hash, err)
 }

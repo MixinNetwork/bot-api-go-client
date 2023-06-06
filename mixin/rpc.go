@@ -171,7 +171,7 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (str
 	return hex.EncodeToString(d.Marshal()), nil
 }
 
-func SentRawTransaction(node string, raw string) (string, error) {
+func SendRawTransaction(node string, raw string) (string, error) {
 	data, err := callRPC(node, "sendrawtransaction", []interface{}{raw})
 	if err != nil {
 		return "", err
