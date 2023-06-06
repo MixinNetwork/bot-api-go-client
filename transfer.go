@@ -20,6 +20,7 @@ type TransferInput struct {
 		Receivers []string
 		Threshold int64
 	}
+	References []string
 }
 
 type RawTransaction struct {
@@ -49,6 +50,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 	data, err := json.Marshal(map[string]interface{}{
 		"asset_id":          in.AssetId,
 		"opponent_multisig": map[string]interface{}{"receivers": in.OpponentMultisig.Receivers, "threshold": in.OpponentMultisig.Threshold},
+		"references":        in.References,
 		"amount":            in.Amount.Persist(),
 		"trace_id":          in.TraceId,
 		"memo":              in.Memo,
@@ -94,6 +96,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 	data, err := json.Marshal(map[string]interface{}{
 		"asset_id":     in.AssetId,
 		"opponent_key": in.OpponentKey,
+		"references":   in.References,
 		"amount":       in.Amount.Persist(),
 		"trace_id":     in.TraceId,
 		"memo":         in.Memo,
