@@ -33,6 +33,15 @@ type Conversation struct {
 	ParticipantSessions []ParticipantSessionView `json:"participant_sessions"`
 }
 
+func CreateContactConversation(ctx context.Context, participantID, uid, sid, key string) (*Conversation, error) {
+	participants := []Participant{
+		{
+			UserId: participantID,
+		},
+	}
+	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, uid), "", "", participants, uid, sid, key)
+}
+
 func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, uid, sid, key string) (*Conversation, error) {
 	params, err := json.Marshal(map[string]interface{}{
 		"category":        category,
