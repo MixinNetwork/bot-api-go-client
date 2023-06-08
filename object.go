@@ -68,7 +68,7 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 
 func EstimateObjectFee(memo string) number.Decimal {
 	extra := EncodeMixinExtra(uuid.Nil.String(), memo)
-	return number.FromString(fmt.Sprint(len(extra)/1024 + 2)).Mul(number.FromString("0.001"))
+	return number.FromString(fmt.Sprint(len(extra)/1024 + 2)).Mul(number.FromString("0.0015"))
 }
 
 type MixinExtraPack struct {
@@ -83,11 +83,10 @@ func EncodeMixinExtra(traceId, memo string) []byte {
 	}
 	p := &MixinExtraPack{T: id, M: memo}
 	b := MsgpackMarshalPanic(p)
-	if len(b) < common.ExtraSizeGeneralLimit {
-		return b
+	if len(b) >= common.ExtraSizeStorageCapacity {
+		panic(memo)
 	}
-	p.M = ""
-	return MsgpackMarshalPanic(p)
+	return b
 }
 
 func MsgpackMarshalPanic(val interface{}) []byte {
