@@ -31,12 +31,35 @@ const (
 	RelationshipActionUnblock = "UNBLOCK"
 )
 
-func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, sessionKey string) (*User, error) {
+func CreateUserSimple(ctx context.Context, sessionSecret, fullName string) (*User, error) {
 	data, _ := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
 		"full_name":      fullName,
 	})
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/users", string(data))
+	body, err := SimpleRequest(ctx, "POST", "/users", data)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *User `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, privateKey string) (*User, error) {
+	data, _ := json.Marshal(map[string]string{
+		"session_secret": sessionSecret,
+		"full_name":      fullName,
+	})
+	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", "/users", string(data))
 	if err != nil {
 		return nil, err
 	}
