@@ -5,7 +5,7 @@ go 1.20
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.1.0
-	github.com/MixinNetwork/mixin v0.15.0
+	github.com/MixinNetwork/mixin v0.15.1
 	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
@@ -23,7 +23,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/blake2b v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/klauspost/compress v1.16.5 // indirect
+	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -31,12 +31,13 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1 // indirect
+	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/text v0.10.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
-	google.golang.org/grpc v1.55.0 // indirect
+	google.golang.org/grpc v1.56.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
