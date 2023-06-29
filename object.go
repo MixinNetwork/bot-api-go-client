@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"unicode/utf8"
 
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/mixin/common"
@@ -87,6 +88,21 @@ func EncodeMixinExtra(traceId, memo string) []byte {
 		panic(memo)
 	}
 	return b
+}
+
+func DecodeMixinExtra(b []byte) *MixinExtraPack {
+	var p MixinExtraPack
+	err := MsgpackUnmarshal(b, &p)
+	if err == nil && (p.M != "" || p.T.String() != uuid.Nil.String()) {
+		return &p
+	}
+
+	if utf8.Valid(b) {
+		p.M = string(b)
+	} else {
+		p.M = hex.EncodeToString(b)
+	}
+	return &p
 }
 
 func MsgpackMarshalPanic(val interface{}) []byte {
