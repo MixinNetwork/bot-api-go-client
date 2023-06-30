@@ -69,6 +69,9 @@ func EncryptPIN(pin, pinToken, sessionId, privateKey string, iterator uint64) (s
 }
 
 func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) (string, error) {
+	if pin == "" {
+		return "", nil
+	}
 	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err != nil {
 		return "", err

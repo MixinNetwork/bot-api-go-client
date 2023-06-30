@@ -3,11 +3,13 @@ package bot
 import (
 	"context"
 	"crypto/md5"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
+	"time"
 )
 
 type User struct {
@@ -127,6 +129,24 @@ func SearchUser(ctx context.Context, mixinId, uid, sid, sessionKey string) (*Use
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionKey string) error {
+	oldEncryptedPin, err := EncryptEd25519PIN(pin, pinToken, sessionKey, uint64(time.Now().UnixNano()))
+	if err != nil {
+		return err
+	}
+
+	pubTipBuf, err := hex.DecodeString(pubTip)
+	if err != nil {
+		return err
+	}
+	counter := make([]byte, 8)
+	binary.BigEndian.PutUint64(counter, 1)
+	pubTipBuf = append(pubTipBuf, counter...)
+	encryptedPin, err := EncryptEd25519PIN(hex.EncodeToString(pubTipBuf), pinToken, sessionKey, uint64(time.Now().UnixNano()))
+
+	return UpdatePin(ctx, oldEncryptedPin, encryptedPin, uid, sid, sessionKey)
 }
 
 func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, sessionKey string) error {

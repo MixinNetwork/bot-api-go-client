@@ -30,6 +30,7 @@ const (
 	TIPRawTransactionCreate     = "TIP:TRANSACTION:CREATE:"
 	TIPOAuthApprove             = "TIP:OAUTH:APPROVE:"
 	TIPProvisioningUpdate       = "TIP:PROVISIONING:UPDATE:"
+	TIPOwnershipTransfer        = "TIP:APP:OWNERSHIP:TRANSFER:"
 )
 
 type TipNodeData struct {
@@ -113,6 +114,10 @@ func TipBodyForAddressAdd(assetId string, publicKey, keyTag, name string) []byte
 func TipBodyForProvisioningUpdate(deviceId string, secret string) []byte {
 	body := deviceId + secret
 	return TipBody(TIPProvisioningUpdate + body)
+}
+
+func TipBodyForOwnershipTransfer(userId string) []byte {
+	return TipBody(TIPOwnershipTransfer + userId)
 }
 
 func TipBody(s string) []byte {
