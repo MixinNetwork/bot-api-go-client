@@ -145,6 +145,9 @@ func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionK
 	binary.BigEndian.PutUint64(counter, 1)
 	pubTipBuf = append(pubTipBuf, counter...)
 	encryptedPin, err := EncryptEd25519PIN(hex.EncodeToString(pubTipBuf), pinToken, sessionKey, uint64(time.Now().UnixNano()))
+	if err != nil {
+		return err
+	}
 
 	return UpdatePin(ctx, oldEncryptedPin, encryptedPin, uid, sid, sessionKey)
 }
