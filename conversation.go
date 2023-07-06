@@ -108,3 +108,32 @@ func ConversationShow(ctx context.Context, conversationId string, accessToken st
 	}
 	return &resp.Data, nil
 }
+
+func JoinConversation(ctx context.Context, conversationId, uid, sid, key string) (*Conversation, error) {
+	path := fmt.Sprintf("/conversations/%s/join", conversationId)
+	accessToken, err := SignAuthenticationToken(uid, sid, key, "POST", path, "")
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := Request(ctx, "POST", path, nil, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  Conversation `json:"data"`
+		Error Error        `json:"error"`
+	}
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		if resp.Error.Code == 401 {
+			return nil, AuthorizationError(ctx)
+		} else if resp.Error.Code == 403 {
+			return nil, ForbiddenError(ctx)
+		}
+		return nil, ServerError(ctx, resp.Error)
+	}
+	return &resp.Data, nil
+}
