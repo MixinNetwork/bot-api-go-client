@@ -206,3 +206,15 @@ func VerifyPINTip(ctx context.Context, uid, pinToken, sessionId, privateKey, pri
 	}
 	return resp.Data, nil
 }
+
+func signTipBody(body []byte, pin string) (string, error) {
+	pinBuf, err := hex.DecodeString(pin)
+	if err != nil {
+		return "", err
+	}
+	if len(pinBuf) != 64 {
+		return "", errors.New("invalid ed25519 private")
+	}
+	sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), body)
+	return hex.EncodeToString(sigBuf), nil
+}

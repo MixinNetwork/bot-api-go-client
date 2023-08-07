@@ -3,7 +3,6 @@ package bot
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -31,13 +30,11 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 		xin := "c94ac88f-4671-3976-b60a-09064f1811e8"
 		teamMixin := "773e5e77-4107-45c2-b648-8fc722ed77f5"
 		tipBody := TipBodyForRawTransactionCreate(xin, "", []string{teamMixin}, 64, in.Amount, in.TraceId, in.Memo)
-
-		pinBuf, err := hex.DecodeString(pin)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
 		if err != nil {
 			return nil, err
 		}
-		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
-		pin = hex.EncodeToString(sigBuf)
 	}
 
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))

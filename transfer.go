@@ -2,8 +2,6 @@ package bot
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -47,13 +45,11 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 
 	if len(pin) != 6 {
 		tipBody := TipBodyForRawTransactionCreate(in.AssetId, "", in.OpponentMultisig.Receivers, in.OpponentMultisig.Threshold, in.Amount, in.TraceId, in.Memo)
-
-		pinBuf, err := hex.DecodeString(pin)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
 		if err != nil {
 			return nil, err
 		}
-		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
-		pin = hex.EncodeToString(sigBuf)
 	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
@@ -103,13 +99,11 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 
 	if len(pin) != 6 {
 		tipBody := TipBodyForRawTransactionCreate(in.AssetId, in.OpponentKey, nil, 0, in.Amount, in.TraceId, in.Memo)
-
-		pinBuf, err := hex.DecodeString(pin)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
 		if err != nil {
 			return nil, err
 		}
-		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
-		pin = hex.EncodeToString(sigBuf)
 	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
@@ -159,13 +153,11 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 
 	if len(pin) != 6 {
 		tipBody := TipBodyForTransfer(in.AssetId, in.RecipientId, in.Amount, in.TraceId, in.Memo)
-
-		pinBuf, err := hex.DecodeString(pin)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
 		if err != nil {
 			return nil, err
 		}
-		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
-		pin = hex.EncodeToString(sigBuf)
 	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
