@@ -43,6 +43,14 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 		return nil, fmt.Errorf("amount exhausted")
 	}
 
+	if len(pin) != 6 {
+		tipBody := TipBodyForRawTransactionCreate(in.AssetId, "", in.OpponentMultisig.Receivers, in.OpponentMultisig.Threshold, in.Amount, in.TraceId, in.Memo)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -54,7 +62,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 		"amount":            in.Amount.Persist(),
 		"trace_id":          in.TraceId,
 		"memo":              in.Memo,
-		"pin":               encryptedPIN,
+		"pin_base64":        encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -89,6 +97,14 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 		return nil, fmt.Errorf("amount exhausted")
 	}
 
+	if len(pin) != 6 {
+		tipBody := TipBodyForRawTransactionCreate(in.AssetId, in.OpponentKey, nil, 0, in.Amount, in.TraceId, in.Memo)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -100,7 +116,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 		"amount":       in.Amount.Persist(),
 		"trace_id":     in.TraceId,
 		"memo":         in.Memo,
-		"pin":          encryptedPIN,
+		"pin_base64":   encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -135,6 +151,14 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 		return nil, fmt.Errorf("amount exhausted")
 	}
 
+	if len(pin) != 6 {
+		tipBody := TipBodyForTransfer(in.AssetId, in.RecipientId, in.Amount, in.TraceId, in.Memo)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -145,7 +169,7 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 		"amount":      in.Amount.Persist(),
 		"trace_id":    in.TraceId,
 		"memo":        in.Memo,
-		"pin":         encryptedPIN,
+		"pin_base64":  encryptedPIN,
 	})
 	if err != nil {
 		return nil, err

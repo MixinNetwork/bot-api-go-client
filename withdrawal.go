@@ -25,7 +25,15 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 	if in.Amount.Exhausted() {
 		return nil, fmt.Errorf("amount negative")
 	}
-
+	if len(pin) != 6 {
+		fee := number.FromString(in.Fee)
+		tipBody := TipBodyForWithdrawalCreate(in.AddressId, in.Amount, fee, in.TraceId, in.Memo)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -36,7 +44,7 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 		"trace_id":   in.TraceId,
 		"memo":       in.Memo,
 		"fee":        in.Fee,
-		"pin":        encryptedPIN,
+		"pin_base64": encryptedPIN,
 
 		"asset_id":    in.AssetId,
 		"destination": in.Destination,

@@ -142,7 +142,7 @@ func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKe
 
 func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey string) (*MultisigRequest, error) {
 	data, err := json.Marshal(map[string]string{
-		"pin": pin,
+		"pin_base64": pin,
 	})
 	if err != nil {
 		return nil, err
@@ -195,7 +195,7 @@ func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string)
 
 func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey string) error {
 	data, err := json.Marshal(map[string]string{
-		"pin": pin,
+		"pin_base64": pin,
 	})
 	if err != nil {
 		return err

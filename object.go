@@ -26,16 +26,27 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 		return nil, fmt.Errorf("amount exhausted")
 	}
 
+	if len(pin) != 6 {
+		xin := "c94ac88f-4671-3976-b60a-09064f1811e8"
+		teamMixin := "773e5e77-4107-45c2-b648-8fc722ed77f5"
+		tipBody := TipBodyForRawTransactionCreate(xin, "", []string{teamMixin}, 64, in.Amount, in.TraceId, in.Memo)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
 	}
 
 	data, err := json.Marshal(map[string]interface{}{
-		"amount":   in.Amount,
-		"trace_id": in.TraceId,
-		"memo":     in.Memo,
-		"pin":      encryptedPIN,
+		"amount":     in.Amount,
+		"trace_id":   in.TraceId,
+		"memo":       in.Memo,
+		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
 		return nil, err

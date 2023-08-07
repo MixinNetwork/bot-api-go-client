@@ -28,6 +28,14 @@ type Address struct {
 }
 
 func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, pin, pinToken string) (*Address, error) {
+	if len(pin) != 6 {
+		tipBody := TipBodyForAddressAdd(in.AssetId, in.Destination, in.Tag, in.Label)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return nil, err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -37,7 +45,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 		"label":       in.Label,
 		"destination": in.Destination,
 		"tag":         in.Tag,
-		"pin":         encryptedPIN,
+		"pin_base64":  encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -92,12 +100,20 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 }
 
 func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pinToken string) error {
+	if len(pin) != 6 {
+		tipBody := TipBody(TIPAddressRemove + addressId)
+		var err error
+		pin, err = signTipBody(tipBody, pin)
+		if err != nil {
+			return err
+		}
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"pin": encryptedPIN,
+		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
 		return err
