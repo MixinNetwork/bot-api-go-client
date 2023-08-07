@@ -29,7 +29,8 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 
 	if len(pin) != 6 {
 		xin := "c94ac88f-4671-3976-b60a-09064f1811e8"
-		tipBody := TipBodyForRawTransactionCreate(xin, "", []string{"773e5e77-4107-45c2-b648-8fc722ed77f5"}, 64, in.Amount, in.TraceId, in.Memo)
+		teamMixin := "773e5e77-4107-45c2-b648-8fc722ed77f5"
+		tipBody := TipBodyForRawTransactionCreate(xin, "", []string{teamMixin}, 64, in.Amount, in.TraceId, in.Memo)
 
 		pinBuf, err := hex.DecodeString(pin)
 		if err != nil {
