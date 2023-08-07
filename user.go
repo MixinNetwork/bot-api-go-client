@@ -154,8 +154,8 @@ func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionK
 
 func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, sessionKey string) error {
 	data, _ := json.Marshal(map[string]string{
-		"old_pin": oldEncryptedPin,
-		"pin":     encryptedPin,
+		"old_pin_base64": oldEncryptedPin,
+		"pin_base64":     encryptedPin,
 	})
 
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/pin/update", string(data))

@@ -54,7 +54,7 @@ func CreateMultisigTransaction(ctx context.Context, in *TransferInput, uid, sid,
 		"amount":            in.Amount.Persist(),
 		"trace_id":          in.TraceId,
 		"memo":              in.Memo,
-		"pin":               encryptedPIN,
+		"pin_base64":        encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func CreateTransaction(ctx context.Context, in *TransferInput, uid, sid, session
 		"amount":       in.Amount.Persist(),
 		"trace_id":     in.TraceId,
 		"memo":         in.Memo,
-		"pin":          encryptedPIN,
+		"pin_base64":   encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func CreateTransfer(ctx context.Context, in *TransferInput, uid, sid, sessionKey
 		"amount":      in.Amount.Persist(),
 		"trace_id":    in.TraceId,
 		"memo":        in.Memo,
-		"pin":         encryptedPIN,
+		"pin_base64":  encryptedPIN,
 	})
 	if err != nil {
 		return nil, err

@@ -37,7 +37,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 		"label":       in.Label,
 		"destination": in.Destination,
 		"tag":         in.Tag,
-		"pin":         encryptedPIN,
+		"pin_base64":  encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pi
 		return err
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"pin": encryptedPIN,
+		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
 		return err

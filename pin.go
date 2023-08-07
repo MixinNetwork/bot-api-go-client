@@ -134,7 +134,7 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 		return nil, err
 	}
 	data, err := json.Marshal(map[string]interface{}{
-		"pin": encryptedPIN,
+		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
 		return nil, err

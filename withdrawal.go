@@ -36,7 +36,7 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 		"trace_id":   in.TraceId,
 		"memo":       in.Memo,
 		"fee":        in.Fee,
-		"pin":        encryptedPIN,
+		"pin_base64": encryptedPIN,
 
 		"asset_id":    in.AssetId,
 		"destination": in.Destination,

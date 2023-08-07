@@ -32,10 +32,10 @@ func CreateObject(ctx context.Context, in *ObjectInput, uid, sid, sessionKey, pi
 	}
 
 	data, err := json.Marshal(map[string]interface{}{
-		"amount":   in.Amount,
-		"trace_id": in.TraceId,
-		"memo":     in.Memo,
-		"pin":      encryptedPIN,
+		"amount":     in.Amount,
+		"trace_id":   in.TraceId,
+		"memo":       in.Memo,
+		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
 		return nil, err
