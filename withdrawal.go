@@ -2,6 +2,8 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -25,7 +27,17 @@ func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessio
 	if in.Amount.Exhausted() {
 		return nil, fmt.Errorf("amount negative")
 	}
+	if len(pin) != 6 {
+		fee := number.FromString(in.Fee)
+		tipBody := TipBodyForWithdrawalCreate(in.AddressId, in.Amount, fee, in.TraceId, in.Memo)
 
+		pinBuf, err := hex.DecodeString(pin)
+		if err != nil {
+			return nil, err
+		}
+		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
+		pin = hex.EncodeToString(sigBuf)
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err

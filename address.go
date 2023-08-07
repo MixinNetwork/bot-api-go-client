@@ -2,6 +2,8 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -28,6 +30,16 @@ type Address struct {
 }
 
 func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, pin, pinToken string) (*Address, error) {
+	if len(pin) != 6 {
+		tipBody := TipBodyForAddressAdd(in.AssetId, in.Destination, in.Tag, in.Label)
+
+		pinBuf, err := hex.DecodeString(pin)
+		if err != nil {
+			return nil, err
+		}
+		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
+		pin = hex.EncodeToString(sigBuf)
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return nil, err
@@ -92,6 +104,16 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 }
 
 func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pinToken string) error {
+	if len(pin) != 6 {
+		tipBody := TipBody(TIPAddressRemove + addressId)
+
+		pinBuf, err := hex.DecodeString(pin)
+		if err != nil {
+			return err
+		}
+		sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
+		pin = hex.EncodeToString(sigBuf)
+	}
 	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
 	if err != nil {
 		return err
