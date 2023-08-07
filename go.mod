@@ -12,7 +12,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
 	github.com/vmihailenco/msgpack/v4 v4.3.12
-	golang.org/x/crypto v0.11.0
+	golang.org/x/crypto v0.12.0
 	gopkg.in/urfave/cli.v1 v1.20.0
 	nhooyr.io/websocket v1.8.7
 )
@@ -33,8 +33,8 @@ require (
 	github.com/zeebo/blake3 v0.2.3 // indirect
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	golang.org/x/net v0.11.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230629202037-9506855d4529 // indirect
 	google.golang.org/grpc v1.56.1 // indirect
