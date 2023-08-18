@@ -28,6 +28,12 @@ type NetworkAsset struct {
 	Liquidity      string  `json:"liquidity"`
 }
 
+type NetworkTicker struct {
+	Type     string `json:"type"`
+	PriceBTC string `json:"price_btc"`
+	PriceUSD string `json:"price_usd"`
+}
+
 func ReadNetworkAsset(ctx context.Context, name string) (*NetworkAsset, error) {
 	body, err := Request(ctx, "GET", "/network/assets/"+name, nil, "")
 	if err != nil {
@@ -36,6 +42,25 @@ func ReadNetworkAsset(ctx context.Context, name string) (*NetworkAsset, error) {
 	var resp struct {
 		Data  *NetworkAsset `json:"data"`
 		Error Error         `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func ReadNetworkTicker(ctx context.Context, assetId string) (*NetworkTicker, error) {
+	body, err := Request(ctx, "GET", "/network/ticker?asset="+assetId, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *NetworkTicker `json:"data"`
+		Error Error          `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
