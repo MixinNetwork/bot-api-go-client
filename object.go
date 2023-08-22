@@ -11,7 +11,7 @@ import (
 
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/mixin/common"
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 	"github.com/vmihailenco/msgpack/v4"
 )
 

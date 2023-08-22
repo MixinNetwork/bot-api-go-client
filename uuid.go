@@ -5,7 +5,7 @@ import (
 	"io"
 	"log"
 
-	"github.com/gofrs/uuid"
+	"github.com/gofrs/uuid/v5"
 )
 
 var Nil = uuid.Nil
