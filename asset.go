@@ -6,6 +6,8 @@ import (
 )
 
 const (
+	BTC        = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+	ETH        = "43d61dcd-e413-450d-80b8-101d5e903357"
 	USDT_ERC20 = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
 	USDC_ERC20 = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
 )
