@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -39,7 +38,6 @@ func Migrate(ctx context.Context, receiver, uid, sid, sessionKey, pin, pinToken 
 	if err != nil {
 		return nil, err
 	}
-	log.Println("data:", receiver, encryptedPIN, uid, sid, sessionKey)
 	data, err := json.Marshal(map[string]string{
 		"user_id":    receiver,
 		"pin_base64": encryptedPIN,
@@ -53,6 +51,37 @@ func Migrate(ctx context.Context, receiver, uid, sid, sessionKey, pin, pinToken 
 	if err != nil {
 		return nil, err
 	}
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *App  `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+// TODO
+func UpdateApp(ctx context.Context, id, homeURI, redirectURI, uid, sid, sessionKey string) (*App, error) {
+	data, _ := json.Marshal(map[string]string{
+		"redirect_uri": homeURI,
+		"home_uri":     redirectURI,
+	})
+	path := fmt.Sprintf("/apps/%s", id)
+
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", path, string(data))
+	if err != nil {
+		return nil, err
+	}
+
 	body, err := Request(ctx, "POST", path, data, token)
 	if err != nil {
 		return nil, err
