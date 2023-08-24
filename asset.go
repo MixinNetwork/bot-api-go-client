@@ -5,6 +5,11 @@ import (
 	"encoding/json"
 )
 
+const (
+	USDT_ERC20 = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
+	USDC_ERC20 = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
+)
+
 type DepositEntry struct {
 	Destination string   `json:"destination"`
 	Tag         string   `json:"tag"`
