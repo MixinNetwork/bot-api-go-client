@@ -9,7 +9,7 @@ import (
 
 func TestGetFiats(t *testing.T) {
 	assert := assert.New(t)
-	a, err := GetFiats(context.Background())
+	a, err := Fiats(context.Background())
 	assert.Nil(err)
 	println(len(a))
 }

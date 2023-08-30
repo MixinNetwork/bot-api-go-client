@@ -11,7 +11,7 @@ type Fiat struct {
 }
 
 func GetFiats(ctx context.Context) ([]*Fiat, error) {
-	body, err := SimpleRequest(ctx, "GET", "/fiats", nil)
+	body, err := SimpleRequest(ctx, "GET", "/external/fiats", nil)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -29,12 +29,8 @@ func GetFiats(ctx context.Context) ([]*Fiat, error) {
 	return resp.Data, nil
 }
 
-func Fiats(ctx context.Context, uid, sid, sessionKey string) ([]*Fiat, error) {
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", "/fiats", "")
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "GET", "/fiats", nil, token)
+func Fiats(ctx context.Context) ([]*Fiat, error) {
+	body, err := Request(ctx, "GET", "/external/fiats", nil, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
