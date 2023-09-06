@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.1.0
-	github.com/MixinNetwork/mixin v0.16.5
+	github.com/MixinNetwork/mixin v0.16.7
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
@@ -20,13 +20,12 @@ require (
 )
 
 require (
-	github.com/MixinNetwork/mobilecoin-account v0.0.4 // indirect
+	github.com/MixinNetwork/mobilecoin-account v0.0.5 // indirect
 	github.com/MixinNetwork/msgpack/v4 v4.4.0 // indirect
 	github.com/bwesterb/go-ristretto v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/blake2b v1.0.0 // indirect
 	github.com/gobwas/ws v1.2.1 // indirect
-	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
@@ -39,7 +38,7 @@ require (
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230815205213-6bfd019c3878 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/grpc v1.57.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
