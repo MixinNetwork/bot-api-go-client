@@ -76,4 +76,4 @@ func main() {
 
 For more examples, see [examples](https://github.com/MixinNetwork/bot-api-go-client/blob/master/examples/wallet.go)。
 
-githook
+githook test
