@@ -63,6 +63,45 @@ type SnapshotShort struct {
 	Memo         string    `json:"data"`
 }
 
+func SnapshotsByOAuth(ctx context.Context, limit int, offset, assetId, order, appID, authorizationID, privateKey, scp string) ([]*Snapshot, error) {
+	v := url.Values{}
+	v.Set("limit", strconv.Itoa(limit))
+	if offset != "" {
+		v.Set("offset", offset)
+	}
+	if assetId != "" {
+		v.Set("asset", assetId)
+	}
+	if order != "" {
+		v.Set("order", order)
+	}
+
+	requestID := UuidNewV4().String()
+	path := "/snapshots?" + v.Encode()
+	token, err := SignOauthAccessToken(appID, authorizationID, privateKey, "GET", path, "", scp, requestID)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := RequestWithId(ctx, "GET", path, nil, token, requestID)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  []*Snapshot `json:"data"`
+		Error Error       `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
