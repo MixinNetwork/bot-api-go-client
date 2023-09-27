@@ -10,6 +10,7 @@ const (
 	ETH        = "43d61dcd-e413-450d-80b8-101d5e903357"
 	USDT_ERC20 = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
 	USDC_ERC20 = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
+	USDT_TRC20 = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
 )
 
 type DepositEntry struct {
