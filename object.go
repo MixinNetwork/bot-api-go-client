@@ -10,7 +10,6 @@ import (
 	"unicode/utf8"
 
 	"github.com/MixinNetwork/go-number"
-	"github.com/MixinNetwork/mixin/common"
 	"github.com/gofrs/uuid/v5"
 	"github.com/vmihailenco/msgpack/v4"
 )
@@ -95,7 +94,7 @@ func EncodeMixinExtra(traceId, memo string) []byte {
 	}
 	p := &MixinExtraPack{T: id, M: memo}
 	b := MsgpackMarshalPanic(p)
-	if len(b) >= common.ExtraSizeStorageCapacity {
+	if len(b) >= 1024*1024*4 {
 		panic(memo)
 	}
 	return b

@@ -3,11 +3,12 @@ package bot
 import (
 	"crypto/ed25519"
 	"crypto/sha512"
+	"encoding/hex"
 	"sort"
 
 	"filippo.io/edwards25519"
-	"github.com/MixinNetwork/mixin/crypto"
 	"golang.org/x/crypto/curve25519"
+	"golang.org/x/crypto/sha3"
 )
 
 func PrivateKeyToCurve25519(curve25519Private *[32]byte, privateKey ed25519.PrivateKey) {
@@ -53,5 +54,6 @@ func HashMembers(ids []string) string {
 	for _, id := range ids {
 		in = in + id
 	}
-	return crypto.Sha256Hash([]byte(in)).String()
+	h := sha3.Sum256([]byte(in))
+	return hex.EncodeToString(h[:])
 }
