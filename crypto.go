@@ -53,5 +53,5 @@ func HashMembers(ids []string) string {
 	for _, id := range ids {
 		in = in + id
 	}
-	return crypto.NewHash([]byte(in)).String()
+	return crypto.Sha256Hash([]byte(in)).String()
 }
