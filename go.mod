@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	filippo.io/edwards25519 v1.0.0
-	github.com/MixinNetwork/go-number v0.1.0
+	github.com/MixinNetwork/go-number v0.1.1
 	github.com/MixinNetwork/mixin v0.16.7
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
