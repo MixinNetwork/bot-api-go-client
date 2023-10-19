@@ -22,16 +22,20 @@ type DepositEntry struct {
 type Asset struct {
 	AssetId        string         `json:"asset_id"`
 	ChainId        string         `json:"chain_id"`
+	MixinID        string         `json:"mixin_id"`
 	FeeAssetId     string         `json:"fee_asset_id"`
 	Symbol         string         `json:"symbol"`
 	Name           string         `json:"name"`
 	IconURL        string         `json:"icon_url"`
 	PriceBTC       string         `json:"price_btc"`
 	PriceUSD       string         `json:"price_usd"`
+	ChangeBTC      string         `json:"change_btc"`
+	ChangeUSD      string         `json:"change_usd"`
 	Balance        string         `json:"balance"`
 	Destination    string         `json:"destination"`
 	Tag            string         `json:"tag"`
 	Confirmations  int            `json:"confirmations"`
+	Capitalization float64        `json:"capitalization"`
 	DepositEntries []DepositEntry `json:"deposit_entries"`
 }
 
