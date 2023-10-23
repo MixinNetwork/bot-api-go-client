@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -41,13 +40,6 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	req.Header.Set("X-Request-Id", requestID)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		if strings.Contains(err.Error(), "Client.Timeout") {
-			if httpUri == DefaultApiHost {
-				httpUri = ZeromeshApiHost
-			} else {
-				httpUri = DefaultApiHost
-			}
-		}
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -76,13 +68,6 @@ func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byt
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		if strings.Contains(err.Error(), "Client.Timeout") {
-			if httpUri == DefaultApiHost {
-				httpUri = ZeromeshApiHost
-			} else {
-				httpUri = DefaultApiHost
-			}
-		}
 		return nil, err
 	}
 	defer resp.Body.Close()
