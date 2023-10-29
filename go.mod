@@ -2,18 +2,16 @@ module github.com/MixinNetwork/bot-api-go-client
 
 go 1.21
 
-replace github.com/vmihailenco/msgpack/v4 => github.com/MixinNetwork/msgpack/v4 v4.3.14
-
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.1.1
 	github.com/MixinNetwork/mixin v0.17.2
+	github.com/MixinNetwork/msgpack/v4 v4.4.0
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/websocket v1.5.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
-	github.com/vmihailenco/msgpack/v4 v4.3.13
 	golang.org/x/crypto v0.14.0
 	gopkg.in/urfave/cli.v1 v1.20.0
 	nhooyr.io/websocket v1.8.10

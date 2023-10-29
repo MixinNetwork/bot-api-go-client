@@ -10,8 +10,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/msgpack/v4"
 	"github.com/gofrs/uuid/v5"
-	"github.com/vmihailenco/msgpack/v4"
 )
 
 type ObjectInput struct {

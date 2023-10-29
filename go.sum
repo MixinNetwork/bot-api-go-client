@@ -4,8 +4,8 @@ github.com/MixinNetwork/go-number v0.1.1 h1:Ui/xi0WGiBWI6cPrZaffB6q8lP7m2Zw0CXgO
 github.com/MixinNetwork/go-number v0.1.1/go.mod h1:4kaXQW9NOjjO3uZ5ehRVn3m+G+5ENGEKgiwfxea3zGQ=
 github.com/MixinNetwork/mixin v0.17.2 h1:ciljR7zLZBvdIMbE8/P2R85sb8TV9WVTacwylXHHrMA=
 github.com/MixinNetwork/mixin v0.17.2/go.mod h1:cqWsdUKfILdii/BgkxiCKdhDOq2mx8VLlv83WXx0TSc=
-github.com/MixinNetwork/msgpack/v4 v4.3.14 h1:o4+gcVS0n/mk0azyJoTsLEkmcDmPV6qPNf64PIKanfU=
-github.com/MixinNetwork/msgpack/v4 v4.3.14/go.mod h1:PIebmyDWkxuoUf55MH3CBvaeKJxjPj8uJlgRPxOJ6zM=
+github.com/MixinNetwork/msgpack/v4 v4.4.0 h1:IsMyKqr5sSRqifQXQCJ9z5StjY4ubVA8scbVqpAzoR8=
+github.com/MixinNetwork/msgpack/v4 v4.4.0/go.mod h1:j8CftTJX2BhZ5fbe8JS2htA8Ei3wPf6w/VIjVx34ORQ=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gofrs/uuid/v5 v5.0.0 h1:p544++a97kEL+svbcFbCQVM9KFu0Yo25UoISXGNNH9M=
