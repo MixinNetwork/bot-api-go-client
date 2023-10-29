@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/MixinNetwork/bot-api-go-client"
+	"github.com/MixinNetwork/bot-api-go-client/v2"
 	"github.com/MixinNetwork/go-number"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -14,7 +14,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "mixin-bot"
 	app.Usage = "Mixin bot API cli"
-	app.Version = "1.0.0"
+	app.Version = "2.0.0"
 	app.Commands = []cli.Command{
 		{
 			Name:    "transaction",

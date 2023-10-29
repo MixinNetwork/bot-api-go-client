@@ -1,4 +1,4 @@
-module github.com/MixinNetwork/bot-api-go-client
+module github.com/MixinNetwork/bot-api-go-client/v2
 
 go 1.21
 
