@@ -18,6 +18,7 @@ type User struct {
 	PinToken       string `json:"pin_token"`
 	PINTokenBase64 string `json:"pin_token_base64"`
 	IdentityNumber string `json:"identity_number"`
+	HasSafe        bool   `json:"has_safe"`
 	Phone          string `json:"phone"`
 	FullName       string `json:"full_name"`
 	AvatarURL      string `json:"avatar_url"`
@@ -180,7 +181,7 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, ses
 }
 
 func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*User, error) {
-	body, err := RequestWithId(ctx, "GET", "/me", nil, accessToken, requestID)
+	body, err := RequestWithId(ctx, "GET", "/safe/me", nil, accessToken, requestID)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

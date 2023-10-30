@@ -6,8 +6,6 @@ import (
 	"net/url"
 )
 
-// https://api.mixin.zone/safe/external/addresses/check?destination=0xc95d6b9403434e1081C20BacBCE44d977d04B711
-
 type SafeExternalAddress struct {
 	ChainId     string `json:"chain_id"`
 	Destination string `json:"destination"`
