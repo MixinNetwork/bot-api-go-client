@@ -23,6 +23,7 @@ type Asset struct {
 	AssetId        string         `json:"asset_id"`
 	ChainId        string         `json:"chain_id"`
 	MixinID        string         `json:"mixin_id"`
+	AssetKey       string         `json:"asset_key"`
 	FeeAssetId     string         `json:"fee_asset_id"`
 	Symbol         string         `json:"symbol"`
 	Name           string         `json:"name"`

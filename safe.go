@@ -18,7 +18,7 @@ type GhostKeyRequest struct {
 	Hint      string   `json:"hint"`
 }
 
-func RequstSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, uid, sid, sessionKey string) ([]*GhostKeys, error) {
+func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, uid, sid, sessionKey string) ([]*GhostKeys, error) {
 	data, err := json.Marshal(gkr)
 	if err != nil {
 		return nil, err
