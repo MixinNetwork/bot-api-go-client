@@ -6,6 +6,46 @@ import (
 	"net/url"
 )
 
+type GhostKeys struct {
+	Type string   `json:"type"`
+	Mask string   `json:"mask"`
+	Keys []string `json:"keys"`
+}
+
+type GhostKeyRequest struct {
+	Receivers []string `json:"receivers"`
+	Index     int      `json:"index"`
+	Hint      string   `json:"hint"`
+}
+
+func RequstSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, uid, sid, sessionKey string) ([]*GhostKeys, error) {
+	data, err := json.Marshal(gkr)
+	if err != nil {
+		return nil, err
+	}
+	method, path := "POST", "/safe/keys"
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*GhostKeys `json:"data"`
+		Error Error        `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 type SafeExternalAddress struct {
 	ChainId     string `json:"chain_id"`
 	Destination string `json:"destination"`
