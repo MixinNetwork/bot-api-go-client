@@ -57,7 +57,7 @@ func callRPC(node, method string, params []interface{}) ([]byte, error) {
 type signerInput struct {
 	Inputs []struct {
 		Hash    crypto.Hash         `json:"hash"`
-		Index   int                 `json:"index"`
+		Index   uint                `json:"index"`
 		Deposit *common.DepositData `json:"deposit,omitempty"`
 		Keys    []*crypto.Key       `json:"keys"`
 		Mask    crypto.Key          `json:"mask"`
@@ -75,7 +75,7 @@ type signerInput struct {
 	Node  string      `json:"-"`
 }
 
-func (raw signerInput) ReadUTXOKeys(hash crypto.Hash, index int) (*common.UTXOKeys, error) {
+func (raw signerInput) ReadUTXOKeys(hash crypto.Hash, index uint) (*common.UTXOKeys, error) {
 	utxo := &common.UTXOKeys{}
 
 	for _, in := range raw.Inputs {
