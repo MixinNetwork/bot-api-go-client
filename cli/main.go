@@ -14,7 +14,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "mixin-bot"
 	app.Usage = "Mixin bot API cli"
-	app.Version = "2.0.0"
+	app.Version = "2.0.1"
 	app.Commands = []cli.Command{
 		{
 			Name:    "transaction",
