@@ -11,6 +11,7 @@ import (
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
+// If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
 func RegisterSafe(ctx context.Context, userId, publicKey, seed string, uid, sid, sessionKey, tipPin, pinToken string) (*User, error) {
 	s, err := hex.DecodeString(seed)
 	if err != nil {
