@@ -11,7 +11,7 @@ import (
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
-func RegisterSafe(ctx context.Context, userId, public, seed string, uid, sid, sessionKey, tipPin, pinToken string) (*User, error) {
+func RegisterSafe(ctx context.Context, userId, publicKey, seed string, uid, sid, sessionKey, tipPin, pinToken string) (*User, error) {
 	s, err := hex.DecodeString(seed)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func RegisterSafe(ctx context.Context, userId, public, seed string, uid, sid, se
 	signBytes := ed25519.Sign(private, h[:])
 	signature := base64.RawURLEncoding.EncodeToString(signBytes[:])
 
-	tipBody := TIPBodyForSequencerRegister(userId, public)
+	tipBody := TIPBodyForSequencerRegister(userId, publicKey)
 	pinBuf, err := hex.DecodeString(tipPin)
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func RegisterSafe(ctx context.Context, userId, public, seed string, uid, sid, se
 		return nil, err
 	}
 	data, _ := json.Marshal(map[string]string{
-		"public_key": public,
+		"public_key": publicKey,
 		"signature":  signature,
 		"pin_base64": encryptedPIN,
 	})
