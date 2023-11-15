@@ -2,6 +2,7 @@ package bot
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"strings"
 
@@ -150,4 +151,33 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 	}
 
 	return &ma, nil
+}
+
+func (ma *MixAddress) RequestOrGenerateGhostKeys(ctx context.Context, outputIndex uint, u *SafeUser) (*GhostKeys, error) {
+	if len(ma.xinMembers) > 0 {
+		seed := make([]byte, 64)
+		crypto.ReadRand(seed)
+		r := crypto.NewKeyFromSeed(seed)
+		gkr := &GhostKeys{
+			Mask: r.Public().String(),
+			Keys: make([]string, len(ma.xinMembers)),
+		}
+		for i, a := range ma.xinMembers {
+			k := crypto.DeriveGhostPublicKey(&r, &a.PublicViewKey, &a.PublicSpendKey, uint64(outputIndex))
+			gkr.Keys[i] = k.String()
+		}
+		return gkr, nil
+	}
+
+	hint := uuid.Must(uuid.NewV4()).String()
+	gkr := &GhostKeyRequest{
+		Receivers: ma.Members(),
+		Index:     outputIndex,
+		Hint:      hint,
+	}
+	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u.UserId, u.SessionId, u.SessionKey)
+	if err != nil {
+		return nil, err
+	}
+	return gks[0], nil
 }

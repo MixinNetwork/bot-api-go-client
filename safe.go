@@ -3,7 +3,8 @@ package bot
 import (
 	"context"
 	"encoding/json"
-	"net/url"
+
+	"github.com/MixinNetwork/mixin/crypto"
 )
 
 type GhostKeys struct {
@@ -14,7 +15,7 @@ type GhostKeys struct {
 
 type GhostKeyRequest struct {
 	Receivers []string `json:"receivers"`
-	Index     int      `json:"index"`
+	Index     uint     `json:"index"`
 	Hint      string   `json:"hint"`
 }
 
@@ -46,42 +47,14 @@ func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, uid, sid,
 	return resp.Data, nil
 }
 
-type SafeExternalAddress struct {
-	ChainId     string `json:"chain_id"`
-	Destination string `json:"destination"`
-}
-
-func (a *SafeExternalAddress) IsExternalAddress() bool {
-	return a.ChainId == ""
-}
-
-func SafeExternalAdddressCheck(ctx context.Context, asset, destination, tag string) (*SafeExternalAddress, error) {
-	values := url.Values{}
-	if destination != "" {
-		values.Add("destination", destination)
+func (g GhostKeys) KeysSlice() []*crypto.Key {
+	keys := make([]*crypto.Key, len(g.Keys))
+	for i, k := range g.Keys {
+		key, err := crypto.KeyFromString(k)
+		if err != nil {
+			panic(k)
+		}
+		keys[i] = &key
 	}
-	if tag != "" {
-		values.Add("tag", tag)
-	}
-	if asset != "" {
-		values.Add("asset", asset)
-	}
-
-	endpoint := "/safe/external/addresses/check?" + values.Encode()
-	body, err := Request(ctx, "GET", endpoint, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	var resp struct {
-		Data  *SafeExternalAddress `json:"data"`
-		Error *Error               `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, BadDataError(ctx)
-	}
-	if resp.Error != nil {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
+	return keys
 }
