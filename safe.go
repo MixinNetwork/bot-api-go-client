@@ -7,6 +7,14 @@ import (
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
+type SafeUser struct {
+	UserId     string
+	SessionId  string
+	SessionKey string
+	UserKey    string
+	SpendKey   string
+}
+
 type GhostKeys struct {
 	Type string   `json:"type"`
 	Mask string   `json:"mask"`
