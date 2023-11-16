@@ -9,6 +9,7 @@ import (
 type Output struct {
 	TransactionHash string `json:"transaction_hash"`
 	OutputIndex     uint   `json:"output_index"`
+	Asset           string `json:"asset"`
 	Amount          string `json:"amount"`
 }
 

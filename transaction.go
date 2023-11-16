@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"crypto/sha512"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -22,9 +23,9 @@ type TransactionRecipient struct {
 }
 
 type SequencerTransactionRequest struct {
-	RawTransaction string
-	State          string
-	Views          []string
+	RawTransaction string   `json:"raw_transaction"`
+	State          string   `json:"state"`
+	Views          []string `json:"views"`
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, u *SafeUser) (*common.VersionedTransaction, error) {
@@ -173,7 +174,8 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 	if err != nil {
 		return nil, err
 	}
-	y, err := edwards25519.NewScalar().SetCanonicalBytes(spent[:])
+	spenty := sha512.Sum512(spent[:])
+	y, err := edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +186,9 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 			return nil, err
 		}
 		x, err := edwards25519.NewScalar().SetCanonicalBytes(viewBytes[:])
+		if err != nil {
+			return nil, err
+		}
 		t := edwards25519.NewScalar().Add(x, y)
 		var key crypto.Key
 		copy(key[:], t.Bytes())
@@ -205,7 +210,7 @@ func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *com
 	if err != nil {
 		return nil, err
 	}
-	method, path := "POST", "/safe/transaction"
+	method, path := "POST", "/safe/transactions"
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
 	if err != nil {
 		return nil, err
@@ -251,7 +256,7 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 		if totalInput.Cmp(totalOutput) < 0 {
 			continue
 		}
-		return outputs[:i], totalInput.Sub(totalOutput), nil
+		return outputs[:i+1], totalInput.Sub(totalOutput), nil
 	}
 	return nil, common.Zero, fmt.Errorf("insufficient outputs %s@%d %s", totalInput, len(outputs), totalOutput)
 }
