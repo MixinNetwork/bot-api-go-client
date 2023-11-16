@@ -11,6 +11,7 @@ type NetworkAsset struct {
 	FeeAssetId     string  `json:"fee_asset_id"`
 	ChainID        string  `json:"chain_id"`
 	AssetKey       string  `json:"asset_key"`
+	Precision      int     `json:"precision"`
 	MixinID        string  `json:"mixin_id"`
 	Symbol         string  `json:"symbol"`
 	Name           string  `json:"name"`
