@@ -24,6 +24,7 @@ type Asset struct {
 	ChainId        string         `json:"chain_id"`
 	MixinID        string         `json:"mixin_id"`
 	AssetKey       string         `json:"asset_key"`
+	Precision      int            `json:"precision"`
 	FeeAssetId     string         `json:"fee_asset_id"`
 	Symbol         string         `json:"symbol"`
 	Name           string         `json:"name"`
