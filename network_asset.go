@@ -8,7 +8,6 @@ import (
 type NetworkAsset struct {
 	Type           string  `json:"type"`
 	AssetID        string  `json:"asset_id"`
-	FeeAssetId     string  `json:"fee_asset_id"`
 	ChainID        string  `json:"chain_id"`
 	AssetKey       string  `json:"asset_key"`
 	Precision      int     `json:"precision"`

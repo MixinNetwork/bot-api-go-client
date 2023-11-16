@@ -20,29 +20,27 @@ type DepositEntry struct {
 }
 
 type Asset struct {
-	AssetId        string         `json:"asset_id"`
-	ChainId        string         `json:"chain_id"`
-	MixinID        string         `json:"mixin_id"`
-	AssetKey       string         `json:"asset_key"`
-	Precision      int            `json:"precision"`
-	FeeAssetId     string         `json:"fee_asset_id"`
-	Symbol         string         `json:"symbol"`
-	Name           string         `json:"name"`
-	IconURL        string         `json:"icon_url"`
-	PriceBTC       string         `json:"price_btc"`
-	PriceUSD       string         `json:"price_usd"`
-	ChangeBTC      string         `json:"change_btc"`
-	ChangeUSD      string         `json:"change_usd"`
-	Balance        string         `json:"balance"`
-	Destination    string         `json:"destination"`
-	Tag            string         `json:"tag"`
-	Confirmations  int            `json:"confirmations"`
-	Capitalization float64        `json:"capitalization"`
-	DepositEntries []DepositEntry `json:"deposit_entries"`
+	AssetId        string  `json:"asset_id"`
+	ChainId        string  `json:"chain_id"`
+	MixinID        string  `json:"mixin_id"`
+	AssetKey       string  `json:"asset_key"`
+	Precision      int     `json:"precision"`
+	Symbol         string  `json:"symbol"`
+	Name           string  `json:"name"`
+	IconURL        string  `json:"icon_url"`
+	PriceBTC       string  `json:"price_btc"`
+	PriceUSD       string  `json:"price_usd"`
+	ChangeBTC      string  `json:"change_btc"`
+	ChangeUSD      string  `json:"change_usd"`
+	Balance        string  `json:"balance"`
+	Destination    string  `json:"destination"`
+	Tag            string  `json:"tag"`
+	Confirmations  int     `json:"confirmations"`
+	Capitalization float64 `json:"capitalization"`
 }
 
 func AssetListWithRequestID(ctx context.Context, accessToken, requestID string) ([]*Asset, error) {
-	body, err := RequestWithId(ctx, "GET", "/assets", nil, accessToken, requestID)
+	body, err := RequestWithId(ctx, "GET", "/safe/assets", nil, accessToken, requestID)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +68,7 @@ func AssetList(ctx context.Context, accessToken string) ([]*Asset, error) {
 }
 
 func AssetShowWithRequestID(ctx context.Context, assetId string, accessToken, requestID string) (*Asset, error) {
-	body, err := RequestWithId(ctx, "GET", "/assets/"+assetId, nil, accessToken, requestID)
+	body, err := RequestWithId(ctx, "GET", "/safe/assets/"+assetId, nil, accessToken, requestID)
 	if err != nil {
 		return nil, err
 	}
