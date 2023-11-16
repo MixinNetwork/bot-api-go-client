@@ -3,6 +3,8 @@ package bot
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"filippo.io/edwards25519"
@@ -125,8 +127,44 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 	return tx, nil
 }
 
+type KernelTransactionRequestCreateRequest struct {
+	RequestID string `json:"request_id"`
+	Raw       string `json:"raw"`
+}
+
 func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
-	panic(0)
+	requests := []*KernelTransactionRequestCreateRequest{{
+		RequestID: traceId,
+		Raw:       hex.EncodeToString(ver.Marshal()),
+	}}
+	data, err := json.Marshal(requests)
+	if err != nil {
+		return nil, err
+	}
+	method, path := "POST", "/transaction/requests"
+	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*SequencerTransactionRequest `json:"data"`
+		Error Error                          `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	if len(resp.Data) != 1 {
+		return nil, errors.New("invalid response size")
+	}
+	return resp.Data[0], nil
 }
 
 func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
