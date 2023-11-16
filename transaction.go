@@ -141,7 +141,7 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	if err != nil {
 		return nil, err
 	}
-	method, path := "POST", "/transaction/requests"
+	method, path := "POST", "/safe/transaction/requests"
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
 	if err != nil {
 		return nil, err
@@ -197,7 +197,38 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 }
 
 func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
-	panic(0)
+	requests := []*KernelTransactionRequestCreateRequest{{
+		RequestID: traceId,
+		Raw:       hex.EncodeToString(ver.Marshal()),
+	}}
+	data, err := json.Marshal(requests)
+	if err != nil {
+		return nil, err
+	}
+	method, path := "POST", "/safe/transaction"
+	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*SequencerTransactionRequest `json:"data"`
+		Error Error                          `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	if len(resp.Data) != 1 {
+		return nil, errors.New("invalid response size")
+	}
+	return resp.Data[0], nil
 }
 
 func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, recipients []*TransactionRecipient, u *SafeUser) ([]*Output, common.Integer, error) {
