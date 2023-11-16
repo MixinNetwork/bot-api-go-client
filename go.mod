@@ -5,7 +5,7 @@ go 1.21
 require (
 	filippo.io/edwards25519 v1.0.0
 	github.com/MixinNetwork/go-number v0.1.1
-	github.com/MixinNetwork/mixin v0.17.5
+	github.com/MixinNetwork/mixin v0.17.6
 	github.com/MixinNetwork/msgpack/v4 v4.4.0
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt/v5 v5.1.0
