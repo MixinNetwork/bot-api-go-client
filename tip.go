@@ -31,6 +31,7 @@ const (
 	TIPOAuthApprove             = "TIP:OAUTH:APPROVE:"
 	TIPProvisioningUpdate       = "TIP:PROVISIONING:UPDATE:"
 	TIPOwnershipTransfer        = "TIP:APP:OWNERSHIP:TRANSFER:"
+	TIPSequencerRegister        = "SEQUENCER:REGISTER:"
 )
 
 type TipNodeData struct {
@@ -118,6 +119,10 @@ func TipBodyForProvisioningUpdate(deviceId string, secret string) []byte {
 
 func TipBodyForOwnershipTransfer(userId string) []byte {
 	return TipBody(TIPOwnershipTransfer + userId)
+}
+
+func TIPBodyForSequencerRegister(userId, publicKey string) []byte {
+	return TipBody(TIPSequencerRegister + userId + publicKey)
 }
 
 func TipBody(s string) []byte {

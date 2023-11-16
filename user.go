@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
 	"crypto/md5"
 	"encoding/binary"
 	"encoding/hex"
@@ -19,6 +20,7 @@ type User struct {
 	PINTokenBase64 string `json:"pin_token_base64"`
 	IdentityNumber string `json:"identity_number"`
 	HasSafe        bool   `json:"has_safe"`
+	TIPKeyBase64   string `json:"tip_key_base64"`
 	Phone          string `json:"phone"`
 	FullName       string `json:"full_name"`
 	AvatarURL      string `json:"avatar_url"`
@@ -142,6 +144,10 @@ func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionK
 	if err != nil {
 		return err
 	}
+	if len(pubTipBuf) != ed25519.PublicKeySize {
+		return fmt.Errorf("invalid public key")
+	}
+
 	counter := make([]byte, 8)
 	binary.BigEndian.PutUint64(counter, 1)
 	pubTipBuf = append(pubTipBuf, counter...)
@@ -201,6 +207,15 @@ func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*U
 
 func UserMe(ctx context.Context, accessToken string) (*User, error) {
 	return UserMeWithRequestID(ctx, accessToken, UuidNewV4().String())
+}
+
+func RequestUserMe(ctx context.Context, uid, sid, privateKey string) (*User, error) {
+	path := "/safe/me"
+	token, err := SignAuthenticationToken(uid, sid, privateKey, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	return UserMe(ctx, token)
 }
 
 func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBase64 string) (*User, error) {
