@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"filippo.io/edwards25519"
 	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
 	"github.com/gofrs/uuid/v5"
@@ -129,7 +130,32 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 }
 
 func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
-	panic(0)
+	msg := ver.PayloadHash()
+	spent, err := crypto.KeyFromString(spendKey)
+	if err != nil {
+		return nil, err
+	}
+	y, err := edwards25519.NewScalar().SetCanonicalBytes(spent[:])
+	if err != nil {
+		return nil, err
+	}
+	signaturesMap := make([]map[uint16]*crypto.Signature, len(ver.Inputs))
+	for i := range ver.Inputs {
+		viewBytes, err := crypto.KeyFromString(views[i])
+		if err != nil {
+			return nil, err
+		}
+		x, err := edwards25519.NewScalar().SetCanonicalBytes(viewBytes[:])
+		t := edwards25519.NewScalar().Add(x, y)
+		var key crypto.Key
+		copy(key[:], t.Bytes())
+		sig := key.Sign(msg)
+		sigs := make(map[uint16]*crypto.Signature)
+		sigs[0] = &sig // for 1/1 bot transaction
+		signaturesMap[i] = sigs
+	}
+	ver.SignaturesMap = signaturesMap
+	return ver, nil
 }
 
 func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
