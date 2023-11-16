@@ -32,11 +32,11 @@ func main() {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "asset,a",
-						Usage: "the asset id",
+						Usage: "asset",
 					},
 					&cli.StringFlag{
 						Name:  "amount,z",
-						Usage: "the asset amount",
+						Usage: "amount",
 					},
 					&cli.StringFlag{
 						Name:  "receiver,r",
@@ -44,7 +44,7 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:  "keystore,k",
-						Usage: "keystore",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
 					},
 				},
 			},
