@@ -2,57 +2,62 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/MixinNetwork/bot-api-go-client/v2"
-	"github.com/MixinNetwork/go-number"
-	"gopkg.in/urfave/cli.v1"
+	"github.com/urfave/cli/v2"
 )
 
+type Bot struct {
+	Pin        string `json:"pin"`
+	ClientID   string `json:"client_id"`
+	SessionID  string `json:"session_id"`
+	PinToken   string `json:"pin_token"`
+	PrivateKey string `json:"private_key"`
+}
+
 func main() {
-	app := cli.NewApp()
-	app.Name = "mixin-bot"
-	app.Usage = "Mixin bot API cli"
-	app.Version = "2.0.1"
-	app.Commands = []cli.Command{
-		{
-			Name:    "transaction",
-			Aliases: []string{"t"},
-			Usage:   "Transfer asset to Mixin Mainnet address",
-			Action:  transferCmd,
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "asset,a",
-					Usage: "the asset id",
+	app := &cli.App{
+		Name:    "mixin-bot",
+		Usage:   "Mixin bot API cli",
+		Version: "2.0.1",
+		Commands: []*cli.Command{
+			{
+				Name:   "transfer",
+				Action: transferCmd,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "asset,a",
+						Usage: "asset",
+					},
+					&cli.StringFlag{
+						Name:  "amount,z",
+						Usage: "amount",
+					},
+					&cli.StringFlag{
+						Name:  "receiver,r",
+						Usage: "receiver",
+					},
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
 				},
-				cli.StringFlag{
-					Name:  "opponent_key,k",
-					Usage: "the opponent key address",
-				},
-				cli.StringFlag{
-					Name:  "amount",
-					Usage: "the amount of transfer",
-				},
-				cli.StringFlag{
-					Name:  "uid",
-					Usage: "the bot user id",
-				},
-				cli.StringFlag{
-					Name:  "sid",
-					Usage: "the bot session id",
-				},
-				cli.StringFlag{
-					Name:  "private",
-					Usage: "the bot private key",
-				},
-				cli.StringFlag{
-					Name:  "pin",
-					Usage: "the bot PIN",
-				},
-				cli.StringFlag{
-					Name:  "pin_token",
-					Usage: "the bot PIN token",
+			},
+			{
+				Name:   "migrate",
+				Action: botMigrateTIPCmd,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
 				},
 			},
 		},
@@ -64,24 +69,63 @@ func main() {
 }
 
 func transferCmd(c *cli.Context) error {
-	assetId := c.String("asset")
-	opponentKey := c.String("opponent_key")
+	keystore := c.String("keystore")
+	asset := c.String("asset")
 	amount := c.String("amount")
-	uid := c.String("uid")
-	sid := c.String("sid")
-	private := c.String("private")
-	pin := c.String("pin")
-	pinToken := c.String("pin_token")
-	in := &bot.TransferInput{
-		AssetId:     assetId,
-		OpponentKey: opponentKey,
-		Amount:      number.FromString(amount),
+	receiver := c.String("receiver")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
 	}
-	transaction, err := bot.CreateTransaction(context.Background(), in, uid, sid, private, pin, pinToken)
+	var user Bot
+	err = json.Unmarshal([]byte(dat), &user)
+	if err != nil {
+		panic(err)
+	}
+
+	su := &bot.SafeUser{
+		UserId:     user.ClientID,
+		SessionId:  user.SessionID,
+		SessionKey: user.PrivateKey,
+		SpendKey:   user.Pin[:64],
+	}
+
+	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
+	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	trace := bot.UuidNewV4().String()
+	log.Println("trace:", trace)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, su)
 	if err != nil {
 		return err
 	}
-	s := fmt.Sprintf("Mixin transfer success snapshotId: %s, transaction hash: %s", transaction.SnapshotId, transaction.TransactionHash)
-	fmt.Println(s)
+	log.Println("tx:", tx.PayloadHash().String())
+	return nil
+}
+
+func botMigrateTIPCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var app Bot
+	err = json.Unmarshal([]byte(dat), &app)
+	if err != nil {
+		panic(err)
+	}
+
+	tipPub, tipPriv, _ := ed25519.GenerateKey(rand.Reader)
+	log.Printf("Your tip private key: %s", hex.EncodeToString(tipPriv))
+
+	err = bot.UpdateTipPin(context.Background(), app.Pin, hex.EncodeToString(tipPub), app.PinToken, app.ClientID, app.SessionID, app.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("bot.UpdateTipPin() => %v", err)
+	}
+
+	app.Pin = hex.EncodeToString(tipPriv)
+	keystoreRaw, _ := json.Marshal(app)
+	log.Printf("your new keystore after migrate: %s", string(keystoreRaw))
 	return nil
 }

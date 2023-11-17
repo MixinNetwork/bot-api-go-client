@@ -2,77 +2,22 @@ package bot
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"time"
 
-	"github.com/MixinNetwork/go-number"
+	"github.com/MixinNetwork/mixin/common"
 )
 
-type WithdrawalInput struct {
-	AddressId string
-	Amount    number.Decimal
-	Fee       string
-	TraceId   string
-	Memo      string
-
-	AssetId     string
-	Destination string
-	Tag         string
+func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, traceId string, u *SafeUser) (*common.VersionedTransaction, error) {
+	recipients := []*TransactionRecipient{{
+		Destination: destination,
+		Tag:         tag,
+		Amount:      amount,
+	}}
+	return SendTransaction(ctx, assetId, recipients, traceId, u)
 }
 
-func CreateWithdrawal(ctx context.Context, in *WithdrawalInput, uid, sid, sessionKey, pin, pinToken string) (*Snapshot, error) {
-	if in.Amount.Exhausted() {
-		return nil, fmt.Errorf("amount negative")
-	}
-	if len(pin) != 6 {
-		fee := number.FromString(in.Fee)
-		tipBody := TipBodyForWithdrawalCreate(in.AddressId, in.Amount, fee, in.TraceId, in.Memo)
-		var err error
-		pin, err = signTipBody(tipBody, pin)
-		if err != nil {
-			return nil, err
-		}
-	}
-	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
-	if err != nil {
-		return nil, err
-	}
-	data, err := json.Marshal(map[string]interface{}{
-		"address_id": in.AddressId,
-		"amount":     in.Amount.Persist(),
-		"trace_id":   in.TraceId,
-		"memo":       in.Memo,
-		"fee":        in.Fee,
-		"pin_base64": encryptedPIN,
-
-		"asset_id":    in.AssetId,
-		"destination": in.Destination,
-		"tag":         in.Tag,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/withdrawals", string(data))
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/withdrawals", data, token)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Error Error    `json:"error"`
-		Data  Snapshot `json:"data,omitempty"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return &resp.Data, nil
+func PayWithdrawalFee(ctx context.Context, traceId, feeId, amount string, u *SafeUser) (*common.VersionedTransaction, error) {
+	// 1. get withdrawal transaction request with the trace id
+	// 2. get unspent outputs for fee id
+	// 3. build the transaction to cashier, with withdrawal transaction hash as reference
+	panic(0)
 }
