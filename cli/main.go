@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -26,9 +29,8 @@ func main() {
 		Version: "2.0.1",
 		Commands: []*cli.Command{
 			{
-				Name:    "transfer",
-				Aliases: []string{"t"},
-				Action:  transferCmd,
+				Name:   "transfer",
+				Action: transferCmd,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "asset,a",
@@ -42,6 +44,16 @@ func main() {
 						Name:  "receiver,r",
 						Usage: "receiver",
 					},
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
+				},
+			},
+			{
+				Name:   "migrate",
+				Action: botMigrateTIPCmd,
+				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "keystore,k",
 						Usage: "keystore download from https://developers.mixin.one/dashboard",
@@ -88,5 +100,32 @@ func transferCmd(c *cli.Context) error {
 		return err
 	}
 	log.Println("tx:", tx.PayloadHash().String())
+	return nil
+}
+
+func botMigrateTIPCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var app Bot
+	err = json.Unmarshal([]byte(dat), &app)
+	if err != nil {
+		panic(err)
+	}
+
+	tipPub, tipPriv, _ := ed25519.GenerateKey(rand.Reader)
+	log.Printf("Your tip private key: %s", hex.EncodeToString(tipPriv))
+
+	err = bot.UpdateTipPin(context.Background(), app.Pin, hex.EncodeToString(tipPub), app.PinToken, app.ClientID, app.SessionID, app.PrivateKey)
+	if err != nil {
+		return fmt.Errorf("bot.UpdateTipPin() => %v", err)
+	}
+
+	app.Pin = hex.EncodeToString(tipPriv)
+	keystoreRaw, _ := json.Marshal(app)
+	log.Printf("your new keystore after migrate: %s", string(keystoreRaw))
 	return nil
 }
