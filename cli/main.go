@@ -60,6 +60,20 @@ func main() {
 					},
 				},
 			},
+			{
+				Name:   "register",
+				Action: registerSafeCMD,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
+					&cli.StringFlag{
+						Name:  "key,s",
+						Usage: "seed for spend private key",
+					},
+				},
+			},
 		},
 	}
 	err := app.Run(os.Args)
@@ -127,5 +141,48 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	app.Pin = hex.EncodeToString(tipPriv)
 	keystoreRaw, _ := json.Marshal(app)
 	log.Printf("your new keystore after migrate: %s", string(keystoreRaw))
+	return nil
+}
+
+func registerSafeCMD(c *cli.Context) error {
+	keystore := c.String("keystore")
+	seed := c.String("key")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var app Bot
+	err = json.Unmarshal([]byte(dat), &app)
+	if err != nil {
+		panic(err)
+	}
+
+	ctx := context.Background()
+	method := "GET"
+	path := "/safe/me"
+	token, err := bot.SignAuthenticationTokenWithoutBody(app.ClientID, app.SessionID, app.PrivateKey, method, path)
+	if err != nil {
+		return err
+	}
+
+	me, err := bot.UserMe(ctx, token)
+	if err != nil {
+		return err
+	}
+	if me.HasSafe {
+		log.Println("user has registed")
+		return nil
+	}
+
+	me, err = bot.RegisterSafe(ctx, app.ClientID, seed[64:], seed[:64], app.ClientID, app.SessionID, app.PrivateKey, app.Pin, app.PinToken)
+	if err != nil {
+		return err
+	}
+	if me.HasSafe {
+		log.Println("user registed")
+	}
+
+	log.Println("user not registed")
 	return nil
 }
