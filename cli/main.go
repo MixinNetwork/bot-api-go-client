@@ -135,6 +135,7 @@ func transferCmd(c *cli.Context) error {
 		return err
 	}
 	log.Println("tx:", tx.PayloadHash().String())
+	log.Println("tx raw:", hex.EncodeToString(tx.Marshal()))
 	return nil
 }
 
