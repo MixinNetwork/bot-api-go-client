@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -53,6 +54,10 @@ func main() {
 						Name:  "keystore,k",
 						Usage: "keystore download from https://developers.mixin.one/dashboard",
 					},
+					&cli.StringFlag{
+						Name:  "input,cvs",
+						Usage: "read input from csv file and transfer all rows",
+					},
 				},
 			},
 			{
@@ -89,6 +94,7 @@ func main() {
 
 func transferCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
+	inputPath := c.String("input")
 	asset := c.String("asset")
 	amount := c.String("amount")
 	receiver := c.String("receiver")
@@ -109,6 +115,9 @@ func transferCmd(c *cli.Context) error {
 		SessionId:  user.SessionID,
 		SessionKey: user.PrivateKey,
 		SpendKey:   user.Pin[:64],
+	}
+	if inputPath != "" {
+		return transferCSV(c, inputPath, su)
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
@@ -136,6 +145,71 @@ func transferCmd(c *cli.Context) error {
 	}
 	log.Println("tx:", tx.PayloadHash().String())
 	log.Println("tx raw:", hex.EncodeToString(tx.Marshal()))
+	return nil
+}
+
+func transferCSV(c *cli.Context, filePath string, su *bot.SafeUser) error {
+	data, err := os.Open(filePath)
+	if err != nil {
+		panic(err)
+	}
+	defer data.Close()
+	r := csv.NewReader(data)
+	records, err := r.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+	log.Println("records:", len(records))
+
+	for _, record := range records {
+		if record[5] != "c6d0c728-2624-429b-8e0d-d9d19b6592fa" {
+			continue
+		}
+		// user_id, asset_id, amount, hash
+		fmt.Println("record:", record[2], record[5], record[6], record[7])
+
+		receiver := record[2]
+		asset := record[5]
+		amount := record[6]
+		trace := record[7]
+		ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
+		tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+
+		memo := c.String("trace")
+		traceID, _ := bot.UuidFromString(trace)
+		if traceID.String() != trace {
+			trace = bot.UniqueObjectId(trace)
+		}
+		transaction, err := bot.GetTransactionById(c.Context, trace)
+		if err != nil {
+			if !strings.Contains(err.Error(), "The endpoint is not found") {
+				log.Print(err)
+				return err
+			}
+		}
+		if transaction != nil {
+			log.Println(transaction.SnapshotID)
+			continue
+		}
+
+		log.Println("asset:", asset)
+		log.Println("amount:", amount)
+		log.Println("receiver:", receiver)
+		log.Println("origin trace is memo:", memo)
+		log.Println("trace:", trace)
+		fmt.Print("Confirm input Y, otherwise input X: ")
+		var input string
+		fmt.Scanln(&input)
+		if strings.ToUpper(input) != "Y" {
+			continue
+		}
+		tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, su)
+		if err != nil {
+			return err
+		}
+		log.Println("tx:", tx.PayloadHash().String())
+		log.Println("tx raw:", hex.EncodeToString(tx.Marshal()))
+	}
 	return nil
 }
 

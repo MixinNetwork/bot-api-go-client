@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"filippo.io/edwards25519"
 	"github.com/MixinNetwork/mixin/common"
@@ -26,6 +27,21 @@ type SequencerTransactionRequest struct {
 	RawTransaction string   `json:"raw_transaction"`
 	State          string   `json:"state"`
 	Views          []string `json:"views"`
+}
+
+type KernelTransactionRequestResponse struct {
+	RequestID       string    `json:"request_id"`
+	TransactionHash string    `json:"transaction_hash"`
+	Asset           string    `json:"asset"`
+	Amount          string    `json:"amount"`
+	Extra           string    `json:"extra"`
+	State           string    `json:"state"`
+	RawTransaction  string    `json:"raw_transaction"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+	SnapshotID      string    `json:"snapshot_id"`
+	SnapshotHash    string    `json:"snapshot_hash"`
+	SnapshotAt      time.Time `json:"snapshot_at"`
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, u *SafeUser) (*common.VersionedTransaction, error) {
@@ -81,6 +97,26 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 		panic(str.RawTransaction)
 	}
 	return ver, nil
+}
+
+func GetTransactionById(ctx context.Context, requestId string) (*KernelTransactionRequestResponse, error) {
+	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
+	body, err := Request(ctx, method, path, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *KernelTransactionRequestResponse `json:"data"`
+		Error Error                             `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }
 
 func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, memo string, u *SafeUser) (*common.Transaction, error) {
