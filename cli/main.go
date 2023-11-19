@@ -117,7 +117,7 @@ func transferCmd(c *cli.Context) error {
 		SpendKey:   user.Pin[:64],
 	}
 	if inputPath != "" {
-		return transferCSV(c, inputPath, su)
+		return transferCSV(c, inputPath, asset, su)
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
@@ -148,7 +148,7 @@ func transferCmd(c *cli.Context) error {
 	return nil
 }
 
-func transferCSV(c *cli.Context, filePath string, su *bot.SafeUser) error {
+func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser) error {
 	data, err := os.Open(filePath)
 	if err != nil {
 		panic(err)
@@ -162,20 +162,19 @@ func transferCSV(c *cli.Context, filePath string, su *bot.SafeUser) error {
 	log.Println("records:", len(records))
 
 	for _, record := range records {
-		if record[5] != "c6d0c728-2624-429b-8e0d-d9d19b6592fa" {
+		if record[5] != asset {
 			continue
 		}
 		// user_id, asset_id, amount, hash
-		fmt.Println("record:", record[2], record[5], record[6], record[7])
-
+		// fmt.Println("record:", record[2], record[5], record[6], record[7])
 		receiver := record[2]
 		asset := record[5]
 		amount := record[6]
 		trace := record[7]
+		memo := record[7]
 		ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
 		tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
 
-		memo := c.String("trace")
 		traceID, _ := bot.UuidFromString(trace)
 		if traceID.String() != trace {
 			trace = bot.UniqueObjectId(trace)
