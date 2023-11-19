@@ -150,7 +150,7 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	}
 
 	tipPub, tipPriv, _ := ed25519.GenerateKey(rand.Reader)
-	log.Printf("Your tip private key: %s", hex.EncodeToString(tipPriv))
+	log.Printf("Your tip private seed: %s", hex.EncodeToString(tipPriv.Seed()))
 
 	err = bot.UpdateTipPin(context.Background(), app.Pin, hex.EncodeToString(tipPub), app.PinToken, app.ClientID, app.SessionID, app.PrivateKey)
 	if err != nil {
@@ -193,13 +193,24 @@ func registerSafeCMD(c *cli.Context) error {
 		log.Println("user has registed")
 		return nil
 	}
+	s, err := hex.DecodeString(seed)
+	if err != nil {
+		panic(err)
+	}
+	if len(s) != ed25519.SeedSize {
+		panic("invalid seed")
+	}
+	privateKey := ed25519.NewKeyFromSeed(s)
+	tipPublic := hex.EncodeToString(privateKey[32:])
+	sd := hex.EncodeToString(privateKey.Seed())
 
-	me, err = bot.RegisterSafe(ctx, app.ClientID, seed[64:], seed[:64], app.ClientID, app.SessionID, app.PrivateKey, app.Pin, app.PinToken)
+	me, err = bot.RegisterSafe(ctx, app.ClientID, tipPublic, sd, app.ClientID, app.SessionID, app.PrivateKey, app.Pin, app.PinToken)
 	if err != nil {
 		return err
 	}
 	if me.HasSafe {
 		log.Println("user registed")
+		return nil
 	}
 
 	log.Println("user not registed")
