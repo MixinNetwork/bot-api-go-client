@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/MixinNetwork/bot-api-go-client/v2"
 	"github.com/urfave/cli/v2"
@@ -117,7 +118,16 @@ func transferCmd(c *cli.Context) error {
 	if traceID.String() != trace {
 		trace = bot.UniqueObjectId(trace)
 	}
+	log.Println("asset:", asset)
+	log.Println("amount:", amount)
+	log.Println("receiver:", receiver)
 	log.Println("trace:", trace)
+	fmt.Print("Confirm input Y, otherwise input X: ")
+	var input string
+	fmt.Scanln(&input)
+	if strings.ToUpper(input) != "Y" {
+		return nil
+	}
 	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, su)
 	if err != nil {
 		return err
