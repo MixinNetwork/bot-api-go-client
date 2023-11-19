@@ -114,13 +114,15 @@ func transferCmd(c *cli.Context) error {
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
 	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
 
-	traceID, _ := bot.UuidFromString("trace")
+	memo := c.String("trace")
+	traceID, _ := bot.UuidFromString(trace)
 	if traceID.String() != trace {
 		trace = bot.UniqueObjectId(trace)
 	}
 	log.Println("asset:", asset)
 	log.Println("amount:", amount)
 	log.Println("receiver:", receiver)
+	log.Println("origin trace is memo:", memo)
 	log.Println("trace:", trace)
 	fmt.Print("Confirm input Y, otherwise input X: ")
 	var input string
@@ -128,7 +130,7 @@ func transferCmd(c *cli.Context) error {
 	if strings.ToUpper(input) != "Y" {
 		return nil
 	}
-	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, su)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, su)
 	if err != nil {
 		return err
 	}

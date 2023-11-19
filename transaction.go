@@ -28,7 +28,7 @@ type SequencerTransactionRequest struct {
 	Views          []string `json:"views"`
 }
 
-func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, u *SafeUser) (*common.VersionedTransaction, error) {
+func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, u *SafeUser) (*common.VersionedTransaction, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -52,7 +52,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	}
 
 	// build the unsigned raw transaction
-	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, u)
+	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, memo, u)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	return ver, nil
 }
 
-func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, u *SafeUser) (*common.Transaction, error) {
+func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, memo string, u *SafeUser) (*common.Transaction, error) {
 	tx := common.NewTransactionV5(asset)
 	for _, in := range utxos {
 		h, err := crypto.HashFromString(in.TransactionHash)
@@ -91,6 +91,14 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 			panic(in.TransactionHash)
 		}
 		tx.AddInput(h, in.OutputIndex)
+	}
+
+	if memo != "" {
+		extraBytes := []byte(memo)
+		if len(extraBytes) > 512 {
+			return nil, errors.New("extra data is too long")
+		}
+		tx.Extra = extraBytes
 	}
 
 	for i, r := range recipients {
