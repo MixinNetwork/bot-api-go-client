@@ -45,6 +45,10 @@ func main() {
 						Usage: "receiver",
 					},
 					&cli.StringFlag{
+						Name:  "trace,t",
+						Usage: "trace",
+					},
+					&cli.StringFlag{
 						Name:  "keystore,k",
 						Usage: "keystore download from https://developers.mixin.one/dashboard",
 					},
@@ -87,6 +91,7 @@ func transferCmd(c *cli.Context) error {
 	asset := c.String("asset")
 	amount := c.String("amount")
 	receiver := c.String("receiver")
+	trace := c.String("trace")
 
 	dat, err := os.ReadFile(keystore)
 	if err != nil {
@@ -107,7 +112,11 @@ func transferCmd(c *cli.Context) error {
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
 	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
-	trace := bot.UuidNewV4().String()
+
+	traceID, _ := bot.UuidFromString("trace")
+	if traceID.String() != trace {
+		trace = bot.UniqueObjectId(trace)
+	}
 	log.Println("trace:", trace)
 	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, su)
 	if err != nil {
