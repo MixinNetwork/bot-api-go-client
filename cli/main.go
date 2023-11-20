@@ -187,7 +187,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 			}
 		}
 		if transaction != nil {
-			log.Println(transaction.SnapshotID)
+			log.Println("exist snapshot_id: ", transaction.SnapshotID)
 			continue
 		}
 

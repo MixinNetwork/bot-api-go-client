@@ -79,7 +79,7 @@ func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byt
 }
 
 func init() {
-	httpClient = &http.Client{Timeout: 10 * time.Second}
+	httpClient = &http.Client{Timeout: 30 * time.Second}
 	httpUri = DefaultApiHost
 	blazeUri = DefaultBlazeHost
 	if httpClient.Transport == nil {
