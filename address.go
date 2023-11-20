@@ -17,12 +17,10 @@ type AddressInput struct {
 type Address struct {
 	AddressId   string `json:"address_id"`
 	AssetId     string `json:"asset_id"`
-	FeeAssetId  string `json:"fee_asset_id"`
 	Label       string `json:"label"`
 	Destination string `json:"destination"`
 	Tag         string `json:"tag"`
 	Fee         string `json:"fee"`
-	Reserve     string `json:"reserve"`
 	Dust        string `json:"dust"`
 	UpdatedAt   string `json:"updated_at"`
 }
