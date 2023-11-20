@@ -24,12 +24,6 @@ type TransactionRecipient struct {
 }
 
 type SequencerTransactionRequest struct {
-	RawTransaction string   `json:"raw_transaction"`
-	State          string   `json:"state"`
-	Views          []string `json:"views"`
-}
-
-type KernelTransactionRequestResponse struct {
 	RequestID       string    `json:"request_id"`
 	TransactionHash string    `json:"transaction_hash"`
 	Asset           string    `json:"asset"`
@@ -42,9 +36,11 @@ type KernelTransactionRequestResponse struct {
 	SnapshotID      string    `json:"snapshot_id"`
 	SnapshotHash    string    `json:"snapshot_hash"`
 	SnapshotAt      time.Time `json:"snapshot_at"`
+
+	Views []string `json:"views"`
 }
 
-func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, u *SafeUser) (*common.VersionedTransaction, error) {
+func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -76,7 +72,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	// verify the raw transaction, the same trace id may have been signed already
 	str, err := verifyRawTransactionBySequencer(ctx, traceId, ver, u)
 	if err != nil || str.State != "unspent" {
-		return ver, err
+		return str, err
 	}
 
 	// sign the raw transaction with user private spend key
@@ -89,25 +85,25 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	}
 
 	// send the raw transaction to the sequencer api
-	str, err = sendRawTransactionToSequencer(ctx, traceId, ver, u)
+	result, err := sendRawTransactionToSequencer(ctx, traceId, ver, u)
 	if err != nil {
 		return nil, err
 	}
 	if hex.EncodeToString(ver.Marshal()) != str.RawTransaction {
 		panic(str.RawTransaction)
 	}
-	return ver, nil
+	return result, nil
 }
 
-func GetTransactionById(ctx context.Context, requestId string) (*KernelTransactionRequestResponse, error) {
+func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
 	body, err := Request(ctx, method, path, nil, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *KernelTransactionRequestResponse `json:"data"`
-		Error Error                             `json:"error"`
+		Data  *SequencerTransactionRequest `json:"data"`
+		Error Error                        `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {

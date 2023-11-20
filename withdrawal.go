@@ -6,7 +6,7 @@ import (
 	"github.com/MixinNetwork/mixin/common"
 )
 
-func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, traceId string, u *SafeUser) (*common.VersionedTransaction, error) {
+func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, traceId string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	recipients := []*TransactionRecipient{{
 		Destination: destination,
 		Tag:         tag,

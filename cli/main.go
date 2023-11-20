@@ -143,8 +143,8 @@ func transferCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Println("tx:", tx.PayloadHash().String())
-	log.Println("tx raw:", hex.EncodeToString(tx.Marshal()))
+	log.Println("tx:", tx.TransactionHash)
+	log.Println("tx raw:", tx.RawTransaction)
 	return nil
 }
 
@@ -206,8 +206,8 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		if err != nil {
 			return err
 		}
-		log.Println("tx:", tx.PayloadHash().String())
-		log.Println("tx raw:", hex.EncodeToString(tx.Marshal()))
+		log.Println("tx:", tx.TransactionHash)
+		log.Println("tx raw:", tx.RawTransaction)
 	}
 	return nil
 }
