@@ -40,6 +40,16 @@ type SequencerTransactionRequest struct {
 	Views []string `json:"views"`
 }
 
+type UtxoError struct {
+	TotalInput  common.Integer
+	TotalOutput common.Integer
+	OutputSize  int
+}
+
+func (ue *UtxoError) Error() string {
+	return fmt.Sprintf("insufficient outputs %s@%d %s", ue.TotalInput, ue.OutputSize, ue.TotalOutput)
+}
+
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
@@ -277,16 +287,23 @@ func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *com
 }
 
 func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, recipients []*TransactionRecipient, u *SafeUser) ([]*Output, common.Integer, error) {
-	var totalOutput common.Integer
-	for _, r := range recipients {
-		amt := common.NewIntegerFromString(r.Amount)
-		totalOutput = totalOutput.Add(amt)
-	}
-
 	membersHash := HashMembers([]string{u.UserId})
 	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, u)
 	if err != nil {
 		return nil, common.Zero, err
+	}
+	if len(outputs) == 0 {
+		return nil, common.Zero, &UtxoError{
+			TotalInput:  common.Zero,
+			TotalOutput: common.Zero,
+			OutputSize:  0,
+		}
+	}
+
+	var totalOutput common.Integer
+	for _, r := range recipients {
+		amt := common.NewIntegerFromString(r.Amount)
+		totalOutput = totalOutput.Add(amt)
 	}
 
 	var totalInput common.Integer
@@ -298,5 +315,9 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 		}
 		return outputs[:i+1], totalInput.Sub(totalOutput), nil
 	}
-	return nil, common.Zero, fmt.Errorf("insufficient outputs %s@%d %s", totalInput, len(outputs), totalOutput)
+	return nil, common.Zero, &UtxoError{
+		TotalInput:  totalInput,
+		TotalOutput: totalOutput,
+		OutputSize:  len(outputs),
+	}
 }
