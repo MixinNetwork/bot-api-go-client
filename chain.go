@@ -110,3 +110,215 @@ func ReadNetworkChains(ctx context.Context, chainId string) ([]*NetworkChain, er
 	}
 	return resp.Data, nil
 }
+
+func GetChainName(chainId string) string {
+	switch chainId {
+	case EOSChainId:
+		return "EOS"
+	case RippleChainId:
+		return "Ripple"
+	case SiacoinChainId:
+		return "Siacoin"
+	case EthereumChainId:
+		return "Ethereum"
+	case EthereumClassicChainId:
+		return "Ethereum Classic"
+	case BSCChainId:
+		return "BNB Smart Chain"
+	case PolygonChainId:
+		return "Polygon"
+	case MVMChainId:
+		return "Mixin Virtual Machine"
+	case BitcoinChainId:
+		return "Bitcoin"
+	case HandshakeChainId:
+		return "Handshake"
+	case BitcoinCashChainId:
+		return "Bitcoin Cash"
+	case BitcoinSVChainId:
+		return "Bitcoin SV"
+	case LitecoinChainId:
+		return "Litecoin"
+	case DecredChainId:
+		return "Decred"
+	case DogecoinChainId:
+		return "Dogecoin"
+	case DashChainId:
+		return "Dash"
+	case ZcashChainId:
+		return "Zcash"
+	case AvalancheChainId:
+		return "Avalanche"
+	case MoneroChainId:
+		return "Monero"
+	case NEMChainId:
+		return "NEM"
+	case HorizenChainId:
+		return "Horizen"
+	case MassGridChainId:
+		return "MassGrid"
+	case BytomChainId:
+		return "Bytom"
+	case BytomPoSChainId:
+		return "Bytom"
+	case TRONChainId:
+		return "TRON"
+	case TONChainId:
+		return "TON"
+	case StellarChainId:
+		return "Stellar"
+	case CosmosChainId:
+		return "Cosmos"
+	case StarcoinChainId:
+		return "Starcoin"
+	case AkashChainId:
+		return "Akash"
+	case BinanceChainId:
+		return "BNB Beacon Chain"
+	case BitSharesChainId:
+		return "Bitshares"
+	case TezosChainId:
+		return "Tezos"
+	case RavencoinChainId:
+		return "Ravencoin"
+	case NamecoinChainId:
+		return "Namecoin"
+	case NervosChainId:
+		return "Nervos"
+	case GrinChainId:
+		return "Grin"
+	case VCashChainId:
+		return "VCash"
+	case FilecoinChainId:
+		return "Filecoin"
+	case PolkadotChainId:
+		return "Polkadot"
+	case KusamaChainId:
+		return "Kusama"
+	case ArweaveChainId:
+		return "Arweave"
+	case MobileCoinChainId:
+		return "MobileCoin"
+	case SolanaChainId:
+		return "Solana"
+	case NearChainId:
+		return "NEAR"
+	case AlgorandChainId:
+		return "Algorand"
+	case XDCChainId:
+		return "XDC Network"
+	case AptosChainId:
+		return "Aptos"
+	default:
+		return "Not Supported Chain"
+	}
+}
+
+func IsChainId(id string) bool {
+	return validChainMap[id]
+}
+
+var validChainMap = map[string]bool{
+	BitcoinChainId:         true,
+	BitcoinCashChainId:     true,
+	BitcoinSVChainId:       true,
+	LitecoinChainId:        true,
+	EthereumChainId:        true,
+	EthereumClassicChainId: true,
+	BSCChainId:             true,
+	PolygonChainId:         true,
+	MVMChainId:             true,
+	DecredChainId:          true,
+	RippleChainId:          true,
+	SiacoinChainId:         true,
+	EOSChainId:             true,
+	DogecoinChainId:        true,
+	DashChainId:            true,
+	ZcashChainId:           true,
+	NEMChainId:             true,
+	ArweaveChainId:         true,
+	HorizenChainId:         true,
+	TRONChainId:            true,
+	TONChainId:             true,
+	StellarChainId:         true,
+	CosmosChainId:          true,
+	StarcoinChainId:        true,
+	AkashChainId:           true,
+	BinanceChainId:         true,
+	MoneroChainId:          true,
+	BitSharesChainId:       true,
+	RavencoinChainId:       true,
+	HandshakeChainId:       true,
+	NervosChainId:          true,
+	TezosChainId:           true,
+	NamecoinChainId:        true,
+	SolanaChainId:          true,
+	FilecoinChainId:        true,
+	MobileCoinChainId:      true,
+	PolkadotChainId:        true,
+	KusamaChainId:          true,
+	AlgorandChainId:        true,
+	NearChainId:            true,
+	AvalancheChainId:       true,
+	XDCChainId:             true,
+	AptosChainId:           true,
+
+	MassGridChainId: true,
+	BytomChainId:    true,
+	BytomPoSChainId: true,
+	GrinChainId:     true,
+	VCashChainId:    true,
+}
+
+func GetFullChains() map[string]bool {
+	return map[string]bool{
+		BitcoinChainId:         true,
+		BitcoinCashChainId:     true,
+		BitcoinSVChainId:       true,
+		LitecoinChainId:        true,
+		EthereumChainId:        true,
+		EthereumClassicChainId: true,
+		BSCChainId:             true,
+		PolygonChainId:         true,
+		MVMChainId:             true,
+		DecredChainId:          true,
+		RippleChainId:          true,
+		SiacoinChainId:         true,
+		EOSChainId:             true,
+		DogecoinChainId:        true,
+		DashChainId:            true,
+		ZcashChainId:           true,
+		NEMChainId:             true,
+		ArweaveChainId:         true,
+		HorizenChainId:         true,
+		TRONChainId:            true,
+		StellarChainId:         true,
+		MassGridChainId:        true,
+		BytomChainId:           true,
+		BytomPoSChainId:        true,
+		CosmosChainId:          true,
+		AkashChainId:           true,
+		BinanceChainId:         true,
+		MoneroChainId:          true,
+		StarcoinChainId:        true,
+		BitSharesChainId:       true,
+		RavencoinChainId:       true,
+		GrinChainId:            true,
+		VCashChainId:           true,
+		HandshakeChainId:       true,
+		NervosChainId:          true,
+		TezosChainId:           true,
+		NamecoinChainId:        true,
+		SolanaChainId:          true,
+		NearChainId:            true,
+		FilecoinChainId:        true,
+		MobileCoinChainId:      true,
+		PolkadotChainId:        true,
+		KusamaChainId:          true,
+		AlgorandChainId:        true,
+		AvalancheChainId:       true,
+		XDCChainId:             true,
+		AptosChainId:           true,
+		TONChainId:             true,
+	}
+}
