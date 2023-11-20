@@ -12,8 +12,8 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
+	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/crypto v0.15.0
-	gopkg.in/urfave/cli.v1 v1.20.0
 	nhooyr.io/websocket v1.8.10
 )
 
@@ -25,7 +25,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/urfave/cli/v2 v2.25.7 // indirect
 	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
