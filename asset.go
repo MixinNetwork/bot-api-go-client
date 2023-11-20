@@ -3,6 +3,8 @@ package bot
 import (
 	"context"
 	"encoding/json"
+
+	"github.com/MixinNetwork/mixin/common"
 )
 
 const (
@@ -108,4 +110,27 @@ func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (common.Integer, error) {
+	su := &SafeUser{
+		UserId:     uid,
+		SessionId:  sid,
+		SessionKey: sessionKey,
+	}
+	return AssetBalanceWithSafeUser(ctx, assetId, su)
+}
+
+func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser) (common.Integer, error) {
+	membersHash := HashMembers([]string{su.UserId})
+	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, su)
+	if err != nil {
+		return common.Zero, err
+	}
+	var total common.Integer
+	for _, o := range outputs {
+		amt := common.NewIntegerFromString(o.Amount)
+		total = total.Add(amt)
+	}
+	return total, nil
 }
