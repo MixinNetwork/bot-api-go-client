@@ -89,7 +89,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	if err != nil {
 		return nil, err
 	}
-	if hex.EncodeToString(ver.Marshal()) != str.RawTransaction {
+	if hex.EncodeToString(ver.Marshal()) != result.RawTransaction {
 		panic(str.RawTransaction)
 	}
 	return result, nil
