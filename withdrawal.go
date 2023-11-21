@@ -12,7 +12,7 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 		Tag:         tag,
 		Amount:      amount,
 	}}
-	return SendTransaction(ctx, assetId, recipients, traceId, "", u)
+	return SendTransaction(ctx, assetId, recipients, traceId, "", nil, u)
 }
 
 func PayWithdrawalFee(ctx context.Context, traceId, feeId, amount string, u *SafeUser) (*common.VersionedTransaction, error) {

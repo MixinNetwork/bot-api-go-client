@@ -139,7 +139,7 @@ func transferCmd(c *cli.Context) error {
 	if strings.ToUpper(input) != "Y" {
 		return nil
 	}
-	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, su)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, nil, su)
 	if err != nil {
 		return err
 	}
@@ -202,7 +202,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		if strings.ToUpper(input) != "Y" {
 			continue
 		}
-		tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, su)
+		tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, nil, su)
 		if err != nil {
 			return err
 		}

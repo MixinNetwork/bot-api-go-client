@@ -54,7 +54,7 @@ func TestTIPTransaction(t *testing.T) {
 	tr := &TransactionRecipient{MixAddress: ma.String(), Amount: "0.013"}
 	trace := UuidNewV4().String()
 	log.Println("trace:", trace)
-	tx, err := SendTransaction(ctx, asset, []*TransactionRecipient{tr}, trace, "test-memo", su)
+	tx, err := SendTransaction(ctx, asset, []*TransactionRecipient{tr}, trace, "test-memo", nil, su)
 	assert.Nil(err)
 	assert.NotNil(tx)
 
