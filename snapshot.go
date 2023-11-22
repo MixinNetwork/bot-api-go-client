@@ -8,229 +8,109 @@ import (
 	"time"
 )
 
-type Snapshot struct {
+type SafeDepositView struct {
+	DepositHash  string `json:"deposit_hash"`
+	DepositIndex int64  `json:"deposit_index"`
+	Sender       string `json:"sender"`
+}
+
+type SafeWithdrawalView struct {
+	WithdrawalHash string `json:"withdrawal_hash"`
+	Receiver       string `json:"receiver"`
+}
+
+type SafeSnapshot struct {
 	Type            string    `json:"type"`
-	SnapshotId      string    `json:"snapshot_id"`
-	AssetId         string    `json:"asset_id"`
+	SnapshotID      string    `json:"snapshot_id"`
+	UserID          string    `json:"user_id"`
+	OpponentID      string    `json:"opponent_id"`
+	TransactionHash string    `json:"transaction_hash"`
+	AssetID         string    `json:"asset_id"`
 	Amount          string    `json:"amount"`
-	OpeningBalance  string    `json:"opening_balance"`
-	ClosingBalance  string    `json:"closing_balance"`
-	TransactionHash string    `json:"transaction_hash,omitempty"`
-	SnapshotHash    string    `json:"snapshot_hash,omitempty"`
-	SnapshotAt      time.Time `json:"snapshot_at,omitempty"`
+	Memo            string    `json:"memo"`
 	CreatedAt       time.Time `json:"created_at"`
 
-	// deposit &  withdrawal
-	OutputIndex int64  `json:"output_index,omitempty"` // deposit
-	Sender      string `json:"sender,omitempty"`       // deposit
-	OpponentId  string `json:"opponent_id,omitempty"`  // transfer
-	TraceId     string `json:"trace_id,omitempty"`     // transfer & raw & withdrawal
-	Memo        string `json:"memo,omitempty"`         // transfer & raw & withdrawal
-
-	OpponentKey               string   `json:"opponent_key"`       // raw
-	OpponentMultisigReceivers []string `json:"opponent_receivers"` // raw
-	OpponentMultisigThreshold int64    `json:"opponent_threshold"` // raw
-	State                     string   `json:"state"`              // raw & withdrawal
-	// withdrawal
-	Receiver      string `json:"receiver,omitempty"`
-	Confirmations int64  `json:"confirmations,omitempty"`
-	Fee           struct {
-		Amount  string `json:"amount"`
-		AssetId string `json:"asset_id"`
-	} `json:"fee,omitempty"`
+	Deposit    *SafeDepositView    `json:"deposit,omitempty"`
+	Withdrawal *SafeWithdrawalView `json:"withdrawal,omitempty"`
 }
 
-type SnapshotShort struct {
-	Type       string `json:"type"`
-	SnapshotId string `json:"snapshot_id"`
-	Source     string `json:"source"`
-	Amount     string `json:"amount"`
-	Asset      struct {
-		Type     string `json:"type"`
-		AssetId  string `json:"asset_id"`
-		ChainId  string `json:"chain_id"`
-		MixinId  string `json:"mixin_id"`
-		Symbol   string `json:"symbol"`
-		Name     string `json:"name"`
-		AssetKey string `json:"asset_key"`
-		IconUrl  string `json:"icon_url"`
-	} `json:"asset"`
-	State        string    `json:"state"`
-	SnapshotHash string    `json:"snapshot_hash"`
-	CreatedAt    time.Time `json:"created_at"`
-	TraceId      string    `json:"trace_id"`
-	OpponentId   string    `json:"opponent_id"`
-	Memo         string    `json:"data"`
-}
-
-func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
+func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offset, uid, sid, sessionKey string) ([]*SafeSnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
-	if offset != "" {
-		v.Set("offset", offset)
+	if app != "" {
+		v.Set("app", app)
 	}
 	if assetId != "" {
 		v.Set("asset", assetId)
 	}
-	if order != "" {
-		v.Set("order", order)
+	if offset != "" {
+		v.Set("offset", offset)
 	}
-
-	path := "/snapshots?" + v.Encode()
+	if opponent != "" {
+		v.Set("opponent", opponent)
+	}
+	path := "/safe/snapshots?" + v.Encode()
 	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
 	if err != nil {
 		return nil, err
 	}
-	return SnapshotsByToken(ctx, limit, offset, assetId, order, token)
+	return SafeSnapshotsByToken(ctx, limit, app, assetId, offset, opponent, token)
 }
 
-func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
+func SafeSnapshotsByToken(ctx context.Context, limit int, app, assetId, opponent, offset, accessToken string) ([]*SafeSnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
-	if offset != "" {
-		v.Set("offset", offset)
+	if app != "" {
+		v.Set("app", app)
 	}
 	if assetId != "" {
 		v.Set("asset", assetId)
 	}
-	if order != "" {
-		v.Set("order", order)
-	}
-
-	path := "/snapshots?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Data  []*Snapshot `json:"data"`
-		Error Error       `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*Snapshot, error) {
-	path := "/snapshots/" + snapshotId
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
-	if err != nil {
-		return nil, err
-	}
-	return SnapshotByToken(ctx, snapshotId, token)
-}
-
-func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey string) (*Snapshot, error) {
-	path := "/snapshots/trace/" + traceId
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := Request(ctx, "GET", path, nil, token)
-	if err != nil {
-		return nil, err
-	}
-	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
-	path := "/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
-	return NetworkSnapshotByToken(ctx, snapshotId, "")
-}
-
-func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
-	path := "/network/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*SnapshotShort, error) {
-	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "", "", "")
-}
-
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*SnapshotShort, error) {
-	v := url.Values{}
-	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
 		v.Set("offset", offset)
 	}
-	if assetId != "" {
-		v.Set("asset", assetId)
+	if opponent != "" {
+		v.Set("opponent", opponent)
 	}
-	if order == "ASC" || order == "DESC" {
-		v.Set("order", order)
-	}
-
-	path := "/network/snapshots?" + v.Encode()
-	accessToken := ""
-	if sessionKey != "" {
-		var err error
-		accessToken, err = SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
-		if err != nil {
-			return nil, err
-		}
-	}
+	path := "/safe/snapshots?" + v.Encode()
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
 		return nil, err
 	}
 
 	var resp struct {
-		Data  []*SnapshotShort `json:"data"`
-		Error Error            `json:"error"`
+		Data  []*SafeSnapshot `json:"data"`
+		Error Error           `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func SafeSnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*SafeSnapshot, error) {
+	path := "/safe/snapshots/" + snapshotId
+	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	return SafeSnapshotByToken(ctx, snapshotId, token)
+}
+
+func SafeSnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*SafeSnapshot, error) {
+	path := "/safe/snapshots/" + snapshotId
+	body, err := Request(ctx, "GET", path, nil, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *SafeSnapshot `json:"data"`
+		Error Error         `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
