@@ -50,7 +50,7 @@ func (ue *UtxoError) Error() string {
 	return fmt.Sprintf("insufficient outputs %s@%d %s", ue.TotalInput, ue.OutputSize, ue.TotalOutput)
 }
 
-func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, memo string, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -77,7 +77,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	}
 
 	// build the unsigned raw transaction
-	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, memo, references, u)
+	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
 	if err != nil {
 		return nil, err
 	}
@@ -122,13 +122,15 @@ func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransa
 	if err != nil {
 		return nil, BadDataError(ctx)
 	}
-	if resp.Error.Code > 0 {
+	if resp.Error.Code == 404 {
+		return nil, nil
+	} else if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
 }
 
-func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, memo string, references []string, u *SafeUser) (*common.Transaction, error) {
+func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, extra []byte, references []string, u *SafeUser) (*common.Transaction, error) {
 	tx := common.NewTransactionV5(asset)
 	for _, in := range utxos {
 		h, err := crypto.HashFromString(in.TransactionHash)
@@ -143,14 +145,6 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 			panic(r)
 		}
 		tx.References = append(tx.References, rh)
-	}
-
-	if memo != "" {
-		extraBytes := []byte(memo)
-		if len(extraBytes) > 512 {
-			return nil, errors.New("extra data is too long")
-		}
-		tx.Extra = extraBytes
 	}
 
 	for i, r := range recipients {
@@ -185,6 +179,11 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 			Mask:   mask,
 		})
 	}
+
+	if l := tx.AsVersioned().GetExtraLimit(); len(tx.Extra) >= l {
+		return nil, fmt.Errorf("large extra %d > %d", len(tx.Extra), l)
+	}
+	tx.Extra = extra
 	return tx, nil
 }
 
