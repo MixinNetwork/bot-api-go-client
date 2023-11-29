@@ -9,22 +9,36 @@ import (
 	"time"
 )
 
+type KernelDepositView struct {
+	Chain        string `json:"chain"`
+	DepositHash  string `json:"deposit_hash"`
+	DepositIndex int64  `json:"deposit_index"`
+}
+
 type Output struct {
+	Type               string    `json:"type"`
 	OutputID           string    `json:"output_id"`
-	OutputIndex        uint      `json:"output_index"`
 	TransactionHash    string    `json:"transaction_hash"`
+	OutputIndex        uint      `json:"output_index"`
 	Asset              string    `json:"asset"`
 	Amount             string    `json:"amount"`
+	Mask               string    `json:"mask"`
+	Keys               []string  `json:"keys"`
+	SendersHash        string    `json:"senders_hash"`
+	SendersThreshold   int64     `json:"senders_threshold"`
+	Senders            []string  `json:"senders"`
+	ReceiversHash      string    `json:"receivers_hash"`
+	ReceiversThreshold int64     `json:"receivers_threshold"`
+	Receivers          []string  `json:"receivers"`
 	Extra              string    `json:"extra"`
 	State              string    `json:"state"`
-	Receivers          []string  `json:"receivers"`
-	ReceiversHash      string    `json:"receivers_hash"`
-	ReceiversThreshold int       `json:"receivers_threshold"`
-	Senders            []string  `json:"senders"`
-	SendersHash        string    `json:"senders_hash"`
-	SendersThreshold   int       `json:"senders_threshold"`
 	Sequence           int64     `json:"sequence"`
 	CreatedAt          time.Time `json:"created_at"`
+	Signers            []string  `json:"signers"`
+	SignedBy           string    `json:"signed_by"`
+
+	Deposit   *KernelDepositView `json:"deposit,omitempty"`
+	RequestId string             `json:"request_id,omitempty"`
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, assetId string, u *SafeUser) ([]*Output, error) {
