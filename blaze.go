@@ -42,6 +42,8 @@ const (
 	MessageCategoryMessagePin            = "MESSAGE_PIN"
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 	MessageCategoryAppCard               = "APP_CARD"
+
+	MessageCategorySystemSafeSnapshot = "SYSTEM_SAFE_SNAPSHOT"
 )
 
 type BlazeMessage struct {
