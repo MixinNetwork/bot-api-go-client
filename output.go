@@ -6,13 +6,25 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 type Output struct {
-	TransactionHash string `json:"transaction_hash"`
-	OutputIndex     uint   `json:"output_index"`
-	Asset           string `json:"asset"`
-	Amount          string `json:"amount"`
+	OutputID           string    `json:"output_id"`
+	OutputIndex        uint      `json:"output_index"`
+	TransactionHash    string    `json:"transaction_hash"`
+	Asset              string    `json:"asset"`
+	Amount             string    `json:"amount"`
+	Extra              string    `json:"extra"`
+	State              string    `json:"state"`
+	Receivers          []string  `json:"receivers"`
+	ReceiversHash      string    `json:"receivers_hash"`
+	ReceiversThreshold int       `json:"receivers_threshold"`
+	Senders            []string  `json:"senders"`
+	SendersHash        string    `json:"senders_hash"`
+	SendersThreshold   int       `json:"senders_threshold"`
+	Sequence           int64     `json:"sequence"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, assetId string, u *SafeUser) ([]*Output, error) {
