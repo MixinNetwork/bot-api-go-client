@@ -6,13 +6,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ed25519"
-	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
-	"io"
-	"strings"
 
 	"golang.org/x/crypto/curve25519"
 )
@@ -114,35 +111,6 @@ func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgemen
 		return resp.Error
 	}
 	return nil
-}
-
-func UniqueConversationId(userId, recipientId string) string {
-	minId, maxId := userId, recipientId
-	if strings.Compare(userId, recipientId) > 0 {
-		maxId, minId = userId, recipientId
-	}
-	h := md5.New()
-	io.WriteString(h, minId)
-	io.WriteString(h, maxId)
-	sum := h.Sum(nil)
-	sum[6] = (sum[6] & 0x0f) | 0x30
-	sum[8] = (sum[8] & 0x3f) | 0x80
-	id, _ := UuidFromBytes(sum)
-	return id.String()
-}
-
-func Chunked(source []interface{}, size int) [][]interface{} {
-	var result [][]interface{}
-	index := 0
-	for index < len(source) {
-		end := index + size
-		if end >= len(source) {
-			end = len(source)
-		}
-		result = append(result, source[index:end])
-		index += size
-	}
-	return result
 }
 
 func EncryptMessageData(data string, sessions []*Session, privateKey string) (string, error) {
