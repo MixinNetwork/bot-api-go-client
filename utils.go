@@ -51,3 +51,16 @@ func Chunked(source []interface{}, size int) [][]interface{} {
 	}
 	return result
 }
+
+func MakeUniqueStringSlice(ss []string) []string {
+	unique := make([]string, 0)
+	filter := make(map[string]bool)
+	for _, s := range ss {
+		if filter[s] {
+			continue
+		}
+		unique = append(unique, s)
+		filter[s] = true
+	}
+	return unique
+}
