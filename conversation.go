@@ -86,7 +86,16 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 	return &resp.Data, nil
 }
 
-func ConversationShow(ctx context.Context, conversationId string, accessToken string) (*Conversation, error) {
+func ConversationShow(ctx context.Context, conversationId, uid, sid, key string) (*Conversation, error) {
+	path := "/conversations/" + conversationId
+	token, err := SignAuthenticationToken(uid, sid, key, "GET", path, "")
+	if err != nil {
+		return nil, err
+	}
+	return ConversationShowByToken(ctx, conversationId, token)
+}
+
+func ConversationShowByToken(ctx context.Context, conversationId string, accessToken string) (*Conversation, error) {
 	body, err := Request(ctx, "GET", "/conversations/"+conversationId, nil, accessToken)
 	if err != nil {
 		return nil, err
