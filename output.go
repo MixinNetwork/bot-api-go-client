@@ -41,9 +41,12 @@ type Output struct {
 	RequestId string             `json:"request_id,omitempty"`
 }
 
-func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, assetId string, u *SafeUser) ([]*Output, error) {
-	method, path := "GET", fmt.Sprintf("/safe/outputs?members=%s&threshold=%d&asset=%s&state=unspent", membersHash, threshold, assetId)
+func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
+	method, path := "GET", fmt.Sprintf("/safe/outputs?members=%s&threshold=%d&asset=%s&state=unspent", membersHash, threshold, kernelAssetId)
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, "")
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, method, path, []byte{}, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)

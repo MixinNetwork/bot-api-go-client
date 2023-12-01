@@ -26,6 +26,7 @@ type SafeSnapshot struct {
 	OpponentID      string    `json:"opponent_id"`
 	TransactionHash string    `json:"transaction_hash"`
 	AssetID         string    `json:"asset_id"`
+	KernelAssetID   string    `json:"kernel_asset_id"`
 	Amount          string    `json:"amount"`
 	Memo            string    `json:"memo"`
 	CreatedAt       time.Time `json:"created_at"`

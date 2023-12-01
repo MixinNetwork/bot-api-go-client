@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/MixinNetwork/mixin/common"
+	"github.com/MixinNetwork/mixin/crypto"
+	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -107,12 +109,16 @@ func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (co
 		SessionId:  sid,
 		SessionKey: sessionKey,
 	}
+
+	if id, _ := uuid.FromString(assetId); assetId == id.String() {
+		assetId = crypto.Sha256Hash([]byte(assetId)).String()
+	}
 	return AssetBalanceWithSafeUser(ctx, assetId, su)
 }
 
-func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser) (common.Integer, error) {
+func AssetBalanceWithSafeUser(ctx context.Context, kernelAssetId string, su *SafeUser) (common.Integer, error) {
 	membersHash := HashMembers([]string{su.UserId})
-	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, su)
+	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, kernelAssetId, su)
 	if err != nil {
 		return common.Zero, err
 	}
