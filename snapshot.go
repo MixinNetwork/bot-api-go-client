@@ -55,7 +55,7 @@ func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offse
 	if err != nil {
 		return nil, err
 	}
-	return SafeSnapshotsByToken(ctx, limit, app, assetId, offset, opponent, token)
+	return SafeSnapshotsByToken(ctx, limit, app, assetId, opponent, offset, token)
 }
 
 func SafeSnapshotsByToken(ctx context.Context, limit int, app, assetId, opponent, offset, accessToken string) ([]*SafeSnapshot, error) {
