@@ -65,22 +65,19 @@ func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte,
 	return resp.Data, nil
 }
 
-func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state, offset, order string, limit int, u *SafeUser) ([]*Output, error) {
+func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset uint64, limit int, u *SafeUser) ([]*Output, error) {
 	v := url.Values{}
 	v.Set("members", membersHash)
 	v.Set("threshold", fmt.Sprint(threshold))
 	v.Set("limit", strconv.Itoa(limit))
-	if offset != "" {
-		v.Set("offset", offset)
+	if offset > 0 {
+		v.Set("offset", fmt.Sprint(offset))
 	}
 	if assetId != "" {
 		v.Set("asset", assetId)
 	}
 	if state != "" {
 		v.Set("state", state)
-	}
-	if order != "" {
-		v.Set("order", order)
 	}
 	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, "")
