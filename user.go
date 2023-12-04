@@ -34,6 +34,10 @@ const (
 	RelationshipActionRemove  = "REMOVE"
 	RelationshipActionBlock   = "BLOCK"
 	RelationshipActionUnblock = "UNBLOCK"
+
+	PreferenceSourceAll      = "EVERYBODY"
+	PreferenceSourceContacts = "CONTACTS"
+	PreferenceSourceNobody   = "NOBODY"
 )
 
 func CreateUserSimple(ctx context.Context, sessionSecret, fullName string) (*User, error) {
