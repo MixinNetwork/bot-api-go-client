@@ -20,6 +20,7 @@ var (
 	httpClient        *http.Client
 	httpUri           string
 	blazeUri          string
+	userAgent         = "Bot-API-Go-Client"
 
 	uid        string
 	sid        string
@@ -38,6 +39,7 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("X-Request-Id", requestID)
+	req.Header.Set("User-Agent", userAgent)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -99,4 +101,8 @@ func SetBaseUri(base string) {
 
 func SetBlazeUri(blaze string) {
 	blazeUri = blaze
+}
+
+func SetUserAgent(ua string) {
+	userAgent = ua
 }
