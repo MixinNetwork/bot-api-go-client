@@ -65,7 +65,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	// get unspent outputs for asset and may return insufficient outputs error
 	utxos, changeAmount, err := requestUnspentOutputsForRecipients(ctx, assetId, recipients, u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("requestUnspentOutputsForRecipients(%s) => %v", assetId, err)
 	}
 	// change to the sender
 	if changeAmount.Sign() > 0 {
@@ -79,13 +79,13 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	// build the unsigned raw transaction
 	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("buildRawTransaction(%s) => %v", asset, err)
 	}
 	ver := tx.AsVersioned()
 	// verify the raw transaction, the same trace id may have been signed already
 	str, err := verifyRawTransactionBySequencer(ctx, traceId, ver, u)
 	if err != nil || str.State != "unspent" {
-		return str, err
+		return str, fmt.Errorf("verifyRawTransactionBySequencer(%s) => %v", traceId, err)
 	}
 
 	// sign the raw transaction with user private spend key
@@ -94,13 +94,13 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	}
 	ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendKey)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
 
 	// send the raw transaction to the sequencer api
 	result, err := sendRawTransactionToSequencer(ctx, traceId, ver, u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("sendRawTransactionToSequencer(%s) => %v", traceId, err)
 	}
 	if hex.EncodeToString(ver.Marshal()) != result.RawTransaction {
 		panic(str.RawTransaction)
