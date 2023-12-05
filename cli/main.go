@@ -54,6 +54,32 @@ func main() {
 						Name:  "keystore,k",
 						Usage: "keystore download from https://developers.mixin.one/dashboard",
 					},
+				},
+			},
+			{
+				Name:   "batchTransfer",
+				Action: batchTransferCmd,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "asset,a",
+						Usage: "asset",
+					},
+					&cli.StringFlag{
+						Name:  "amount,z",
+						Usage: "amount",
+					},
+					&cli.StringFlag{
+						Name:  "receiver,r",
+						Usage: "receiver",
+					},
+					&cli.StringFlag{
+						Name:  "trace,t",
+						Usage: "trace",
+					},
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
 					&cli.StringFlag{
 						Name:  "input,cvs",
 						Usage: "read input from csv file and transfer all rows",
@@ -93,6 +119,55 @@ func main() {
 }
 
 func transferCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	asset := c.String("asset")
+	amount := c.String("amount")
+	receiver := c.String("receiver")
+	trace := c.String("trace")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var user Bot
+	err = json.Unmarshal([]byte(dat), &user)
+	if err != nil {
+		panic(err)
+	}
+
+	su := &bot.SafeUser{
+		UserId:     user.ClientID,
+		SessionId:  user.SessionID,
+		SessionKey: user.PrivateKey,
+		SpendKey:   user.Pin[:64],
+	}
+
+	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
+	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+
+	memo := c.String("trace")
+	if trace == "" {
+		trace = bot.UuidNewV4().String()
+	}
+	traceID, _ := bot.UuidFromString(trace)
+	if traceID.String() != trace {
+		trace = bot.UniqueObjectId(trace)
+	}
+	log.Println("asset:", asset)
+	log.Println("amount:", amount)
+	log.Println("receiver:", receiver)
+	log.Println("origin trace is memo:", memo)
+	log.Println("trace:", trace)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, su)
+	if err != nil {
+		return err
+	}
+	log.Println("tx:", tx.TransactionHash)
+	log.Println("tx raw:", tx.RawTransaction)
+	return nil
+}
+
+func batchTransferCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
 	inputPath := c.String("input")
 	asset := c.String("asset")
@@ -139,7 +214,7 @@ func transferCmd(c *cli.Context) error {
 	if strings.ToUpper(input) != "Y" {
 		return nil
 	}
-	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, nil, su)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, su)
 	if err != nil {
 		return err
 	}
@@ -202,7 +277,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		if strings.ToUpper(input) != "Y" {
 			continue
 		}
-		tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, memo, nil, su)
+		tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, su)
 		if err != nil {
 			return err
 		}
