@@ -87,6 +87,28 @@ func main() {
 				},
 			},
 			{
+				Name:   "outputs",
+				Action: listOutputsCmd,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "asset,a",
+						Usage: "asset",
+					},
+					&cli.StringSliceFlag{
+						Name:  "members,m",
+						Usage: "members",
+					},
+					&cli.IntFlag{
+						Name:  "threshold,t",
+						Usage: "threshold",
+					},
+					&cli.StringFlag{
+						Name:  "keystore,k",
+						Usage: "keystore download from https://developers.mixin.one/dashboard",
+					},
+				},
+			},
+			{
 				Name:   "migrate",
 				Action: botMigrateTIPCmd,
 				Flags: []cli.Flag{
