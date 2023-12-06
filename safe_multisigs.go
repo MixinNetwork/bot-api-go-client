@@ -53,7 +53,7 @@ func CreateMultisigTransactionRequests(ctx context.Context, requests []*KernelTr
 	return resp.Data, nil
 }
 
-func SignMultisigTransactionRequests(ctx context.Context, id, request *KernelTransactionRequestCreateRequest, u *SafeUser) (*KernelTransactionRequest, error) {
+func SignMultisigTransactionRequests(ctx context.Context, id string, request *KernelTransactionRequestCreateRequest, u *SafeUser) (*KernelTransactionRequest, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func SignMultisigTransactionRequests(ctx context.Context, id, request *KernelTra
 	return resp.Data, nil
 }
 
-func UnlockMultisigTransactionRequests(ctx context.Context, id, u *SafeUser) (*KernelTransactionRequest, error) {
+func UnlockMultisigTransactionRequests(ctx context.Context, id string, u *SafeUser) (*KernelTransactionRequest, error) {
 	method, path := "POST", fmt.Sprintf("/safe/multisigs/%s/unlock", id)
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, "")
 	if err != nil {
@@ -105,7 +105,7 @@ func UnlockMultisigTransactionRequests(ctx context.Context, id, u *SafeUser) (*K
 	return resp.Data, nil
 }
 
-func GetMultisigTransactionRequests(ctx context.Context, id, u *SafeUser) (*KernelTransactionRequest, error) {
+func GetMultisigTransactionRequests(ctx context.Context, id string, u *SafeUser) (*KernelTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/multisigs/%s", id)
 	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, "")
 	if err != nil {
