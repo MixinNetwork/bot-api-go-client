@@ -26,7 +26,7 @@ func main() {
 			batchTransferCmdCli,
 			// ./cli transferMulti -keystore=/path/to/keystore-7000105129.tip.json -asset=f3bed3e0f6738938c8988eb8853c5647baa263901deb217ee53586d5de831f3b -receivers=8291d1bb-440c-4557-b69f-91dda17876d1 -receivers=e9e5b807-fa8b-455a-8dfa-b189d28310ff -threshold=1 -amount=0.0013
 			transferMultiCmdCli,
-			// ./cli outputs -keystore=/path/to/keystore-7000105129.tip.json -asset=f3bed3e0f6738938c8988eb8853c5647baa263901deb217ee53586d5de831f3b -members=8291d1bb-440c-4557-b69f-91dda17876d1 -threshold=1
+			// ./cli outputs -keystore=/path/to/keystore-7000105129.tip.json  -asset=f3bed3e0f6738938c8988eb8853c5647baa263901deb217ee53586d5de831f3b -members=8291d1bb-440c-4557-b69f-91dda17876d1 -members=e9e5b807-fa8b-455a-8dfa-b189d28310ff -threshold=1
 			listOutputsCmdCli,
 			// ./cli migrate --keystore /path/to/keystore-7000103710.json
 			botMigrateTIPCmdCli,

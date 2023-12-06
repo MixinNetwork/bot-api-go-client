@@ -2,9 +2,15 @@ package bot
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/MixinNetwork/mixin/common"
+	"github.com/MixinNetwork/mixin/crypto"
+	"github.com/gofrs/uuid/v5"
 )
 
 type KernelTransactionRequest struct {
@@ -127,4 +133,89 @@ func GetMultisigTransactionRequests(ctx context.Context, id string, u *SafeUser)
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func BuildMultiTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, members []string, threshold byte, u *SafeUser) (*KernelTransactionRequest, error) {
+	if uuid.FromStringOrNil(assetId).String() == assetId {
+		assetId = crypto.Sha256Hash([]byte(assetId)).String()
+	}
+	asset, err := crypto.HashFromString(assetId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid asset id %s", assetId)
+	}
+	if len(references) > 2 {
+		return nil, fmt.Errorf("too many references %d", len(references))
+	}
+
+	// get unspent outputs for asset and may return insufficient outputs error
+	utxos, changeAmount, err := requestUnspentMultiOutputsForRecipients(ctx, assetId, recipients, members, threshold, u)
+	if err != nil {
+		return nil, fmt.Errorf("requestUnspentOutputsForRecipients(%s) => %v", assetId, err)
+	}
+	// change to the sender
+	if changeAmount.Sign() > 0 {
+		ma := NewUUIDMixAddress(members, threshold)
+		recipients = append(recipients, &TransactionRecipient{
+			MixAddress: ma.String(),
+			Amount:     changeAmount.String(),
+		})
+	}
+
+	// build the unsigned raw transaction
+	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
+	if err != nil {
+		return nil, fmt.Errorf("buildRawTransaction(%s) => %v", asset, err)
+	}
+	ver := tx.AsVersioned()
+	// verify the raw transaction, the same trace id may have been signed already
+	requests := []*KernelTransactionRequestCreateRequest{
+		{
+			RequestID: traceId,
+			Raw:       hex.EncodeToString(ver.Marshal()),
+		},
+	}
+	rs, err := CreateMultisigTransactionRequests(ctx, requests, u)
+	if err != nil {
+		return nil, err
+	}
+	if len(rs) != 1 {
+		return nil, errors.New("invalid response size")
+	}
+	return rs[0], nil
+}
+
+func requestUnspentMultiOutputsForRecipients(ctx context.Context, assetId string, recipients []*TransactionRecipient, members []string, threshold byte, u *SafeUser) ([]*Output, common.Integer, error) {
+	membersHash := HashMembers(members)
+	outputs, err := ListUnspentOutputs(ctx, membersHash, threshold, assetId, u)
+	if err != nil {
+		return nil, common.Zero, err
+	}
+	if len(outputs) == 0 {
+		return nil, common.Zero, &UtxoError{
+			TotalInput:  common.Zero,
+			TotalOutput: common.Zero,
+			OutputSize:  0,
+		}
+	}
+
+	var totalOutput common.Integer
+	for _, r := range recipients {
+		amt := common.NewIntegerFromString(r.Amount)
+		totalOutput = totalOutput.Add(amt)
+	}
+
+	var totalInput common.Integer
+	for i, o := range outputs {
+		amt := common.NewIntegerFromString(o.Amount)
+		totalInput = totalInput.Add(amt)
+		if totalInput.Cmp(totalOutput) < 0 {
+			continue
+		}
+		return outputs[:i+1], totalInput.Sub(totalOutput), nil
+	}
+	return nil, common.Zero, &UtxoError{
+		TotalInput:  totalInput,
+		TotalOutput: totalOutput,
+		OutputSize:  len(outputs),
+	}
 }
