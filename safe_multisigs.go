@@ -134,7 +134,7 @@ func GetMultisigTransactionRequests(ctx context.Context, id string, u *SafeUser)
 	return resp.Data, nil
 }
 
-func BuildMultiTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, members []string, threshold byte, u *SafeUser) (*KernelTransactionRequest, error) {
+func BuildMultiTransaction(ctx context.Context, assetId, amount string, receivers []string, receiversThreshold byte, traceId string, extra []byte, references []string, senders []string, sendersThreshold byte, u *SafeUser) (*KernelTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -146,16 +146,23 @@ func BuildMultiTransaction(ctx context.Context, assetId string, recipients []*Tr
 		return nil, fmt.Errorf("too many references %d", len(references))
 	}
 
+	ma := NewUUIDMixAddress(receivers, receiversThreshold)
+	recipients := []*TransactionRecipient{
+		{
+			MixAddress: ma.String(),
+			Amount:     amount,
+		},
+	}
 	// get unspent outputs for asset and may return insufficient outputs error
-	utxos, changeAmount, err := requestUnspentMultiOutputsForRecipients(ctx, assetId, recipients, members, threshold, u)
+	utxos, changeAmount, err := requestUnspentMultiOutputsForRecipients(ctx, assetId, recipients, senders, sendersThreshold, u)
 	if err != nil {
 		return nil, fmt.Errorf("requestUnspentMultiOutputsForRecipients(%s) => %v", assetId, err)
 	}
 	// change to the sender
 	if changeAmount.Sign() > 0 {
-		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
+		maa := NewUUIDMixAddress(senders, sendersThreshold)
 		recipients = append(recipients, &TransactionRecipient{
-			MixAddress: ma.String(),
+			MixAddress: maa.String(),
 			Amount:     changeAmount.String(),
 		})
 	}
@@ -177,25 +184,33 @@ func BuildMultiTransaction(ctx context.Context, assetId string, recipients []*Tr
 		return nil, fmt.Errorf("CreateMultisigTransactionRequests(%s) => %v", traceId, err)
 	}
 	multisig := ms[0]
+	return multisig, nil
+	/*
+	   // sign the raw transaction with user private spend key
 
-	// sign the raw transaction with user private spend key
-	if len(multisig.Views) != len(ver.Inputs) {
-		return nil, fmt.Errorf("invalid view keys count %d %d", len(multisig.Views), len(ver.Inputs))
-	}
-	ver, err = signRawTransaction(ctx, ver, multisig.Views, utxos, u.SpendKey)
-	if err != nil {
-		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
-	}
+	   	if len(multisig.Views) != len(ver.Inputs) {
+	   		return nil, fmt.Errorf("invalid view keys count %d %d", len(multisig.Views), len(ver.Inputs))
+	   	}
 
-	// send the raw transaction to the sequencer api
-	result, err := SignMultisigTransactionRequests(ctx, traceId, &KernelTransactionRequestCreateRequest{
-		RequestID: traceId,
-		Raw:       hex.EncodeToString(ver.Marshal()),
-	}, u)
-	if err != nil {
-		return nil, fmt.Errorf("SignMultisigTransactionRequests(%s) => %v", traceId, err)
-	}
-	return result, nil
+	   ver, err = signRawTransaction(ctx, ver, multisig.Views, utxos, u.SpendKey)
+
+	   	if err != nil {
+	   		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
+	   	}
+
+	   // send the raw transaction to the sequencer api
+
+	   	result, err := SignMultisigTransactionRequests(ctx, traceId, &KernelTransactionRequestCreateRequest{
+	   		RequestID: traceId,
+	   		Raw:       hex.EncodeToString(ver.Marshal()),
+	   	}, u)
+
+	   	if err != nil {
+	   		return nil, fmt.Errorf("SignMultisigTransactionRequests(%s) => %v", traceId, err)
+	   	}
+
+	   return result, nil
+	*/
 }
 
 func requestUnspentMultiOutputsForRecipients(ctx context.Context, assetId string, recipients []*TransactionRecipient, members []string, threshold byte, u *SafeUser) ([]*Output, common.Integer, error) {
