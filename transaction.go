@@ -92,7 +92,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	if len(str.Views) != len(ver.Inputs) {
 		return nil, fmt.Errorf("invalid view keys count %d %d", len(str.Views), len(ver.Inputs))
 	}
-	ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendKey)
+	ver, err = signRawTransaction(ctx, ver, str.Views, utxos, u.SpendKey)
 	if err != nil {
 		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
@@ -227,7 +227,7 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	return resp.Data[0], nil
 }
 
-func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
+func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, utxos []*Output, spendKey string) (*common.VersionedTransaction, error) {
 	msg := ver.PayloadHash()
 	spent, err := crypto.KeyFromString(spendKey)
 	if err != nil {
@@ -239,7 +239,16 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 		return nil, err
 	}
 	signaturesMap := make([]map[uint16]*crypto.Signature, len(ver.Inputs))
-	for i := range ver.Inputs {
+	for i, input := range ver.Inputs {
+		utxo := utxos[i]
+		if utxo.TransactionHash != input.Hash.String() || utxo.OutputIndex != input.Index {
+			return nil, fmt.Errorf("invalid input or utxo: %v %v", input, utxo)
+		}
+		keysFilter := make(map[string]uint16)
+		for i, k := range utxo.Keys {
+			keysFilter[k] = uint16(i)
+		}
+
 		viewBytes, err := crypto.KeyFromString(views[i])
 		if err != nil {
 			return nil, err
@@ -252,8 +261,12 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 		var key crypto.Key
 		copy(key[:], t.Bytes())
 		sig := key.Sign(msg)
+		index, found := keysFilter[key.Public().String()]
+		if !found {
+			return nil, fmt.Errorf("invalid key for the input %v", input)
+		}
 		sigs := make(map[uint16]*crypto.Signature)
-		sigs[0] = &sig // for 1/1 bot transaction
+		sigs[index] = &sig // for 1/1 bot transaction
 		signaturesMap[i] = sigs
 	}
 	ver.SignaturesMap = signaturesMap
