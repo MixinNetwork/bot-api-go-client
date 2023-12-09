@@ -20,7 +20,8 @@ type Output struct {
 	OutputID           string    `json:"output_id"`
 	TransactionHash    string    `json:"transaction_hash"`
 	OutputIndex        uint      `json:"output_index"`
-	Asset              string    `json:"asset"`
+	AssetId            string    `json:"asset_id"`
+	KernelAssetId      string    `json:"kernel_asset_id"`
 	Amount             string    `json:"amount"`
 	Mask               string    `json:"mask"`
 	Keys               []string  `json:"keys"`
@@ -42,27 +43,7 @@ type Output struct {
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
-	method, path := "GET", fmt.Sprintf("/safe/outputs?members=%s&threshold=%d&asset=%s&state=unspent", membersHash, threshold, kernelAssetId)
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, "")
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, method, path, []byte{}, token)
-	if err != nil {
-		return nil, ServerError(ctx, err)
-	}
-	var resp struct {
-		Data  []*Output `json:"data"`
-		Error Error     `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, BadDataError(ctx)
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
+	return ListOutputs(ctx, membersHash, threshold, kernelAssetId, "unspent", 0, 500, u)
 }
 
 func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset uint64, limit int, u *SafeUser) ([]*Output, error) {
