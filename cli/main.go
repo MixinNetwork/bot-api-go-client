@@ -87,28 +87,6 @@ func main() {
 				},
 			},
 			{
-				Name:   "outputs",
-				Action: listOutputsCmd,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "asset,a",
-						Usage: "asset",
-					},
-					&cli.StringSliceFlag{
-						Name:  "members,m",
-						Usage: "members",
-					},
-					&cli.IntFlag{
-						Name:  "threshold,t",
-						Usage: "threshold",
-					},
-					&cli.StringFlag{
-						Name:  "keystore,k",
-						Usage: "keystore download from https://developers.mixin.one/dashboard",
-					},
-				},
-			},
-			{
 				Name:   "migrate",
 				Action: botMigrateTIPCmd,
 				Flags: []cli.Flag{
@@ -158,10 +136,10 @@ func transferCmd(c *cli.Context) error {
 	}
 
 	su := &bot.SafeUser{
-		UserId:     user.ClientID,
-		SessionId:  user.SessionID,
-		SessionKey: user.PrivateKey,
-		SpendKey:   user.Pin[:64],
+		UserId:            user.ClientID,
+		SessionId:         user.SessionID,
+		SessionPrivateKey: user.PrivateKey,
+		SpendPrivateKey:   user.Pin[:64],
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
@@ -208,10 +186,10 @@ func batchTransferCmd(c *cli.Context) error {
 	}
 
 	su := &bot.SafeUser{
-		UserId:     user.ClientID,
-		SessionId:  user.SessionID,
-		SessionKey: user.PrivateKey,
-		SpendKey:   user.Pin[:64],
+		UserId:            user.ClientID,
+		SessionId:         user.SessionID,
+		SessionPrivateKey: user.PrivateKey,
+		SpendPrivateKey:   user.Pin[:64],
 	}
 	if inputPath != "" {
 		return transferCSV(c, inputPath, asset, su)

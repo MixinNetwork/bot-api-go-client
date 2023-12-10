@@ -92,7 +92,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	if len(str.Views) != len(ver.Inputs) {
 		return nil, fmt.Errorf("invalid view keys count %d %d", len(str.Views), len(ver.Inputs))
 	}
-	ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendKey)
+	ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
@@ -202,7 +202,7 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 		return nil, err
 	}
 	method, path := "POST", "/safe/transaction/requests"
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionPrivateKey, method, path, string(data))
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *com
 		return nil, err
 	}
 	method, path := "POST", "/safe/transactions"
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionPrivateKey, method, path, string(data))
 	if err != nil {
 		return nil, err
 	}

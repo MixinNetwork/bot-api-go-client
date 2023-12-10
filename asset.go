@@ -105,9 +105,9 @@ func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
 
 func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (common.Integer, error) {
 	su := &SafeUser{
-		UserId:     uid,
-		SessionId:  sid,
-		SessionKey: sessionKey,
+		UserId:            uid,
+		SessionId:         sid,
+		SessionPrivateKey: sessionKey,
 	}
 
 	if id, _ := uuid.FromString(assetId); assetId == id.String() {

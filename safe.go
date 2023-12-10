@@ -8,11 +8,26 @@ import (
 )
 
 type SafeUser struct {
-	UserId     string
-	SessionId  string
-	SessionKey string
-	UserKey    string
-	SpendKey   string
+	// this is the app or bot uuid of messenger api
+	// user id can never change
+	UserId string
+
+	// session id could be rotated by the app owner
+	SessionId string
+
+	// session private key rotates with the session id
+	// this key is used for all authentication of messenger api
+	SessionPrivateKey string
+
+	// server public key rotates with the session id
+	// server public key is used to verify signature of server response
+	// could also be used to do ecdh with session private key
+	ServerPublicKey string
+
+	// spend private key is used to query or send money
+	// this is the mixin kernel spend private key
+	// spend private key can never change
+	SpendPrivateKey string
 }
 
 type GhostKeys struct {
