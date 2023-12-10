@@ -126,7 +126,7 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 	if ma.Version != MixAddressVersion {
 		return nil, fmt.Errorf("invalid address version %d", ma.Version)
 	}
-	if ma.Threshold == 0 || ma.Threshold > total || total > 64 {
+	if ma.Threshold == 0 || total > 64 {
 		return nil, fmt.Errorf("invalid address threshold %d/%d", ma.Threshold, total)
 	}
 
@@ -175,7 +175,7 @@ func (ma *MixAddress) RequestOrGenerateGhostKeys(ctx context.Context, outputInde
 		Index:     outputIndex,
 		Hint:      hint,
 	}
-	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u.UserId, u.SessionId, u.SessionKey)
+	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u.UserId, u.SessionId, u.SessionPrivateKey)
 	if err != nil {
 		return nil, err
 	}
