@@ -216,10 +216,10 @@ func DecryptMessageData(data string, sessionId, private string) (string, error) 
 				return "", err
 			}
 			var priv [32]byte
-			var pub []byte
+			var pub [32]byte
 			copy(pub[:], bytes[3:35])
 			PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
-			dst, err := curve25519.X25519(priv[:], pub)
+			dst, err := curve25519.X25519(priv[:], pub[:])
 			if err != nil {
 				return "", err
 			}
