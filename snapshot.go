@@ -29,6 +29,7 @@ type SafeSnapshot struct {
 	KernelAssetID   string    `json:"kernel_asset_id"`
 	Amount          string    `json:"amount"`
 	Memo            string    `json:"memo"`
+	RequestId       string    `json:"request_id"`
 	CreatedAt       time.Time `json:"created_at"`
 
 	Deposit    *SafeDepositView    `json:"deposit,omitempty"`
