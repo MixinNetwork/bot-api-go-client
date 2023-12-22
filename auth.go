@@ -32,18 +32,21 @@ func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (st
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
-	priv, err := base64.RawURLEncoding.DecodeString(privateKey)
+	priv, err := hex.DecodeString(privateKey)
 	if err != nil {
-		block, _ := pem.Decode([]byte(privateKey))
-		if block == nil {
-			return "", fmt.Errorf("bad RSA private pem format %s", privateKey)
-		}
-		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		priv, err = base64.RawURLEncoding.DecodeString(privateKey)
 		if err != nil {
-			return "", err
+			block, _ := pem.Decode([]byte(privateKey))
+			if block == nil {
+				return "", fmt.Errorf("bad RSA private pem format %s", privateKey)
+			}
+			key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if err != nil {
+				return "", err
+			}
+			token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
+			return token.SignedString(key)
 		}
-		token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-		return token.SignedString(key)
 	}
 	// more validate the private key
 	if len(priv) != 64 {
@@ -66,13 +69,15 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		"jti": requestID,
 	}
 
-	kb, err := base64.RawURLEncoding.DecodeString(privateKey)
+	priv, err := hex.DecodeString(privateKey)
 	if err != nil {
-		return "", err
+		priv, err = base64.RawURLEncoding.DecodeString(privateKey)
+		if err != nil {
+			return "", err
+		}
 	}
-	priv := ed25519.PrivateKey(kb)
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	return token.SignedString(priv)
+	return token.SignedString(ed25519.PrivateKey(priv))
 }
 
 // OAuthGetAccessToken get the access token of a user

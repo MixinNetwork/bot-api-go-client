@@ -26,6 +26,9 @@ import (
 )
 
 func EncryptPIN(pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
+	if _, err := hex.DecodeString(privateKey); err == nil {
+		return EncryptEd25519PIN(pin, pinToken, privateKey, iterator)
+	}
 	_, err := base64.RawURLEncoding.DecodeString(privateKey)
 	if err == nil {
 		return EncryptEd25519PIN(pin, pinToken, privateKey, iterator)
@@ -72,15 +75,21 @@ func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) 
 	if pin == "" {
 		return "", nil
 	}
-	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
+	privateBytes, err := hex.DecodeString(privateKey)
 	if err != nil {
-		return "", err
+		privateBytes, err = base64.RawURLEncoding.DecodeString(privateKey)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	private := ed25519.PrivateKey(privateBytes)
-	public, err := base64.RawURLEncoding.DecodeString(pinTokenBase64)
+	public, err := hex.DecodeString(pinTokenBase64)
 	if err != nil {
-		return "", err
+		public, err = base64.RawURLEncoding.DecodeString(pinTokenBase64)
+		if err != nil {
+			return "", err
+		}
 	}
 	var curvePriv, pub [32]byte
 	PrivateKeyToCurve25519(&curvePriv, private)
