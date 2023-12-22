@@ -27,14 +27,14 @@ type MultisigUTXO struct {
 	SignedTx        string    `json:"signed_tx"`
 }
 
-func ReadMultisigsLegacy(ctx context.Context, limit int, offset, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+func ReadMultisigsLegacy(ctx context.Context, limit int, offset string, user *SafeUser) ([]*MultisigUTXO, error) {
 	v := url.Values{}
 	v.Set("limit", fmt.Sprint(limit))
 	if offset != "" {
 		v.Set("offset", offset)
 	}
 	method, path := "GET", "/multisigs?"+v.Encode()
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	token, err := SignAuthenticationToken(method, path, "", user)
 	if err != nil {
 		return nil, err
 	}

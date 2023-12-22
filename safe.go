@@ -8,7 +8,7 @@ import (
 )
 
 type SafeUser struct {
-	// this is the app or bot uuid of messenger api
+	// this is the app children user uuid or the app uuid of messenger api
 	// user id can never change
 	UserId string
 
@@ -17,17 +17,17 @@ type SafeUser struct {
 
 	// session private key rotates with the session id
 	// this key is used for all authentication of messenger api
-	SessionPrivateKey string
+	SessionPrivateKey string // hex
 
 	// server public key rotates with the session id
 	// server public key is used to verify signature of server response
 	// could also be used to do ecdh with session private key
-	ServerPublicKey string
+	ServerPublicKey string // hex
 
 	// spend private key is used to query or send money
 	// this is the mixin kernel spend private key
 	// spend private key can never change
-	SpendPrivateKey string
+	SpendPrivateKey string // hex
 }
 
 type GhostKeys struct {
@@ -42,13 +42,13 @@ type GhostKeyRequest struct {
 	Hint      string   `json:"hint"`
 }
 
-func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, uid, sid, sessionKey string) ([]*GhostKeys, error) {
+func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, user *SafeUser) ([]*GhostKeys, error) {
 	data, err := json.Marshal(gkr)
 	if err != nil {
 		return nil, err
 	}
 	method, path := "POST", "/safe/keys"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), user)
 	if err != nil {
 		return nil, err
 	}

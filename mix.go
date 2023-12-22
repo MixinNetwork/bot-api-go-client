@@ -175,7 +175,7 @@ func (ma *MixAddress) RequestOrGenerateGhostKeys(ctx context.Context, outputInde
 		Index:     outputIndex,
 		Hint:      hint,
 	}
-	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u.UserId, u.SessionId, u.SessionPrivateKey)
+	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u)
 	if err != nil {
 		return nil, err
 	}

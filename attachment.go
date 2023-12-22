@@ -12,8 +12,8 @@ type Attachment struct {
 	UploadUrl    string `json:"upload_url"`
 }
 
-func CreateAttachment(ctx context.Context, uid, sid, key string) (*Attachment, error) {
-	token, err := SignAuthenticationToken(uid, sid, key, "POST", "/attachments", "")
+func CreateAttachment(ctx context.Context, user *SafeUser) (*Attachment, error) {
+	token, err := SignAuthenticationToken("POST", "/attachments", "", user)
 	if err != nil {
 		return nil, err
 	}
@@ -40,8 +40,8 @@ func CreateAttachment(ctx context.Context, uid, sid, key string) (*Attachment, e
 	return &resp.Data, nil
 }
 
-func AttachmentShow(ctx context.Context, uid, sid, key, id string) (*Attachment, error) {
-	token, err := SignAuthenticationToken(uid, sid, key, "GET", "/attachments/"+id, "")
+func AttachmentShow(ctx context.Context, id string, user *SafeUser) (*Attachment, error) {
+	token, err := SignAuthenticationToken("GET", "/attachments/"+id, "", user)
 	if err != nil {
 		return nil, err
 	}
