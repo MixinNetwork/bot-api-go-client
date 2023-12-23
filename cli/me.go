@@ -47,3 +47,46 @@ func appMeCmd(c *cli.Context) error {
 	log.Printf("%#v", me)
 	return nil
 }
+
+var userCmdCli = &cli.Command{
+	Name:   "user",
+	Action: userCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+		&cli.StringFlag{
+			Name:  "id",
+			Usage: "user id",
+		},
+	},
+}
+
+func userCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	id := c.String("id")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(dat))
+	var u SafeUser
+	err = json.Unmarshal([]byte(dat), &u)
+	if err != nil {
+		panic(err)
+	}
+
+	su := &bot.SafeUser{
+		UserId:            u.AppID,
+		SessionId:         u.SessionID,
+		SessionPrivateKey: u.SessionPrivateKey,
+	}
+	user, err := bot.GetUser(context.Background(), id, su)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("%#v", user)
+	return nil
+}

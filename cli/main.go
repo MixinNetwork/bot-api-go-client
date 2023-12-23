@@ -14,6 +14,7 @@ func main() {
 		Version: "2.0.1",
 		Commands: []*cli.Command{
 			appMeCmdCli,
+			userCmdCli,
 			// transferCmdCli,
 			// batchTransferCmdCli,
 			// botMigrateTIPCmdCli,
