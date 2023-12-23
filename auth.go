@@ -16,20 +16,20 @@ func SignAuthenticationTokenWithoutBody(method, uri string, user *SafeUser) (str
 	return SignAuthenticationToken(method, uri, "", user)
 }
 
-func SignAuthenticationToken(method, uri, body string, user *SafeUser) (string, error) {
+func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
 	claims := jwt.MapClaims{
-		"uid": uid,
-		"sid": sid,
+		"uid": su.UserId,
+		"sid": su.SessionId,
 		"iat": time.Now().UTC().Unix(),
 		"exp": expire.Unix(),
 		"jti": UuidNewV4().String(),
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
-	priv, err := hex.DecodeString(user.SessionPrivateKey)
+	priv, err := hex.DecodeString(su.SessionPrivateKey)
 	if err != nil {
 		return "", err
 	}
