@@ -32,8 +32,8 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var app Bot
-	err = json.Unmarshal([]byte(dat), &app)
+	var u SafeUser
+	err = json.Unmarshal([]byte(dat), &u)
 	if err != nil {
 		panic(err)
 	}
@@ -41,14 +41,17 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	tipPub, tipPriv, _ := ed25519.GenerateKey(rand.Reader)
 	log.Printf("Your tip private seed: %s", hex.EncodeToString(tipPriv.Seed()))
 
-	err = bot.UpdateTipPin(context.Background(), app.Pin, hex.EncodeToString(tipPub), app.PinToken, app.ClientID, app.SessionID, app.PrivateKey)
+	su := &bot.SafeUser{
+		UserId:            u.AppID,
+		SessionId:         u.SessionID,
+		ServerPublicKey:   u.ServerPublicKey,
+		SessionPrivateKey: u.SessionPrivateKey,
+	}
+
+	err = bot.UpdateTipPin(context.Background(), "", hex.EncodeToString(tipPub), su)
 	if err != nil {
 		return fmt.Errorf("bot.UpdateTipPin() => %v", err)
 	}
-
-	app.Pin = hex.EncodeToString(tipPriv)
-	keystoreRaw, _ := json.Marshal(app)
-	log.Printf("your new keystore after migrate: %s", string(keystoreRaw))
 	return nil
 }
 
@@ -75,16 +78,22 @@ func registerSafeCMD(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var app Bot
-	err = json.Unmarshal([]byte(dat), &app)
+	var u SafeUser
+	err = json.Unmarshal([]byte(dat), &u)
 	if err != nil {
 		panic(err)
 	}
 
+	su := &bot.SafeUser{
+		UserId:            u.AppID,
+		SessionId:         u.SessionID,
+		ServerPublicKey:   u.ServerPublicKey,
+		SessionPrivateKey: u.SessionPrivateKey,
+	}
 	ctx := context.Background()
 	method := "GET"
 	path := "/safe/me"
-	token, err := bot.SignAuthenticationTokenWithoutBody(app.ClientID, app.SessionID, app.PrivateKey, method, path)
+	token, err := bot.SignAuthenticationTokenWithoutBody(method, path, su)
 	if err != nil {
 		return err
 	}
@@ -108,7 +117,7 @@ func registerSafeCMD(c *cli.Context) error {
 	tipPublic := hex.EncodeToString(privateKey[32:])
 	sd := hex.EncodeToString(privateKey.Seed())
 
-	me, err = bot.RegisterSafe(ctx, app.ClientID, tipPublic, sd, app.ClientID, app.SessionID, app.PrivateKey, app.Pin, app.PinToken)
+	me, err = bot.RegisterSafe(ctx, su.UserId, tipPublic, sd, su)
 	if err != nil {
 		return err
 	}

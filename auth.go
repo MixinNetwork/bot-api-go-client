@@ -29,7 +29,7 @@ func SignAuthenticationToken(method, uri, body string, user *SafeUser) (string, 
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
-	priv, err := hex.DecodeString(privateKey)
+	priv, err := hex.DecodeString(user.SessionPrivateKey)
 	if err != nil {
 		return "", err
 	}

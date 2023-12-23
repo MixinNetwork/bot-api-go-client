@@ -138,7 +138,7 @@ func SearchUser(ctx context.Context, mixinId string, su *SafeUser) (*User, error
 	return resp.Data, nil
 }
 
-func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken string, su *SafeUser) error {
+func UpdateTipPin(ctx context.Context, pin, pubTip string, su *SafeUser) error {
 	oldEncryptedPin, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), su)
 	if err != nil {
 		return err
