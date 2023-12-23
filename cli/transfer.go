@@ -18,6 +18,10 @@ var transferCmdCli = &cli.Command{
 	Action: transferCmd,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
+			Name:  "spent,s",
+			Usage: "spent",
+		},
+		&cli.StringFlag{
 			Name:  "asset,a",
 			Usage: "asset",
 		},
@@ -42,6 +46,7 @@ var transferCmdCli = &cli.Command{
 
 func transferCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
+	spent := c.String("spent")
 	asset := c.String("asset")
 	amount := c.String("amount")
 	receiver := c.String("receiver")
@@ -62,6 +67,7 @@ func transferCmd(c *cli.Context) error {
 		SessionId:         u.SessionID,
 		ServerPublicKey:   u.ServerPublicKey,
 		SessionPrivateKey: u.SessionPrivateKey,
+		SpendPrivateKey:   spent,
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)

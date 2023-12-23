@@ -15,7 +15,7 @@ func main() {
 		Commands: []*cli.Command{
 			appMeCmdCli,
 			userCmdCli,
-			// transferCmdCli,
+			transferCmdCli,
 			// batchTransferCmdCli,
 			// botMigrateTIPCmdCli,
 			// registerSafeCMDCli,
