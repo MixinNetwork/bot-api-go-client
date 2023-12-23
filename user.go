@@ -90,9 +90,9 @@ func CreateUser(ctx context.Context, sessionSecret, fullName string, su *SafeUse
 	return resp.Data, nil
 }
 
-func GetUser(ctx context.Context, userId, uid, sid, sessionKey string) (*User, error) {
+func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/users/%s", userId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", url, "")
+	token, err := SignAuthenticationToken("GET", url, "", su)
 	if err != nil {
 		return nil, err
 	}
