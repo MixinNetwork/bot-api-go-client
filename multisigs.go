@@ -27,14 +27,14 @@ type MultisigUTXO struct {
 	SignedTx        string    `json:"signed_tx"`
 }
 
-func ReadMultisigsLegacy(ctx context.Context, limit int, offset, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+func ReadMultisigsLegacy(ctx context.Context, limit int, offset string, user *SafeUser) ([]*MultisigUTXO, error) {
 	v := url.Values{}
 	v.Set("limit", fmt.Sprint(limit))
 	if offset != "" {
 		v.Set("offset", offset)
 	}
 	method, path := "GET", "/multisigs?"+v.Encode()
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	token, err := SignAuthenticationToken(method, path, "", user)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func ReadMultisigsLegacy(ctx context.Context, limit int, offset, uid, sid, sessi
 }
 
 // state: spent, unspent, signed
-func ReadMultisigs(ctx context.Context, limit int, offset, membersHash, threshold, state, uid, sid, sessionKey string) ([]*MultisigUTXO, error) {
+func ReadMultisigs(ctx context.Context, limit int, offset, membersHash, threshold, state string, su *SafeUser) ([]*MultisigUTXO, error) {
 	v := url.Values{}
 	v.Set("limit", fmt.Sprint(limit))
 	if offset != "" {
@@ -67,7 +67,7 @@ func ReadMultisigs(ctx context.Context, limit int, offset, membersHash, threshol
 	v.Set("threshold", threshold)
 	v.Set("state", state)
 	method, path := "GET", "/multisigs/outputs?"+v.Encode()
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	token, err := SignAuthenticationToken(method, path, "", su)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ type MultisigRequest struct {
 }
 
 // CreateMultisig create a multisigs request which action is `unlock` or `sign`
-func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKey string) (*MultisigRequest, error) {
+func CreateMultisig(ctx context.Context, action, raw string, su *SafeUser) (*MultisigRequest, error) {
 	data, err := json.Marshal(map[string]string{
 		"action": action,
 		"raw":    raw,
@@ -118,7 +118,7 @@ func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKe
 		return nil, err
 	}
 	method, path := "POST", "/multisigs/requests"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func CreateMultisig(ctx context.Context, action, raw string, uid, sid, sessionKe
 	return resp.Data, nil
 }
 
-func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey string) (*MultisigRequest, error) {
+func SignMultisig(ctx context.Context, id, pin string, su *SafeUser) (*MultisigRequest, error) {
 	data, err := json.Marshal(map[string]string{
 		"pin_base64": pin,
 	})
@@ -148,7 +148,7 @@ func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey stri
 		return nil, err
 	}
 	method, path := "POST", "/multisigs/requests/"+id+"/sign"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -170,9 +170,9 @@ func SignMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey stri
 	return resp.Data, nil
 }
 
-func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string) error {
+func CancelMultisig(ctx context.Context, id string, su *SafeUser) error {
 	method, path := "POST", "/multisigs/requests/"+id+"/cancel"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, "")
+	token, err := SignAuthenticationToken(method, path, "", su)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func CancelMultisig(ctx context.Context, id string, uid, sid, sessionKey string)
 	return nil
 }
 
-func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey string) error {
+func UnlockMultisig(ctx context.Context, id, pin string, su *SafeUser) error {
 	data, err := json.Marshal(map[string]string{
 		"pin_base64": pin,
 	})
@@ -201,7 +201,7 @@ func UnlockMultisig(ctx context.Context, id, pin string, uid, sid, sessionKey st
 		return err
 	}
 	method, path := "POST", "/multisigs/requests/"+id+"/unlock"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), su)
 	if err != nil {
 		return err
 	}

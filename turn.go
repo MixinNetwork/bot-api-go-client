@@ -11,8 +11,8 @@ type Turn struct {
 	Credential string `json:"credential"`
 }
 
-func GetTurnServer(ctx context.Context, uid, sid, sessionKey string) ([]*Turn, error) {
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", "/turn", "")
+func GetTurnServer(ctx context.Context, su *SafeUser) ([]*Turn, error) {
+	token, err := SignAuthenticationToken("GET", "/turn", "", su)
 	if err != nil {
 		return nil, err
 	}

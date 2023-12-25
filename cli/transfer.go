@@ -18,6 +18,10 @@ var transferCmdCli = &cli.Command{
 	Action: transferCmd,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
+			Name:  "spent,s",
+			Usage: "spent",
+		},
+		&cli.StringFlag{
 			Name:  "asset,a",
 			Usage: "asset",
 		},
@@ -42,6 +46,7 @@ var transferCmdCli = &cli.Command{
 
 func transferCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
+	spent := c.String("spent")
 	asset := c.String("asset")
 	amount := c.String("amount")
 	receiver := c.String("receiver")
@@ -51,17 +56,18 @@ func transferCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var user Bot
-	err = json.Unmarshal([]byte(dat), &user)
+	var u SafeUser
+	err = json.Unmarshal([]byte(dat), &u)
 	if err != nil {
 		panic(err)
 	}
 
 	su := &bot.SafeUser{
-		UserId:            user.ClientID,
-		SessionId:         user.SessionID,
-		SessionPrivateKey: user.PrivateKey,
-		SpendPrivateKey:   user.Pin[:64],
+		UserId:            u.AppID,
+		SessionId:         u.SessionID,
+		ServerPublicKey:   u.ServerPublicKey,
+		SessionPrivateKey: u.SessionPrivateKey,
+		SpendPrivateKey:   spent,
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
@@ -132,17 +138,16 @@ func batchTransferCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var user Bot
+	var user SafeUser
 	err = json.Unmarshal([]byte(dat), &user)
 	if err != nil {
 		panic(err)
 	}
 
 	su := &bot.SafeUser{
-		UserId:            user.ClientID,
+		UserId:            user.AppID,
 		SessionId:         user.SessionID,
-		SessionPrivateKey: user.PrivateKey,
-		SpendPrivateKey:   user.Pin[:64],
+		SessionPrivateKey: user.SessionPrivateKey,
 	}
 	if inputPath != "" {
 		return transferCSV(c, inputPath, asset, su)

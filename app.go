@@ -2,11 +2,8 @@ package bot
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 )
 
@@ -27,19 +24,16 @@ type App struct {
 	IsVerified       bool      `json:"is_verified"`
 }
 
-func Migrate(ctx context.Context, receiver, uid, sid, sessionKey, pin, pinToken string) (*App, error) {
+func Migrate(ctx context.Context, receiver string, user *SafeUser) (*App, error) {
 	tipBody := TipBodyForOwnershipTransfer(receiver)
-
-	pinBuf, err := hex.DecodeString(pin)
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
-	encryptedPIN, err := EncryptEd25519PIN(hex.EncodeToString(sigBuf), pinToken, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), user)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("data:", receiver, encryptedPIN, uid, sid, sessionKey)
 	data, err := json.Marshal(map[string]string{
 		"user_id":    receiver,
 		"pin_base64": encryptedPIN,
@@ -49,7 +43,7 @@ func Migrate(ctx context.Context, receiver, uid, sid, sessionKey, pin, pinToken 
 	}
 
 	path := fmt.Sprintf("/apps/%s/transfer", uid)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), user)
 	if err != nil {
 		return nil, err
 	}

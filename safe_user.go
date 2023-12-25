@@ -12,7 +12,7 @@ import (
 )
 
 // If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
-func RegisterSafe(ctx context.Context, userId, publicKey, seed string, uid, sid, sessionKey, tipPin, pinToken string) (*User, error) {
+func RegisterSafe(ctx context.Context, userId, publicKey, seed string, su *SafeUser) (*User, error) {
 	s, err := hex.DecodeString(seed)
 	if err != nil {
 		return nil, err
@@ -23,13 +23,13 @@ func RegisterSafe(ctx context.Context, userId, publicKey, seed string, uid, sid,
 	signature := base64.RawURLEncoding.EncodeToString(signBytes[:])
 
 	tipBody := TIPBodyForSequencerRegister(userId, publicKey)
-	pinBuf, err := hex.DecodeString(tipPin)
+	pinBuf, err := hex.DecodeString(su.SpendPrivateKey)
 	if err != nil {
 		return nil, err
 	}
 	sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
 
-	encryptedPIN, err := EncryptEd25519PIN(hex.EncodeToString(sigBuf), pinToken, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptEd25519PIN(hex.EncodeToString(sigBuf), uint64(time.Now().UnixNano()), su)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func RegisterSafe(ctx context.Context, userId, publicKey, seed string, uid, sid,
 		"pin_base64": encryptedPIN,
 	})
 
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/safe/users", string(data))
+	token, err := SignAuthenticationToken("POST", "/safe/users", string(data), su)
 	if err != nil {
 		return nil, err
 	}

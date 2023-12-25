@@ -15,5 +15,10 @@ func NewAuthenticator(uid, sid, privateKey string) *Authenticator {
 }
 
 func (a *Authenticator) BuildJWT(method, uri, body string) (string, error) {
-	return SignAuthenticationToken(a.Uid, a.Sid, a.PrivateKey, method, uri, body)
+	user := &SafeUser{
+		UserId:            uid,
+		SessionId:         sid,
+		SessionPrivateKey: a.PrivateKey,
+	}
+	return SignAuthenticationToken(method, uri, body, user)
 }

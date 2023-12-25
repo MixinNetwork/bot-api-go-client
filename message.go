@@ -49,12 +49,12 @@ type ReceiptAcknowledgementRequest struct {
 	Status    string `json:"status"`
 }
 
-func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, sessionId, secret string) error {
+func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUser) error {
 	msg, err := json.Marshal(messages)
 	if err != nil {
 		return err
 	}
-	accessToken, err := SignAuthenticationToken(clientId, sessionId, secret, "POST", "/messages", string(msg))
+	accessToken, err := SignAuthenticationToken("POST", "/messages", string(msg), user)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, clientId, ses
 	return nil
 }
 
-func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, clientId, sessionId, secret string) error {
+func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, user *SafeUser) error {
 	request := MessageRequest{
 		ConversationId: conversationId,
 		RecipientId:    recipientId,
@@ -83,16 +83,16 @@ func PostMessage(ctx context.Context, conversationId, recipientId, messageId, ca
 		Category:       category,
 		Data:           data,
 	}
-	return PostMessages(ctx, []*MessageRequest{&request}, clientId, sessionId, secret)
+	return PostMessages(ctx, []*MessageRequest{&request}, user)
 }
 
-func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgementRequest, clientId, sessionId, secret string) error {
+func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgementRequest, user *SafeUser) error {
 	array, err := json.Marshal(requests)
 	if err != nil {
 		return err
 	}
 	path := "/acknowledgements"
-	accessToken, err := SignAuthenticationToken(clientId, sessionId, secret, "POST", path, string(array))
+	accessToken, err := SignAuthenticationToken("POST", path, string(array), user)
 	if err != nil {
 		return err
 	}

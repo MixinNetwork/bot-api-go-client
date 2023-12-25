@@ -33,16 +33,16 @@ type Conversation struct {
 	ParticipantSessions []ParticipantSessionView `json:"participant_sessions"`
 }
 
-func CreateContactConversation(ctx context.Context, participantID, uid, sid, key string) (*Conversation, error) {
+func CreateContactConversation(ctx context.Context, participantID string, user *SafeUser) (*Conversation, error) {
 	participants := []Participant{
 		{
 			UserId: participantID,
 		},
 	}
-	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, uid), "", "", participants, uid, sid, key)
+	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, uid), "", "", participants, user)
 }
 
-func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, uid, sid, key string) (*Conversation, error) {
+func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, user *SafeUser) (*Conversation, error) {
 	params, err := json.Marshal(map[string]interface{}{
 		"category":        category,
 		"conversation_id": conversationId,
@@ -58,7 +58,7 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 			return nil, fmt.Errorf("bad particpants members length %d", len(participants))
 		}
 	}
-	accessToken, err := SignAuthenticationToken(uid, sid, key, "POST", "/conversations", string(params))
+	accessToken, err := SignAuthenticationToken("POST", "/conversations", string(params), user)
 	if err != nil {
 		return nil, err
 	}
@@ -86,9 +86,9 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 	return &resp.Data, nil
 }
 
-func ConversationShow(ctx context.Context, conversationId, uid, sid, key string) (*Conversation, error) {
+func ConversationShow(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := "/conversations/" + conversationId
-	token, err := SignAuthenticationToken(uid, sid, key, "GET", path, "")
+	token, err := SignAuthenticationToken("GET", path, "", user)
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +118,9 @@ func ConversationShowByToken(ctx context.Context, conversationId string, accessT
 	return &resp.Data, nil
 }
 
-func JoinConversation(ctx context.Context, conversationId, uid, sid, key string) (*Conversation, error) {
+func JoinConversation(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := fmt.Sprintf("/conversations/%s/join", conversationId)
-	accessToken, err := SignAuthenticationToken(uid, sid, key, "POST", path, "")
+	accessToken, err := SignAuthenticationToken("POST", path, "", user)
 	if err != nil {
 		return nil, err
 	}

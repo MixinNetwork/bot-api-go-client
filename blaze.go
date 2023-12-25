@@ -328,7 +328,12 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 }
 
 func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
-	token, err := SignAuthenticationToken(b.uid, b.sid, b.key, "GET", "/", "")
+	user := &SafeUser{
+		UserId:            b.uid,
+		SessionId:         b.sid,
+		SessionPrivateKey: b.key,
+	}
+	token, err := SignAuthenticationToken("GET", "/", "", user)
 	if err != nil {
 		return nil, err
 	}

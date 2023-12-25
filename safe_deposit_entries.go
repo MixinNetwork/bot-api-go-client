@@ -17,7 +17,7 @@ type DepositEntryView struct {
 	IsPrimary     bool     `json:"is_primary"`
 }
 
-func CreateDepositEntry(ctx context.Context, chainID string, members []string, threshold int64) ([]*DepositEntryView, error) {
+func CreateDepositEntry(ctx context.Context, chainID string, members []string, threshold int64, user *SafeUser) ([]*DepositEntryView, error) {
 	data, _ := json.Marshal(map[string]any{
 		"chain_id":  chainID,
 		"members":   members,
@@ -25,7 +25,7 @@ func CreateDepositEntry(ctx context.Context, chainID string, members []string, t
 	})
 	endpoint := "/safe/deposit/entries"
 
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", endpoint, string(data))
+	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
 	if err != nil {
 		return nil, err
 	}

@@ -4,53 +4,41 @@ import (
 	"context"
 	"crypto/ed25519"
 	"crypto/sha256"
-	"crypto/x509"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func SignAuthenticationTokenWithoutBody(uid, sid, privateKey, method, uri string) (string, error) {
-	return SignAuthenticationToken(uid, sid, privateKey, method, uri, "")
+func SignAuthenticationTokenWithoutBody(method, uri string, user *SafeUser) (string, error) {
+	return SignAuthenticationToken(method, uri, "", user)
 }
 
-func SignAuthenticationToken(uid, sid, privateKey, method, uri, body string) (string, error) {
+func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
 	claims := jwt.MapClaims{
-		"uid": uid,
-		"sid": sid,
+		"uid": su.UserId,
+		"sid": su.SessionId,
 		"iat": time.Now().UTC().Unix(),
 		"exp": expire.Unix(),
 		"jti": UuidNewV4().String(),
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
-	priv, err := base64.RawURLEncoding.DecodeString(privateKey)
+	priv, err := hex.DecodeString(su.SessionPrivateKey)
 	if err != nil {
-		block, _ := pem.Decode([]byte(privateKey))
-		if block == nil {
-			return "", fmt.Errorf("bad RSA private pem format %s", privateKey)
-		}
-		key, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-		if err != nil {
-			return "", err
-		}
-		token := jwt.NewWithClaims(jwt.SigningMethodRS512, claims)
-		return token.SignedString(key)
+		return "", err
 	}
 	// more validate the private key
-	if len(priv) != 64 {
+	if len(priv) != 32 {
 		return "", fmt.Errorf("bad ed25519 private key %s", priv)
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	return token.SignedString(ed25519.PrivateKey(priv))
+	return token.SignedString(ed25519.NewKeyFromSeed(priv))
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
@@ -66,13 +54,14 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		"jti": requestID,
 	}
 
-	kb, err := base64.RawURLEncoding.DecodeString(privateKey)
+	priv, err := hex.DecodeString(privateKey)
 	if err != nil {
-		return "", err
+		if err != nil {
+			return "", err
+		}
 	}
-	priv := ed25519.PrivateKey(kb)
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	return token.SignedString(priv)
+	return token.SignedString(ed25519.NewKeyFromSeed(priv))
 }
 
 // OAuthGetAccessToken get the access token of a user

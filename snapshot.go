@@ -36,7 +36,7 @@ type SafeSnapshot struct {
 	Withdrawal *SafeWithdrawalView `json:"withdrawal,omitempty"`
 }
 
-func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offset, uid, sid, sessionKey string) ([]*SafeSnapshot, error) {
+func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offset string, su *SafeUser) ([]*SafeSnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if app != "" {
@@ -52,7 +52,7 @@ func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offse
 		v.Set("opponent", opponent)
 	}
 	path := "/safe/snapshots?" + v.Encode()
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	token, err := SignAuthenticationToken("GET", path, "", su)
 	if err != nil {
 		return nil, err
 	}
@@ -94,9 +94,9 @@ func SafeSnapshotsByToken(ctx context.Context, limit int, app, assetId, opponent
 	return resp.Data, nil
 }
 
-func SafeSnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*SafeSnapshot, error) {
+func SafeSnapshotById(ctx context.Context, snapshotId string, su *SafeUser) (*SafeSnapshot, error) {
 	path := "/safe/snapshots/" + snapshotId
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", path, "")
+	token, err := SignAuthenticationToken("GET", path, "", su)
 	if err != nil {
 		return nil, err
 	}

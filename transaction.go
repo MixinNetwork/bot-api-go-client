@@ -202,7 +202,7 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 		return nil, err
 	}
 	method, path := "POST", "/safe/transaction/requests"
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionPrivateKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), u)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *com
 		return nil, err
 	}
 	method, path := "POST", "/safe/transactions"
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionPrivateKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), u)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 )
 
-func CallKernelRPC(ctx context.Context, uid, sid, sessionKey, method string, params ...interface{}) ([]byte, error) {
+func CallKernelRPC(ctx context.Context, user *SafeUser, method string, params ...interface{}) ([]byte, error) {
 	p := map[string]interface{}{
 		"method": method,
 		"params": params,
@@ -15,7 +15,7 @@ func CallKernelRPC(ctx context.Context, uid, sid, sessionKey, method string, par
 		return nil, err
 	}
 
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/external/kernel", string(data))
+	token, err := SignAuthenticationToken("POST", "/external/kernel", string(data), user)
 	if err != nil {
 		return nil, err
 	}

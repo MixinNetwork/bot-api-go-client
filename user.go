@@ -63,12 +63,12 @@ func CreateUserSimple(ctx context.Context, sessionSecret, fullName string) (*Use
 	return resp.Data, nil
 }
 
-func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, privateKey string) (*User, error) {
+func CreateUser(ctx context.Context, sessionSecret, fullName string, su *SafeUser) (*User, error) {
 	data, _ := json.Marshal(map[string]string{
 		"session_secret": sessionSecret,
 		"full_name":      fullName,
 	})
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", "/users", string(data))
+	token, err := SignAuthenticationToken("POST", "/users", string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +90,9 @@ func CreateUser(ctx context.Context, sessionSecret, fullName, uid, sid, privateK
 	return resp.Data, nil
 }
 
-func GetUser(ctx context.Context, userId, uid, sid, sessionKey string) (*User, error) {
+func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/users/%s", userId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", url, "")
+	token, err := SignAuthenticationToken("GET", url, "", su)
 	if err != nil {
 		return nil, err
 	}
@@ -114,9 +114,9 @@ func GetUser(ctx context.Context, userId, uid, sid, sessionKey string) (*User, e
 	return resp.Data, nil
 }
 
-func SearchUser(ctx context.Context, mixinId, uid, sid, sessionKey string) (*User, error) {
+func SearchUser(ctx context.Context, mixinId string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/search/%s", mixinId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", url, "")
+	token, err := SignAuthenticationToken("GET", url, "", su)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +138,8 @@ func SearchUser(ctx context.Context, mixinId, uid, sid, sessionKey string) (*Use
 	return resp.Data, nil
 }
 
-func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionKey string) error {
-	oldEncryptedPin, err := EncryptEd25519PIN(pin, pinToken, sessionKey, uint64(time.Now().UnixNano()))
+func UpdateTipPin(ctx context.Context, pin, pubTip string, su *SafeUser) error {
+	oldEncryptedPin, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), su)
 	if err != nil {
 		return err
 	}
@@ -155,21 +155,21 @@ func UpdateTipPin(ctx context.Context, pin, pubTip, pinToken, uid, sid, sessionK
 	counter := make([]byte, 8)
 	binary.BigEndian.PutUint64(counter, 1)
 	pubTipBuf = append(pubTipBuf, counter...)
-	encryptedPin, err := EncryptEd25519PIN(hex.EncodeToString(pubTipBuf), pinToken, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPin, err := EncryptEd25519PIN(hex.EncodeToString(pubTipBuf), uint64(time.Now().UnixNano()), su)
 	if err != nil {
 		return err
 	}
 
-	return UpdatePin(ctx, oldEncryptedPin, encryptedPin, uid, sid, sessionKey)
+	return UpdatePin(ctx, oldEncryptedPin, encryptedPin, su)
 }
 
-func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin, uid, sid, sessionKey string) error {
+func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin string, su *SafeUser) error {
 	data, _ := json.Marshal(map[string]string{
 		"old_pin_base64": oldEncryptedPin,
 		"pin_base64":     encryptedPin,
 	})
 
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/pin/update", string(data))
+	token, err := SignAuthenticationToken("POST", "/pin/update", string(data), su)
 	if err != nil {
 		return err
 	}
@@ -213,16 +213,16 @@ func UserMe(ctx context.Context, accessToken string) (*User, error) {
 	return UserMeWithRequestID(ctx, accessToken, UuidNewV4().String())
 }
 
-func RequestUserMe(ctx context.Context, uid, sid, privateKey string) (*User, error) {
+func RequestUserMe(ctx context.Context, su *SafeUser) (*User, error) {
 	path := "/safe/me"
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "GET", path, "")
+	token, err := SignAuthenticationToken("GET", path, "", su)
 	if err != nil {
 		return nil, err
 	}
 	return UserMe(ctx, token)
 }
 
-func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBase64 string) (*User, error) {
+func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUser) (*User, error) {
 	data, err := json.Marshal(map[string]interface{}{
 		"full_name":     fullName,
 		"avatar_base64": avatarBase64,
@@ -232,7 +232,7 @@ func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBas
 	}
 
 	path := "/me"
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func UpdateUserMe(ctx context.Context, uid, sid, privateKey, fullName, avatarBas
 	return resp.Data, nil
 }
 
-func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageSource, conversationSource, currency string, threshold float64) (*User, error) {
+func UpdatePreference(ctx context.Context, messageSource, conversationSource, currency string, threshold float64, su *SafeUser) (*User, error) {
 	data, err := json.Marshal(map[string]interface{}{
 		"receive_message_source":          messageSource,
 		"accept_conversation_source":      conversationSource,
@@ -265,7 +265,7 @@ func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageS
 		return nil, err
 	}
 	path := "/me/preferences"
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -287,7 +287,7 @@ func UpdatePreference(ctx context.Context, uid, sid, privateKey string, messageS
 	return resp.Data, nil
 }
 
-func Relationship(ctx context.Context, uid, sid, privateKey string, userId, action string) (*User, error) {
+func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*User, error) {
 	data, err := json.Marshal(map[string]interface{}{
 		"user_id": userId,
 		"action":  action,
@@ -297,7 +297,7 @@ func Relationship(ctx context.Context, uid, sid, privateKey string, userId, acti
 	}
 
 	path := "/relationships"
-	token, err := SignAuthenticationToken(uid, sid, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), su)
 	if err != nil {
 		return nil, err
 	}

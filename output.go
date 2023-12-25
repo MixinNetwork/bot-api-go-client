@@ -61,7 +61,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 		v.Set("state", state)
 	}
 	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
-	token, err := SignAuthenticationToken(u.UserId, u.SessionId, u.SessionPrivateKey, method, path, "")
+	token, err := SignAuthenticationToken(method, path, "", u)
 	body, err := Request(ctx, method, path, []byte{}, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)

@@ -25,16 +25,14 @@ type Address struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
-func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, pin, pinToken string) (*Address, error) {
-	if len(pin) != 6 {
-		tipBody := TipBodyForAddressAdd(in.AssetId, in.Destination, in.Tag, in.Label)
-		var err error
-		pin, err = signTipBody(tipBody, pin)
-		if err != nil {
-			return nil, err
-		}
+func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Address, error) {
+	tipBody := TipBodyForAddressAdd(in.AssetId, in.Destination, in.Tag, in.Label)
+	var err error
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
+	if err != nil {
+		return nil, err
 	}
-	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), user)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +47,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 		return nil, err
 	}
 
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", "/addresses", string(data))
+	token, err := SignAuthenticationToken("POST", "/addresses", string(data), user)
 	if err != nil {
 		return nil, err
 	}
@@ -72,9 +70,9 @@ func CreateAddress(ctx context.Context, in *AddressInput, uid, sid, sessionKey, 
 	return resp.Data, nil
 }
 
-func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*Address, error) {
+func ReadAddress(ctx context.Context, addressId, user *SafeUser) (*Address, error) {
 	endpoint := fmt.Sprintf("/addresses/%s", addressId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", endpoint, "")
+	token, err := SignAuthenticationToken("GET", endpoint, "", user)
 	if err != nil {
 		return nil, err
 	}
@@ -97,16 +95,13 @@ func ReadAddress(ctx context.Context, addressId, uid, sid, sessionKey string) (*
 	return resp.Data, nil
 }
 
-func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pinToken string) error {
-	if len(pin) != 6 {
-		tipBody := TipBody(TIPAddressRemove + addressId)
-		var err error
-		pin, err = signTipBody(tipBody, pin)
-		if err != nil {
-			return err
-		}
+func DeleteAddress(ctx context.Context, addressId string, user *SafeUser) error {
+	tipBody := TipBody(TIPAddressRemove + addressId)
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
+	if err != nil {
+		return err
 	}
-	encryptedPIN, err := EncryptPIN(pin, pinToken, sid, sessionKey, uint64(time.Now().UnixNano()))
+	encryptedPIN, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), user)
 	if err != nil {
 		return err
 	}
@@ -118,7 +113,7 @@ func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pi
 	}
 
 	endpoint := fmt.Sprintf("/addresses/%s/delete", addressId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "POST", endpoint, string(data))
+	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
 	if err != nil {
 		return err
 	}
@@ -140,9 +135,9 @@ func DeleteAddress(ctx context.Context, addressId, uid, sid, sessionKey, pin, pi
 	return nil
 }
 
-func GetAddressesByAssetId(ctx context.Context, assetId, uid, sid, sessionKey string) ([]*Address, error) {
+func GetAddressesByAssetId(ctx context.Context, assetId string, user *SafeUser) ([]*Address, error) {
 	endpoint := fmt.Sprintf("/assets/%s/addresses", assetId)
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, "GET", endpoint, "")
+	token, err := SignAuthenticationToken("GET", endpoint, "", user)
 	if err != nil {
 		return nil, err
 	}

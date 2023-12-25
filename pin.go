@@ -7,14 +7,10 @@ import (
 	"crypto/cipher"
 	"crypto/ed25519"
 	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"fmt"
 	"io"
@@ -25,77 +21,32 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-func EncryptPIN(pin, pinToken, sessionId, privateKey string, iterator uint64) (string, error) {
-	_, err := base64.RawURLEncoding.DecodeString(privateKey)
-	if err == nil {
-		return EncryptEd25519PIN(pin, pinToken, privateKey, iterator)
-	}
-	privBlock, _ := pem.Decode([]byte(privateKey))
-	if privBlock == nil {
-		return "", errors.New("invalid pem private key")
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(privBlock.Bytes)
-	if err != nil {
-		return "", err
-	}
-	token, _ := base64.StdEncoding.DecodeString(pinToken)
-	keyBytes, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, priv, token, []byte(sessionId))
-	if err != nil {
-		return "", err
-	}
-	pinByte := []byte(pin)
-	timeBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
-	pinByte = append(pinByte, timeBytes...)
-	iteratorBytes := make([]byte, 8)
-	binary.LittleEndian.PutUint64(iteratorBytes, iterator)
-	pinByte = append(pinByte, iteratorBytes...)
-	padding := aes.BlockSize - len(pinByte)%aes.BlockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	pinByte = append(pinByte, padtext...)
-	block, err := aes.NewCipher(keyBytes)
-	if err != nil {
-		return "", err
-	}
-	ciphertext := make([]byte, aes.BlockSize+len(pinByte))
-	iv := ciphertext[:aes.BlockSize]
-	_, err = io.ReadFull(rand.Reader, iv)
-	if err != nil {
-		return "", err
-	}
-	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], pinByte)
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
-}
-
-func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) (string, error) {
-	if pin == "" {
-		return "", nil
-	}
-	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
+func EncryptEd25519PIN(pin string, iterator uint64, current *SafeUser) (string, error) {
+	privateBytes, err := hex.DecodeString(current.SessionPrivateKey)
 	if err != nil {
 		return "", err
 	}
 
-	private := ed25519.PrivateKey(privateBytes)
-	public, err := base64.RawURLEncoding.DecodeString(pinTokenBase64)
+	private := ed25519.NewKeyFromSeed(privateBytes)
+	public, err := hex.DecodeString(current.ServerPublicKey)
 	if err != nil {
 		return "", err
 	}
 	var curvePriv, pub [32]byte
 	PrivateKeyToCurve25519(&curvePriv, private)
+	public, err = PublicKeyToCurve25519(ed25519.PublicKey(public))
+	if err != nil {
+		return "", err
+	}
 	copy(pub[:], public[:])
 	keyBytes, err := curve25519.X25519(curvePriv[:], pub[:])
 	if err != nil {
 		return "", err
 	}
 
-	pinByte := []byte(pin)
-	if len(pin) > 6 {
-		pinByte, err = hex.DecodeString(pin)
-		if err != nil {
-			return "", err
-		}
+	pinByte, err := hex.DecodeString(pin)
+	if err != nil {
+		return "", err
 	}
 	timeBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(timeBytes, uint64(time.Now().Unix()))
@@ -121,15 +72,8 @@ func EncryptEd25519PIN(pin, pinTokenBase64, privateKey string, iterator uint64) 
 	return base64.RawURLEncoding.EncodeToString(ciphertext), nil
 }
 
-func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey string) (*User, error) {
-	var err error
-	var encryptedPIN string
-	pt, err := base64.RawURLEncoding.DecodeString(pinToken)
-	if err == nil && len(pt) == 32 {
-		encryptedPIN, err = EncryptEd25519PIN(pin, pinToken, privateKey, uint64(time.Now().UnixNano()))
-	} else {
-		encryptedPIN, err = EncryptPIN(pin, pinToken, sessionId, privateKey, uint64(time.Now().UnixNano()))
-	}
+func VerifyPIN(ctx context.Context, pin string, user *SafeUser) (*User, error) {
+	encryptedPIN, err := EncryptEd25519PIN(pin, uint64(time.Now().UnixNano()), user)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +84,7 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 		return nil, err
 	}
 	path := "/pin/verify"
-	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), user)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +106,12 @@ func VerifyPIN(ctx context.Context, uid, pin, pinToken, sessionId, privateKey st
 	return resp.Data, nil
 }
 
-func VerifyPINTip(ctx context.Context, uid, pinToken, sessionId, privateKey, privateTip string) (*User, error) {
+func VerifyPINTip(ctx context.Context, su *SafeUser) (*User, error) {
 	TIPVerify := "TIP:VERIFY:"
 	timestamp := time.Now().UnixNano()
 	tb := []byte(fmt.Sprintf("%s%032d", TIPVerify, timestamp))
-	privateTipBuf, err := hex.DecodeString(privateTip)
-	if err != nil {
-		return nil, err
-	}
-	sig := ed25519.Sign(ed25519.PrivateKey(privateTipBuf), tb)
-	source, err := EncryptEd25519PIN(hex.EncodeToString(sig), pinToken, privateKey, uint64(timestamp))
+	pin, err := signTipBody(tb, su.SpendPrivateKey)
+	source, err := EncryptEd25519PIN(pin, uint64(timestamp), su)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +123,7 @@ func VerifyPINTip(ctx context.Context, uid, pinToken, sessionId, privateKey, pri
 		return nil, err
 	}
 	path := "/pin/verify"
-	token, err := SignAuthenticationToken(uid, sessionId, privateKey, "POST", path, string(data))
+	token, err := SignAuthenticationToken("POST", path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
@@ -212,9 +152,9 @@ func signTipBody(body []byte, pin string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(pinBuf) != 64 {
+	if len(pinBuf) != 32 {
 		return "", errors.New("invalid ed25519 private")
 	}
-	sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), body)
+	sigBuf := ed25519.Sign(ed25519.NewKeyFromSeed(pinBuf), body)
 	return hex.EncodeToString(sigBuf), nil
 }

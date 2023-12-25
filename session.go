@@ -12,13 +12,13 @@ type UserSession struct {
 	Platform  string `json:"platform"`
 }
 
-func FetchUserSession(ctx context.Context, users []string, uid, sid, sessionKey string) ([]*UserSession, error) {
+func FetchUserSession(ctx context.Context, users []string, su *SafeUser) ([]*UserSession, error) {
 	data, err := json.Marshal(users)
 	if err != nil {
 		return nil, err
 	}
 	method, path := "POST", "/sessions/fetch"
-	token, err := SignAuthenticationToken(uid, sid, sessionKey, method, path, string(data))
+	token, err := SignAuthenticationToken(method, path, string(data), su)
 	if err != nil {
 		return nil, err
 	}
