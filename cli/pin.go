@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ./cli verify_pin -keystore=/path/to/keystore-700xxxx006.json -spend=31088c8....40dc0
 var verifyPINCmdCli = &cli.Command{
 	Name:   "verify_pin",
 	Action: verifyPINCmd,
