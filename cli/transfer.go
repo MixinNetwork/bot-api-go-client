@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MixinNetwork/bot-api-go-client/v2"
+	"github.com/MixinNetwork/bot-api-go-client/v3"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,8 +18,8 @@ var transferCmdCli = &cli.Command{
 	Action: transferCmd,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:  "spent,s",
-			Usage: "spent",
+			Name:  "spend,s",
+			Usage: "spend",
 		},
 		&cli.StringFlag{
 			Name:  "asset,a",
@@ -46,7 +46,7 @@ var transferCmdCli = &cli.Command{
 
 func transferCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
-	spent := c.String("spent")
+	spend := c.String("spend")
 	asset := c.String("asset")
 	amount := c.String("amount")
 	receiver := c.String("receiver")
@@ -67,7 +67,7 @@ func transferCmd(c *cli.Context) error {
 		SessionId:         u.SessionID,
 		ServerPublicKey:   u.ServerPublicKey,
 		SessionPrivateKey: u.SessionPrivateKey,
-		SpendPrivateKey:   spent,
+		SpendPrivateKey:   spend,
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
