@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	filippo.io/edwards25519 v1.1.0
+	github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0
 	github.com/MixinNetwork/go-number v0.1.1
 	github.com/MixinNetwork/mixin v0.17.9
 	github.com/gofrs/uuid/v5 v5.0.0
@@ -11,7 +12,7 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.8.4
-	github.com/urfave/cli/v2 v2.26.0
+	github.com/urfave/cli/v2 v2.27.0
 	golang.org/x/crypto v0.17.0
 	nhooyr.io/websocket v1.8.10
 )
