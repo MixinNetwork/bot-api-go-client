@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	AppMessageCategoryPeriod = "period"
-	AppMessageCategoryTime   = "time"
+	AppMessageRunningPeriod = "period"
+	AppMessageRunningTime   = "time"
 )
 
 type MessageData struct {
@@ -23,10 +23,10 @@ type MessageData struct {
 }
 
 type AppMessage struct {
-	Project  string         `yaml:"project"`
-	Category string         `yaml:"category"`
-	Status   int            `yaml:"status"`
-	Data     []*MessageData `yaml:"data"`
+	Project string         `yaml:"project"`
+	Running string         `yaml:"running"`
+	Status  int            `yaml:"status"`
+	Data    []*MessageData `yaml:"data"`
 }
 
 func UnmarshalAppMessage(b []byte) (*AppMessage, error) {
