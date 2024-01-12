@@ -50,6 +50,15 @@ func (ue *UtxoError) Error() string {
 	return fmt.Sprintf("insufficient outputs %s@%d %s", ue.TotalInput, ue.OutputSize, ue.TotalOutput)
 }
 
+func SendTransferTransaction(ctx context.Context, assetId, receiver, amount, traceId string, extra []byte, u *SafeUser) (*SequencerTransactionRequest, error) {
+	ma := NewUUIDMixAddress([]string{receiver}, 1)
+	tr := &TransactionRecipient{
+		MixAddress: ma.String(),
+		Amount:     amount,
+	}
+	return SendTransaction(ctx, assetId, []*TransactionRecipient{tr}, traceId, extra, nil, u)
+}
+
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
