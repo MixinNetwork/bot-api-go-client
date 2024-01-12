@@ -12,7 +12,7 @@ import (
 )
 
 // If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
-func RegisterSafe(ctx context.Context, userId, publicKey, seed string, su *SafeUser) (*User, error) {
+func RegisterSafe(ctx context.Context, userId, seed string, su *SafeUser) (*User, error) {
 	s, err := hex.DecodeString(seed)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func RegisterSafe(ctx context.Context, userId, publicKey, seed string, su *SafeU
 	h := crypto.Sha256Hash([]byte(userId))
 	signBytes := ed25519.Sign(private, h[:])
 	signature := base64.RawURLEncoding.EncodeToString(signBytes[:])
-
+	publicKey := hex.EncodeToString(private[32:])
 	tipBody := TIPBodyForSequencerRegister(userId, publicKey)
 	pinBuf, err := hex.DecodeString(su.SpendPrivateKey)
 	if err != nil {

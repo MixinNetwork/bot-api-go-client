@@ -114,10 +114,9 @@ func registerSafeCMD(c *cli.Context) error {
 		panic("invalid seed")
 	}
 	privateKey := ed25519.NewKeyFromSeed(s)
-	tipPublic := hex.EncodeToString(privateKey[32:])
 	sd := hex.EncodeToString(privateKey.Seed())
 
-	me, err = bot.RegisterSafe(ctx, su.UserId, tipPublic, sd, su)
+	me, err = bot.RegisterSafe(ctx, su.UserId, sd, su)
 	if err != nil {
 		return err
 	}
