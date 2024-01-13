@@ -51,6 +51,9 @@ func (ue *UtxoError) Error() string {
 }
 
 func SendTransferTransaction(ctx context.Context, assetId, receiver, amount, traceId string, extra []byte, u *SafeUser) (*SequencerTransactionRequest, error) {
+	if uuid.FromStringOrNil(receiver).String() != receiver {
+		return nil, fmt.Errorf("invalid receiver %s", receiver)
+	}
 	ma := NewUUIDMixAddress([]string{receiver}, 1)
 	tr := &TransactionRecipient{
 		MixAddress: ma.String(),
