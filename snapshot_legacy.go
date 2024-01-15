@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-type Snapshot struct {
+type LegacySnapshot struct {
 	Type            string    `json:"type"`
 	SnapshotId      string    `json:"snapshot_id"`
 	AssetId         string    `json:"asset_id"`
@@ -40,7 +40,7 @@ type Snapshot struct {
 	} `json:"fee,omitempty"`
 }
 
-type SnapshotShort struct {
+type LegacySnapshotShort struct {
 	Type       string `json:"type"`
 	SnapshotId string `json:"snapshot_id"`
 	Source     string `json:"source"`
@@ -63,7 +63,7 @@ type SnapshotShort struct {
 	Memo         string    `json:"data"`
 }
 
-func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*Snapshot, error) {
+func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*LegacySnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -89,7 +89,7 @@ func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid,
 	return SnapshotsByToken(ctx, limit, offset, assetId, order, token)
 }
 
-func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*Snapshot, error) {
+func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*LegacySnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -109,8 +109,8 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, ac
 	}
 
 	var resp struct {
-		Data  []*Snapshot `json:"data"`
-		Error Error       `json:"error"`
+		Data  []*LegacySnapshot `json:"data"`
+		Error Error             `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -122,7 +122,7 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, ac
 	return resp.Data, nil
 }
 
-func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*Snapshot, error) {
+func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*LegacySnapshot, error) {
 	su := &SafeUser{
 		UserId:            uid,
 		SessionId:         sid,
@@ -136,7 +136,7 @@ func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey s
 	return SnapshotByToken(ctx, snapshotId, token)
 }
 
-func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey string) (*Snapshot, error) {
+func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey string) (*LegacySnapshot, error) {
 	su := &SafeUser{
 		UserId:            uid,
 		SessionId:         sid,
@@ -153,8 +153,8 @@ func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey
 		return nil, err
 	}
 	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
+		Data  *LegacySnapshot `json:"data"`
+		Error Error           `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -166,7 +166,7 @@ func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey
 	return resp.Data, nil
 }
 
-func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*Snapshot, error) {
+func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*LegacySnapshot, error) {
 	path := "/snapshots/" + snapshotId
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
@@ -174,8 +174,8 @@ func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string)
 	}
 
 	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
+		Data  *LegacySnapshot `json:"data"`
+		Error Error           `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -187,11 +187,11 @@ func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshot(ctx context.Context, snapshotId string) (*Snapshot, error) {
+func NetworkSnapshot(ctx context.Context, snapshotId string) (*LegacySnapshot, error) {
 	return NetworkSnapshotByToken(ctx, snapshotId, "")
 }
 
-func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*Snapshot, error) {
+func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*LegacySnapshot, error) {
 	path := "/network/snapshots/" + snapshotId
 	body, err := Request(ctx, "GET", path, nil, accessToken)
 	if err != nil {
@@ -199,8 +199,8 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 	}
 
 	var resp struct {
-		Data  *Snapshot `json:"data"`
-		Error Error     `json:"error"`
+		Data  *LegacySnapshot `json:"data"`
+		Error Error           `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -212,11 +212,11 @@ func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*SnapshotShort, error) {
+func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*LegacySnapshotShort, error) {
 	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "", "", "")
 }
 
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*SnapshotShort, error) {
+func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*LegacySnapshotShort, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -249,8 +249,8 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	var resp struct {
-		Data  []*SnapshotShort `json:"data"`
-		Error Error            `json:"error"`
+		Data  []*LegacySnapshotShort `json:"data"`
+		Error Error                  `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
