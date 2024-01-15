@@ -22,6 +22,7 @@ func main() {
 			// batchTransferCmdCli,
 			// botMigrateTIPCmdCli,
 			// registerSafeCMDCli,
+			safeSnapshotsCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
