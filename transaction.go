@@ -87,7 +87,68 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 			Amount:     changeAmount.String(),
 		})
 	}
+	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
+}
 
+func SendTransactionWithOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, utxo *Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+	if uuid.FromStringOrNil(assetId).String() == assetId {
+		assetId = crypto.Sha256Hash([]byte(assetId)).String()
+	}
+	asset, err := crypto.HashFromString(assetId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid asset id %s", assetId)
+	}
+	if len(references) > 2 {
+		return nil, fmt.Errorf("too many references %d", len(references))
+	}
+
+	var totalOutput common.Integer
+	for _, r := range recipients {
+		amt := common.NewIntegerFromString(r.Amount)
+		totalOutput = totalOutput.Add(amt)
+	}
+	totalInput := common.NewIntegerFromString(utxo.Amount)
+	changeAmount := totalInput.Sub(totalOutput)
+	if changeAmount.Sign() < 0 {
+		return nil, &UtxoError{
+			TotalInput:  totalInput,
+			TotalOutput: totalOutput,
+			OutputSize:  1,
+		}
+	}
+	if changeAmount.Sign() > 0 {
+		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
+		recipients = append(recipients, &TransactionRecipient{
+			MixAddress: ma.String(),
+			Amount:     changeAmount.String(),
+		})
+	}
+	return sendTransaction(ctx, asset, []*Output{utxo}, recipients, traceId, extra, references, u)
+}
+
+func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
+	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
+	body, err := Request(ctx, method, path, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *SequencerTransactionRequest `json:"data"`
+		Error Error                        `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code == 404 {
+		return nil, nil
+	} else if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	// build the unsigned raw transaction
 	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
 	if err != nil {
@@ -118,28 +179,6 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 		panic(str.RawTransaction)
 	}
 	return result, nil
-}
-
-func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
-	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
-	body, err := Request(ctx, method, path, nil, "")
-	if err != nil {
-		return nil, ServerError(ctx, err)
-	}
-	var resp struct {
-		Data  *SequencerTransactionRequest `json:"data"`
-		Error Error                        `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, BadDataError(ctx)
-	}
-	if resp.Error.Code == 404 {
-		return nil, nil
-	} else if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
 }
 
 func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, extra []byte, references []string, u *SafeUser) (*common.Transaction, error) {
