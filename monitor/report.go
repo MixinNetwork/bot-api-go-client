@@ -23,10 +23,12 @@ type MessageData struct {
 }
 
 type AppMessage struct {
-	Project string         `yaml:"project"`
-	Running string         `yaml:"running"`
-	Status  int            `yaml:"status"`
-	Data    []*MessageData `yaml:"data"`
+	Project  string         `yaml:"project"`
+	Running  string         `yaml:"running"`
+	Duration int64          `yaml:"duration"`
+	Tag      string         `yaml:"tag"`
+	Status   int            `yaml:"status"`
+	Data     []*MessageData `yaml:"data"`
 }
 
 func UnmarshalAppMessage(b []byte) (*AppMessage, error) {
