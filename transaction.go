@@ -23,19 +23,26 @@ type TransactionRecipient struct {
 	Tag         string
 }
 
+type TransactionReceiver struct {
+	Members    []string    `json:"members"`
+	MemberHash crypto.Hash `json:"members_hash"`
+	Threshold  uint8       `json:"threshold"`
+}
+
 type SequencerTransactionRequest struct {
-	RequestID       string    `json:"request_id"`
-	TransactionHash string    `json:"transaction_hash"`
-	Asset           string    `json:"asset"`
-	Amount          string    `json:"amount"`
-	Extra           string    `json:"extra"`
-	State           string    `json:"state"`
-	RawTransaction  string    `json:"raw_transaction"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
-	SnapshotID      string    `json:"snapshot_id"`
-	SnapshotHash    string    `json:"snapshot_hash"`
-	SnapshotAt      time.Time `json:"snapshot_at"`
+	RequestID       string                 `json:"request_id"`
+	TransactionHash string                 `json:"transaction_hash"`
+	Asset           string                 `json:"asset"`
+	Amount          string                 `json:"amount"`
+	Extra           string                 `json:"extra"`
+	Receivers       []*TransactionReceiver `json:"receivers"`
+	State           string                 `json:"state"`
+	RawTransaction  string                 `json:"raw_transaction"`
+	CreatedAt       time.Time              `json:"created_at"`
+	UpdatedAt       time.Time              `json:"updated_at"`
+	SnapshotID      string                 `json:"snapshot_id"`
+	SnapshotHash    string                 `json:"snapshot_hash"`
+	SnapshotAt      time.Time              `json:"snapshot_at"`
 
 	Views []string `json:"views"`
 }
