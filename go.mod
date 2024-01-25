@@ -6,7 +6,7 @@ require (
 	filippo.io/edwards25519 v1.1.0
 	github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0
 	github.com/MixinNetwork/go-number v0.1.1
-	github.com/MixinNetwork/mixin v0.17.12
+	github.com/MixinNetwork/mixin v0.17.13
 	github.com/gofrs/uuid/v5 v5.0.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/gorilla/websocket v1.5.1
@@ -14,6 +14,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/crypto v0.18.0
+	gopkg.in/yaml.v3 v3.0.1
 	nhooyr.io/websocket v1.8.10
 )
 
@@ -28,8 +29,7 @@ require (
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20231213231151-1d8dd44e695e // indirect
 	github.com/zeebo/blake3 v0.2.3 // indirect
-	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
