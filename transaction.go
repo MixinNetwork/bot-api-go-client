@@ -30,19 +30,23 @@ type TransactionReceiver struct {
 }
 
 type SequencerTransactionRequest struct {
-	RequestID       string                 `json:"request_id"`
-	TransactionHash string                 `json:"transaction_hash"`
-	Asset           string                 `json:"asset"`
-	Amount          string                 `json:"amount"`
-	Extra           string                 `json:"extra"`
-	Receivers       []*TransactionReceiver `json:"receivers"`
-	State           string                 `json:"state"`
-	RawTransaction  string                 `json:"raw_transaction"`
-	CreatedAt       time.Time              `json:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at"`
-	SnapshotID      string                 `json:"snapshot_id"`
-	SnapshotHash    string                 `json:"snapshot_hash"`
-	SnapshotAt      time.Time              `json:"snapshot_at"`
+	RequestID        string                 `json:"request_id"`
+	TransactionHash  string                 `json:"transaction_hash"`
+	Asset            string                 `json:"asset"`
+	Amount           string                 `json:"amount"`
+	Extra            string                 `json:"extra"`
+	Receivers        []*TransactionReceiver `json:"receivers"`
+	Senders          []string               `json:"senders"`
+	SendersHash      string                 `json:"senders_hash"`
+	SendersThreshold uint8                  `json:"senders_threshold"`
+	Signers          []string               `json:"signers"`
+	State            string                 `json:"state"`
+	RawTransaction   string                 `json:"raw_transaction"`
+	CreatedAt        time.Time              `json:"created_at"`
+	UpdatedAt        time.Time              `json:"updated_at"`
+	SnapshotID       string                 `json:"snapshot_id"`
+	SnapshotHash     string                 `json:"snapshot_hash"`
+	SnapshotAt       time.Time              `json:"snapshot_at"`
 
 	Views []string `json:"views"`
 }
@@ -134,8 +138,20 @@ func SendTransactionWithOutput(ctx context.Context, assetId string, recipients [
 }
 
 func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
+	return GetTransactionByIdWithSafeUser(ctx, requestId, nil)
+}
+
+func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
-	body, err := Request(ctx, method, path, nil, "")
+	var accessToken string
+	var err error
+	if su != nil {
+		accessToken, err = SignAuthenticationToken(method, path, "", su)
+		if err != nil {
+			return nil, err
+		}
+	}
+	body, err := Request(ctx, method, path, nil, accessToken)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
