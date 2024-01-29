@@ -4,8 +4,8 @@ github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0 h1:wLOBGmv/rLV/423s4qA1tKWMh
 github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0/go.mod h1:uM9do+j0vWc73qxf+1b5EYebEzDP9x2uEmjt/UeziZ4=
 github.com/MixinNetwork/go-number v0.1.1 h1:Ui/xi0WGiBWI6cPrZaffB6q8lP7m2Zw0CXgOqLXb/3c=
 github.com/MixinNetwork/go-number v0.1.1/go.mod h1:4kaXQW9NOjjO3uZ5ehRVn3m+G+5ENGEKgiwfxea3zGQ=
-github.com/MixinNetwork/mixin v0.17.13 h1:TDpJUCTlbXj9LW0DrV8Q047VrCO2cWVhxWs8fdXE0/E=
-github.com/MixinNetwork/mixin v0.17.13/go.mod h1:iKRFQEk0SWyFeXSNrOYF/Pr0EWY2q0F1pbrNpNyHDMY=
+github.com/MixinNetwork/mixin v0.17.14 h1:77dXO4T2t5SZEgyUmvSSCsx6dUsRrl24YezaxAz3VQE=
+github.com/MixinNetwork/mixin v0.17.14/go.mod h1:CpAirmrcOXEiDfwzaHnInQMMNp58dfhjn8iZJl7ofRI=
 github.com/cpuguy83/go-md2man/v2 v2.0.3 h1:qMCsGGgs+MAzDFyp9LpAe1Lqy/fY/qCovCm0qnXZOBM=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
