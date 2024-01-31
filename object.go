@@ -17,7 +17,7 @@ func CreateObjectStorageTransaction(ctx context.Context, extra []byte, traceId s
 	mix := NewMainnetMixAddress([]string{addr.String()}, 1)
 	mix.Threshold = 64
 	recipients := []*TransactionRecipient{{
-		MixAddress: mix.String(),
+		MixAddress: mix,
 		Amount:     amount.String(),
 	}}
 	return SendTransaction(ctx, common.XINAssetId.String(), recipients, traceId, extra, nil, u)
