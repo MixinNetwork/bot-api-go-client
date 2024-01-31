@@ -16,7 +16,7 @@ import (
 )
 
 type TransactionRecipient struct {
-	MixAddress string
+	MixAddress *MixAddress
 	Amount     string
 
 	Destination string
@@ -67,7 +67,7 @@ func SendTransferTransaction(ctx context.Context, assetId, receiver, amount, tra
 	}
 	ma := NewUUIDMixAddress([]string{receiver}, 1)
 	tr := &TransactionRecipient{
-		MixAddress: ma.String(),
+		MixAddress: ma,
 		Amount:     amount,
 	}
 	return SendTransaction(ctx, assetId, []*TransactionRecipient{tr}, traceId, extra, nil, u)
@@ -94,7 +94,7 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
 		recipients = append(recipients, &TransactionRecipient{
-			MixAddress: ma.String(),
+			MixAddress: ma,
 			Amount:     changeAmount.String(),
 		})
 	}
@@ -130,7 +130,7 @@ func SendTransactionWithOutput(ctx context.Context, assetId string, recipients [
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
 		recipients = append(recipients, &TransactionRecipient{
-			MixAddress: ma.String(),
+			MixAddress: ma,
 			Amount:     changeAmount.String(),
 		})
 	}
@@ -221,7 +221,8 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 		tx.References = append(tx.References, rh)
 	}
 
-	for i, r := range recipients {
+	var scriptRecipients []*TransactionRecipient
+	for _, r := range recipients {
 		if r.Destination != "" {
 			tx.Outputs = append(tx.Outputs, &common.Output{
 				Type:   common.OutputTypeWithdrawalSubmit,
@@ -233,25 +234,27 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 			})
 			continue
 		}
-		ma, err := NewMixAddressFromString(r.MixAddress)
-		if err != nil {
-			return nil, fmt.Errorf("invalid mix address %s", r.MixAddress)
-		}
-		ghost, err := ma.RequestOrGenerateGhostKeys(ctx, uint(i), u)
+		scriptRecipients = append(scriptRecipients, r)
+	}
+	if len(scriptRecipients) > 0 {
+		gkm, err := requestGhostKeys(ctx, scriptRecipients, u)
 		if err != nil {
 			return nil, err
 		}
-		mask, err := crypto.KeyFromString(ghost.Mask)
-		if err != nil {
-			panic(ghost.Mask)
+		for i, r := range scriptRecipients {
+			g := gkm[uint(i)]
+			mask, err := crypto.KeyFromString(g.Mask)
+			if err != nil {
+				panic(g.Mask)
+			}
+			tx.Outputs = append(tx.Outputs, &common.Output{
+				Type:   common.OutputTypeScript,
+				Amount: common.NewIntegerFromString(r.Amount),
+				Script: common.NewThresholdScript(r.MixAddress.Threshold),
+				Keys:   g.KeysSlice(),
+				Mask:   mask,
+			})
 		}
-		tx.Outputs = append(tx.Outputs, &common.Output{
-			Type:   common.OutputTypeScript,
-			Amount: common.NewIntegerFromString(r.Amount),
-			Script: common.NewThresholdScript(ma.Threshold),
-			Keys:   ghost.KeysSlice(),
-			Mask:   mask,
-		})
 	}
 
 	if l := tx.AsVersioned().GetExtraLimit(); len(tx.Extra) >= l {
@@ -403,4 +406,44 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 		TotalOutput: totalOutput,
 		OutputSize:  len(outputs),
 	}
+}
+
+func requestGhostKeys(ctx context.Context, scriptRecipients []*TransactionRecipient, u *SafeUser) (map[uint]*GhostKeys, error) {
+	gkm := make(map[uint]*GhostKeys, len(scriptRecipients))
+	var uuidGkrs []*GhostKeyRequest
+	for i, r := range scriptRecipients {
+		ma := r.MixAddress
+		if len(ma.xinMembers) > 0 {
+			seed := make([]byte, 64)
+			crypto.ReadRand(seed)
+			r := crypto.NewKeyFromSeed(seed)
+			gk := &GhostKeys{
+				Mask: r.Public().String(),
+				Keys: make([]string, len(ma.xinMembers)),
+			}
+			for j, a := range ma.xinMembers {
+				k := crypto.DeriveGhostPublicKey(&r, &a.PublicViewKey, &a.PublicSpendKey, uint64(i))
+				gk.Keys[j] = k.String()
+			}
+			gkm[uint(i)] = gk
+		} else {
+			hint := uuid.Must(uuid.NewV4()).String()
+			uuidGkrs = append(uuidGkrs, &GhostKeyRequest{
+				Receivers: ma.Members(),
+				Index:     uint(i),
+				Hint:      hint,
+			})
+		}
+	}
+	if len(uuidGkrs) > 0 {
+		uuidGks, err := RequestSafeGhostKeys(ctx, uuidGkrs, u)
+		if err != nil {
+			return nil, err
+		}
+		for i, g := range uuidGks {
+			index := uuidGkrs[i].Index
+			gkm[index] = g
+		}
+	}
+	return gkm, nil
 }

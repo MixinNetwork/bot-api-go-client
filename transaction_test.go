@@ -24,9 +24,16 @@ func TestTIPTransaction(t *testing.T) {
 	var bot BotTest
 	err := json.Unmarshal([]byte(botData), &bot)
 	assert.Nil(err)
+	su := &SafeUser{
+		UserId:            bot.ClientID,
+		SessionId:         bot.SessionID,
+		SessionPrivateKey: bot.PrivateKey,
+		SpendPrivateKey:   bot.Pin[:64],
+	}
+
 	method := "GET"
 	path := "/safe/me"
-	token, err := SignAuthenticationTokenWithoutBody(bot.ClientID, bot.SessionID, bot.PrivateKey, method, path)
+	token, err := SignAuthenticationTokenWithoutBody(method, path, su)
 	assert.Nil(err)
 
 	me, err := UserMe(ctx, token)
@@ -34,27 +41,21 @@ func TestTIPTransaction(t *testing.T) {
 	assert.NotNil(me)
 	log.Printf("%#v", me)
 
-	me, err = VerifyPINTip(ctx, bot.ClientID, bot.PinToken, bot.SessionID, bot.PrivateKey, bot.Pin)
+	me, err = VerifyPINTip(ctx, su)
 	assert.Nil(err)
 	assert.NotNil(me)
 
 	members := HashMembers([]string{bot.ClientID})
 	asset := "f3bed3e0f6738938c8988eb8853c5647baa263901deb217ee53586d5de831f3b" // candy
-	su := &SafeUser{
-		UserId:     bot.ClientID,
-		SessionId:  bot.SessionID,
-		SessionKey: bot.PrivateKey,
-		SpendKey:   bot.Pin[:64],
-	}
 	outputs, err := ListUnspentOutputs(ctx, members, 1, asset, su)
 	assert.Nil(err)
 	assert.Len(outputs, 1)
 
 	ma := NewUUIDMixAddress([]string{"e9e5b807-fa8b-455a-8dfa-b189d28310ff"}, 1)
-	tr := &TransactionRecipient{MixAddress: ma.String(), Amount: "0.013"}
+	tr := &TransactionRecipient{MixAddress: ma, Amount: "0.013"}
 	trace := UuidNewV4().String()
 	log.Println("trace:", trace)
-	tx, err := SendTransaction(ctx, asset, []*TransactionRecipient{tr}, trace, "test-memo", nil, su)
+	tx, err := SendTransaction(ctx, asset, []*TransactionRecipient{tr}, trace, []byte("test-memo"), nil, su)
 	assert.Nil(err)
 	assert.NotNil(tx)
 
