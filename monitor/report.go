@@ -11,24 +11,22 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
-const (
-	AppMessageRunningPeriod = "period"
-	AppMessageRunningTime   = "time"
-)
-
 type MessageData struct {
-	Name  string `yaml:"name" json:"name"`
-	Value string `yaml:"value" json:"value"`
-	Score int    `yaml:"score" json:"score"`
+	Name  string `yaml:"n" json:"name"`
+	Value string `yaml:"v" json:"value"`
+	Score int    `yaml:"s" json:"score"`
 }
 
+// Tag: service name
+// Running: period, time
+// Duration: 0m 10m, 30m, 60m
+// project example:
+// 1. rpc-bsc|p|rpc
+// 2. rpc-deposit|t|rpc
 type AppMessage struct {
-	Project  string         `yaml:"project"`
-	Running  string         `yaml:"running"`
-	Duration int64          `yaml:"duration"`
-	Tag      string         `yaml:"tag"`
-	Status   int            `yaml:"status"`
-	Data     []*MessageData `yaml:"data"`
+	Project string         `yaml:"project"`
+	Status  int            `yaml:"status"`
+	Data    []*MessageData `yaml:"data"`
 }
 
 func UnmarshalAppMessage(b []byte) (*AppMessage, error) {
