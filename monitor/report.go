@@ -22,7 +22,6 @@ const (
 type MessageData struct {
 	Name  string `yaml:"name" json:"name"`
 	Value string `yaml:"value" json:"value"`
-	Score int    `yaml:"score" json:"score"`
 }
 
 // Tag: service name
