@@ -11,6 +11,11 @@ import (
 	yaml "gopkg.in/yaml.v3"
 )
 
+const (
+	AppMessageRunningPeriod = "period"
+	AppMessageRunningTime   = "time"
+)
+
 type MessageData struct {
 	Name  string `yaml:"name" json:"name"`
 	Value string `yaml:"value" json:"value"`
