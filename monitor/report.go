@@ -12,17 +12,17 @@ import (
 )
 
 type MessageData struct {
-	Name  string `yaml:"n" json:"name"`
-	Value string `yaml:"v" json:"value"`
-	Score int    `yaml:"s" json:"score"`
+	Name  string `yaml:"name" json:"name"`
+	Value string `yaml:"value" json:"value"`
+	Score int    `yaml:"score" json:"score"`
 }
 
 // Tag: service name
 // Running: period, time
 // Duration: 0m 10m, 30m, 60m
 // project example:
-// 1. rpc-bsc|p|rpc
-// 2. rpc-deposit|t|rpc
+// 1. rpc-bsc|p|30|rpc
+// 2. rpc-deposit|t|0|rpc
 type AppMessage struct {
 	Project string         `yaml:"project"`
 	Status  int            `yaml:"status"`
