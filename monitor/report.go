@@ -12,6 +12,9 @@ import (
 )
 
 const (
+	AppMessageRunningPeriodShort = "p"
+	AppMessageRunningTimeShort   = "t"
+
 	AppMessageRunningPeriod = "period"
 	AppMessageRunningTime   = "time"
 )
