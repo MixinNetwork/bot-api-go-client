@@ -54,7 +54,7 @@ func ReportToMonitor(ctx context.Context, asset, amount, trace string, receivers
 		return nil, err
 	}
 	ma := bot.NewUUIDMixAddress(receivers, byte(threshold))
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 	if trace == "" {
 		trace = bot.UniqueObjectId(ma.String(), asset, amount, u.UserId, hex.EncodeToString(memo), fmt.Sprint(minutes))
 	}
