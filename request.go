@@ -15,12 +15,10 @@ var (
 	DefaultApiHost   = "https://api.mixin.one"
 	DefaultBlazeHost = "blaze.mixin.one"
 
-	ZeromeshApiHost   = "https://mixin-api.zeromesh.net"
-	ZeromeshBlazeHost = "mixin-blaze.zeromesh.net"
-	httpClient        *http.Client
-	httpUri           string
-	blazeUri          string
-	userAgent         = "Bot-API-Go-Client"
+	httpClient *http.Client
+	httpUri    string
+	blazeUri   string
+	userAgent  = "Bot-API-Go-Client"
 
 	uid        string
 	sid        string
