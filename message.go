@@ -49,6 +49,32 @@ type ReceiptAcknowledgementRequest struct {
 	Status    string `json:"status"`
 }
 
+func PostMessageRequest(ctx context.Context, message *MessageRequest, user *SafeUser) error {
+	msg, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	accessToken, err := SignAuthenticationToken("POST", "/messages", string(msg), user)
+	if err != nil {
+		return err
+	}
+	body, err := Request(ctx, "POST", "/messages", msg, accessToken)
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error.Code > 0 {
+		return resp.Error
+	}
+	return nil
+}
+
 func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUser) error {
 	msg, err := json.Marshal(messages)
 	if err != nil {
