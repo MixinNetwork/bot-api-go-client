@@ -343,11 +343,7 @@ func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
 	conn, _, err := b.dailer.Dial(u.String(), header)
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout") {
-			if blazeUri == DefaultBlazeHost {
-				blazeUri = ZeromeshBlazeHost
-			} else {
-				blazeUri = DefaultBlazeHost
-			}
+			blazeUri = DefaultBlazeHost
 		}
 		return nil, err
 	}
