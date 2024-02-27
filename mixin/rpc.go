@@ -14,7 +14,7 @@ import (
 
 var httpClient *http.Client
 
-func callRPC(node, method string, params []interface{}) ([]byte, error) {
+func CallRPC(node, method string, params []interface{}) ([]byte, error) {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
@@ -86,7 +86,7 @@ func (raw signerInput) ReadUTXOKeys(hash crypto.Hash, index uint) (*common.UTXOK
 		}
 	}
 
-	data, err := callRPC(raw.Node, "getutxo", []interface{}{hash.String(), index})
+	data, err := CallRPC(raw.Node, "getutxo", []interface{}{hash.String(), index})
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (str
 }
 
 func SendRawTransaction(node string, raw string) (string, error) {
-	data, err := callRPC(node, "sendrawtransaction", []interface{}{raw})
+	data, err := CallRPC(node, "sendrawtransaction", []interface{}{raw})
 	if err != nil {
 		return "", err
 	}
