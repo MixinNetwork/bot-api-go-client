@@ -12,7 +12,7 @@ type AssetNetwork struct {
 	Symbol  string `json:"symbol"`
 }
 
-func ReadNetworkAsset(ctx context.Context) ([]*AssetNetwork, error) {
+func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {
 	body, err := Request(ctx, "GET", "/network", nil, "")
 	if err != nil {
 		return nil, err
