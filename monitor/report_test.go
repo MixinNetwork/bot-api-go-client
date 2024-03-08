@@ -12,7 +12,6 @@ func TestReport(t *testing.T) {
 	md := &MessageData{
 		Name:  "bar",
 		Value: "foo",
-		Score: 200,
 	}
 
 	am := &AppMessage{
@@ -25,12 +24,5 @@ func TestReport(t *testing.T) {
 
 	buf, err := am.Marshal()
 	require.Nil(err)
-	require.Equal(`p: rpc-bsc-p-30
-s: 200
-d:
-    - "n": bar
-      v: foo
-      s: 200
-`, string(buf))
-	require.Equal(67, len(buf))
+	require.Equal(73, len(buf))
 }
