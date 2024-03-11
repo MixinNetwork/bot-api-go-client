@@ -50,6 +50,11 @@ func ForbiddenError(ctx context.Context) Error {
 	return createError(ctx, http.StatusAccepted, http.StatusForbidden, description, nil)
 }
 
+func NotFoundError(ctx context.Context) Error {
+	description := "The endpoint is not found."
+	return createError(ctx, http.StatusAccepted, http.StatusNotFound, description, nil)
+}
+
 func createError(ctx context.Context, status, code int, description string, err error) Error {
 	pc, file, line, _ := runtime.Caller(2)
 	_ = runtime.FuncForPC(pc).Name()

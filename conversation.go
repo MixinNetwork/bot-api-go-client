@@ -112,6 +112,8 @@ func ConversationShowByToken(ctx context.Context, conversationId string, accessT
 			return nil, AuthorizationError(ctx)
 		} else if resp.Error.Code == 403 {
 			return nil, ForbiddenError(ctx)
+		} else if resp.Error.Code == 404 {
+			return nil, NotFoundError(ctx)
 		}
 		return nil, ServerError(ctx, resp.Error)
 	}
