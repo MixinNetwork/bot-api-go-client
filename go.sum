@@ -1,7 +1,5 @@
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
-github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0 h1:wLOBGmv/rLV/423s4qA1tKWMh9SxC63ZEx6PStj3/00=
-github.com/MixinNetwork/bot-api-go-client/v2 v2.1.0/go.mod h1:uM9do+j0vWc73qxf+1b5EYebEzDP9x2uEmjt/UeziZ4=
 github.com/MixinNetwork/go-number v0.1.1 h1:Ui/xi0WGiBWI6cPrZaffB6q8lP7m2Zw0CXgOqLXb/3c=
 github.com/MixinNetwork/go-number v0.1.1/go.mod h1:4kaXQW9NOjjO3uZ5ehRVn3m+G+5ENGEKgiwfxea3zGQ=
 github.com/MixinNetwork/mixin v0.18.3 h1:hN7XeamqTurC7WX2pIl09+WsuGhVCtrD6qM8kKB+ODE=

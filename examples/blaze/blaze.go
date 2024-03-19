@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/MixinNetwork/bot-api-go-client/v2"
+	"github.com/MixinNetwork/bot-api-go-client/v3"
 )
 
 type mixinBlazeHandler func(ctx context.Context, msg bot.MessageView, clientID string) error
