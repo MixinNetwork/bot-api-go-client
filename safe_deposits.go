@@ -6,25 +6,25 @@ import (
 )
 
 type SafeDepositPending struct {
-	Amount          float64 `json:"amount"`
-	AssetID         string  `json:"asset_id"`
-	AssetKey        string  `json:"asset_key"`
-	BlockHash       string  `json:"block_hash"`
-	BlockNumber     int     `json:"block_number"`
-	ChainID         string  `json:"chain_id"`
-	Confirmations   int     `json:"confirmations"`
-	CreatedAt       string  `json:"created_at"`
-	DepositID       string  `json:"deposit_id"`
-	Destination     string  `json:"destination"`
-	Extra           string  `json:"extra"`
-	KernelAssetID   string  `json:"kernel_asset_id"`
-	OutputIndex     int     `json:"output_index"`
-	Sender          string  `json:"sender"`
-	State           string  `json:"state"`
-	Tag             string  `json:"tag"`
-	Threshold       int     `json:"threshold"`
-	TransactionHash string  `json:"transaction_hash"`
-	UpdatedAt       string  `json:"updated_at"`
+	Amount          string `json:"amount"`
+	AssetID         string `json:"asset_id"`
+	AssetKey        string `json:"asset_key"`
+	BlockHash       string `json:"block_hash"`
+	BlockNumber     int    `json:"block_number"`
+	ChainID         string `json:"chain_id"`
+	Confirmations   int    `json:"confirmations"`
+	CreatedAt       string `json:"created_at"`
+	DepositID       string `json:"deposit_id"`
+	Destination     string `json:"destination"`
+	Extra           string `json:"extra"`
+	KernelAssetID   string `json:"kernel_asset_id"`
+	OutputIndex     int    `json:"output_index"`
+	Sender          string `json:"sender"`
+	State           string `json:"state"`
+	Tag             string `json:"tag"`
+	Threshold       int    `json:"threshold"`
+	TransactionHash string `json:"transaction_hash"`
+	UpdatedAt       string `json:"updated_at"`
 }
 
 func FetchSafeDeposit(ctx context.Context) ([]*SafeDepositPending, error) {
