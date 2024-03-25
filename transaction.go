@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -144,7 +143,6 @@ func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransa
 
 func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
-	log.Printf("GetTransactionByIdWithSafeUser(%s)", path)
 	var accessToken string
 	var err error
 	if su != nil {
