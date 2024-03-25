@@ -3,10 +3,11 @@ package bot
 import (
 	"context"
 	"encoding/json"
-
+	"fmt"
 	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
 	"github.com/gofrs/uuid/v5"
+	"net/url"
 )
 
 const (
@@ -44,6 +45,12 @@ type AssetTicker struct {
 	Type     string `json:"type"`
 	PriceBTC string `json:"price_btc"`
 	PriceUSD string `json:"price_usd"`
+}
+
+type AssetFee struct {
+	Type    string `json:"type"`
+	AssetID string `json:"asset_id"`
+	Amount  string `json:"amount"`
 }
 
 func ReadAsset(ctx context.Context, name string) (*Asset, error) {
@@ -128,4 +135,30 @@ func AssetBalanceWithSafeUser(ctx context.Context, kernelAssetId string, su *Saf
 		total = total.Add(amt)
 	}
 	return total, nil
+}
+
+func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser) ([]*AssetFee, error) {
+	params := url.Values{}
+	params.Set("destination", destination)
+	method, path := "GET", fmt.Sprintf("/safe/assets/%s/fees?%s", assetId, params.Encode())
+	token, err := SignAuthenticationToken(method, path, "", su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, nil, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*AssetFee `json:"data"`
+		Error Error       `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }
