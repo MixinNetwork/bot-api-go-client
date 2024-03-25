@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -143,6 +144,7 @@ func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransa
 
 func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
+	log.Printf("GetTransactionByIdWithSafeUser(%s)", path)
 	var accessToken string
 	var err error
 	if su != nil {
@@ -269,11 +271,7 @@ type KernelTransactionRequestCreateRequest struct {
 	Raw       string `json:"raw"`
 }
 
-func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
-	requests := []*KernelTransactionRequestCreateRequest{{
-		RequestID: traceId,
-		Raw:       hex.EncodeToString(ver.Marshal()),
-	}}
+func VerifyRawTransaction(ctx context.Context, requests []*KernelTransactionRequestCreateRequest, u *SafeUser) ([]*SequencerTransactionRequest, error) {
 	data, err := json.Marshal(requests)
 	if err != nil {
 		return nil, err
@@ -298,10 +296,23 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
-	if len(resp.Data) != 1 {
+	return resp.Data, nil
+}
+
+func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
+	requests := []*KernelTransactionRequestCreateRequest{{
+		RequestID: traceId,
+		Raw:       hex.EncodeToString(ver.Marshal()),
+	}}
+	verified, err := VerifyRawTransaction(ctx, requests, u)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(verified) != 1 {
 		return nil, errors.New("invalid response size")
 	}
-	return resp.Data[0], nil
+	return verified[0], nil
 }
 
 func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
@@ -337,11 +348,7 @@ func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, v
 	return ver, nil
 }
 
-func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
-	requests := []*KernelTransactionRequestCreateRequest{{
-		RequestID: traceId,
-		Raw:       hex.EncodeToString(ver.Marshal()),
-	}}
+func SendRawTransaction(ctx context.Context, requests []*KernelTransactionRequestCreateRequest, u *SafeUser) ([]*SequencerTransactionRequest, error) {
 	data, err := json.Marshal(requests)
 	if err != nil {
 		return nil, err
@@ -366,13 +373,31 @@ func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *com
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
-	if len(resp.Data) != 1 {
+	return resp.Data, nil
+}
+
+func sendRawTransactionToSequencer(ctx context.Context, traceId string, ver *common.VersionedTransaction, u *SafeUser) (*SequencerTransactionRequest, error) {
+	requests := []*KernelTransactionRequestCreateRequest{{
+		RequestID: traceId,
+		Raw:       hex.EncodeToString(ver.Marshal()),
+	}}
+	txs, err := SendRawTransaction(ctx, requests, u)
+	if err != nil {
+		return nil, err
+	}
+	if len(txs) != 1 {
 		return nil, errors.New("invalid response size")
 	}
-	return resp.Data[0], nil
+	return txs[0], nil
 }
 
 func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, recipients []*TransactionRecipient, u *SafeUser) ([]*Output, common.Integer, error) {
+	var totalOutput common.Integer
+	for _, r := range recipients {
+		amt := common.NewIntegerFromString(r.Amount)
+		totalOutput = totalOutput.Add(amt)
+	}
+
 	membersHash := HashMembers([]string{u.UserId})
 	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, u)
 	if err != nil {
@@ -381,15 +406,9 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	if len(outputs) == 0 {
 		return nil, common.Zero, &UtxoError{
 			TotalInput:  common.Zero,
-			TotalOutput: common.Zero,
+			TotalOutput: totalOutput,
 			OutputSize:  0,
 		}
-	}
-
-	var totalOutput common.Integer
-	for _, r := range recipients {
-		amt := common.NewIntegerFromString(r.Amount)
-		totalOutput = totalOutput.Add(amt)
 	}
 
 	var totalInput common.Integer

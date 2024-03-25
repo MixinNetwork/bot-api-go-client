@@ -71,7 +71,7 @@ func transferCmd(c *cli.Context) error {
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 	memo := c.String("trace")
 	if trace == "" {
@@ -154,7 +154,7 @@ func batchTransferCmd(c *cli.Context) error {
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 	memo := c.String("trace")
 	traceID, _ := bot.UuidFromString(trace)
@@ -206,7 +206,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		trace := record[7]
 		memo := record[7]
 		ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-		tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+		tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 		traceID, _ := bot.UuidFromString(trace)
 		if traceID.String() != trace {
