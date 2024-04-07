@@ -46,7 +46,7 @@ func NewMainnetMixAddress(members []string, threshold byte) *MixAddress {
 	if len(members) > 255 {
 		panic(len(members))
 	}
-	if int(threshold) == 0 || int(threshold) > len(members) {
+	if int(threshold) == 0 {
 		panic(threshold)
 	}
 	ma := &MixAddress{

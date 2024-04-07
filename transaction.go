@@ -24,9 +24,9 @@ type TransactionRecipient struct {
 }
 
 type TransactionReceiver struct {
-	Members    []string    `json:"members"`
-	MemberHash crypto.Hash `json:"members_hash"`
-	Threshold  uint8       `json:"threshold"`
+	Members     []string    `json:"members"`
+	MembersHash crypto.Hash `json:"members_hash"`
+	Threshold   uint8       `json:"threshold"`
 }
 
 type SequencerTransactionRequest struct {
@@ -237,7 +237,7 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 		scriptRecipients = append(scriptRecipients, r)
 	}
 	if len(scriptRecipients) > 0 {
-		gkm, err := requestGhostKeys(ctx, scriptRecipients, u)
+		gkm, err := RequestGhostRecipients(ctx, scriptRecipients, u)
 		if err != nil {
 			return nil, err
 		}
@@ -425,7 +425,7 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	}
 }
 
-func requestGhostKeys(ctx context.Context, scriptRecipients []*TransactionRecipient, u *SafeUser) (map[uint]*GhostKeys, error) {
+func RequestGhostRecipients(ctx context.Context, scriptRecipients []*TransactionRecipient, u *SafeUser) (map[uint]*GhostKeys, error) {
 	gkm := make(map[uint]*GhostKeys, len(scriptRecipients))
 	var uuidGkrs []*GhostKeyRequest
 	for i, r := range scriptRecipients {
