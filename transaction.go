@@ -221,8 +221,14 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 		tx.References = append(tx.References, rh)
 	}
 
-	var scriptRecipients []*TransactionRecipient
-	for _, r := range recipients {
+	gkm, err := RequestGhostRecipients(ctx, recipients, u)
+	if err != nil {
+		return nil, err
+	}
+	for i, r := range recipients {
+		if r.Destination == "" && r.MixAddress == nil {
+			panic(r)
+		}
 		if r.Destination != "" {
 			tx.Outputs = append(tx.Outputs, &common.Output{
 				Type:   common.OutputTypeWithdrawalSubmit,
@@ -234,27 +240,19 @@ func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output
 			})
 			continue
 		}
-		scriptRecipients = append(scriptRecipients, r)
-	}
-	if len(scriptRecipients) > 0 {
-		gkm, err := RequestGhostRecipients(ctx, scriptRecipients, u)
+
+		g := gkm[i]
+		mask, err := crypto.KeyFromString(g.Mask)
 		if err != nil {
-			return nil, err
+			panic(g.Mask)
 		}
-		for i, r := range scriptRecipients {
-			g := gkm[uint(i)]
-			mask, err := crypto.KeyFromString(g.Mask)
-			if err != nil {
-				panic(g.Mask)
-			}
-			tx.Outputs = append(tx.Outputs, &common.Output{
-				Type:   common.OutputTypeScript,
-				Amount: common.NewIntegerFromString(r.Amount),
-				Script: common.NewThresholdScript(r.MixAddress.Threshold),
-				Keys:   g.KeysSlice(),
-				Mask:   mask,
-			})
-		}
+		tx.Outputs = append(tx.Outputs, &common.Output{
+			Type:   common.OutputTypeScript,
+			Amount: common.NewIntegerFromString(r.Amount),
+			Script: common.NewThresholdScript(r.MixAddress.Threshold),
+			Keys:   g.KeysSlice(),
+			Mask:   mask,
+		})
 	}
 
 	if l := tx.AsVersioned().GetExtraLimit(); len(tx.Extra) >= l {
@@ -425,10 +423,13 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	}
 }
 
-func RequestGhostRecipients(ctx context.Context, scriptRecipients []*TransactionRecipient, u *SafeUser) (map[uint]*GhostKeys, error) {
-	gkm := make(map[uint]*GhostKeys, len(scriptRecipients))
+func RequestGhostRecipients(ctx context.Context, recipients []*TransactionRecipient, u *SafeUser) (map[int]*GhostKeys, error) {
+	gkm := make(map[int]*GhostKeys, len(recipients))
 	var uuidGkrs []*GhostKeyRequest
-	for i, r := range scriptRecipients {
+	for i, r := range recipients {
+		if r.MixAddress == nil {
+			continue
+		}
 		ma := r.MixAddress
 		if len(ma.xinMembers) > 0 {
 			seed := make([]byte, 64)
@@ -442,7 +443,7 @@ func RequestGhostRecipients(ctx context.Context, scriptRecipients []*Transaction
 				k := crypto.DeriveGhostPublicKey(&r, &a.PublicViewKey, &a.PublicSpendKey, uint64(i))
 				gk.Keys[j] = k.String()
 			}
-			gkm[uint(i)] = gk
+			gkm[i] = gk
 		} else {
 			hint := uuid.Must(uuid.NewV4()).String()
 			uuidGkrs = append(uuidGkrs, &GhostKeyRequest{
@@ -459,7 +460,7 @@ func RequestGhostRecipients(ctx context.Context, scriptRecipients []*Transaction
 		}
 		for i, g := range uuidGks {
 			index := uuidGkrs[i].Index
-			gkm[index] = g
+			gkm[int(index)] = g
 		}
 	}
 	return gkm, nil
