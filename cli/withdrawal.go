@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"log"
+
 	"github.com/MixinNetwork/bot-api-go-client/v3"
 	"github.com/urfave/cli/v2"
-	"log"
 )
 
 // ./cli withdrawal -keystore=/path/to/keystore-700xxxx006.json -spend=31088c8....40dc0 -asset=43d61dcd-e413-450d-80b8-101d5e903357 -amount=0.01 -destination=0x....
