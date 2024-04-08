@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ./cli transfer -keystore=/path/to/keystore-7000105125.json -spend=2bca...ec0 -asset=965e5c6e-434c-3fa9-b780-c50f43cd955c -receiver=e9e5b807-xxxx-455a-8dfa-b189d28310ff -amount=0.0012
 var transferCmdCli = &cli.Command{
 	Name:   "transfer",
 	Action: transferCmd,
