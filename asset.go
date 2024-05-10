@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
+
 	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
 	"github.com/gofrs/uuid/v5"
-	"net/url"
 )
 
 const (
@@ -39,6 +40,8 @@ type Asset struct {
 	SnapshotsCount int64   `json:"snapshots_count"`
 	Capitalization float64 `json:"capitalization"`
 	Liquidity      string  `json:"liquidity"`
+
+	CollectionHash string `json:"collection_hash,omitempty"`
 }
 
 type AssetTicker struct {

@@ -38,8 +38,9 @@ type Output struct {
 	Signers            []string  `json:"signers"`
 	SignedBy           string    `json:"signed_by"`
 
-	Deposit   *KernelDepositView `json:"deposit,omitempty"`
-	RequestId string             `json:"request_id,omitempty"`
+	InscriptionHash string             `json:"inscription_hash,omitempty"`
+	Deposit         *KernelDepositView `json:"deposit,omitempty"`
+	RequestId       string             `json:"request_id,omitempty"`
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
