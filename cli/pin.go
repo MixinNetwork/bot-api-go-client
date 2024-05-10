@@ -35,6 +35,6 @@ func verifyPINCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	log.Println("user %#v", user)
+	log.Printf("user %#v", user)
 	return nil
 }

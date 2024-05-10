@@ -39,7 +39,7 @@ type MessageRequest struct {
 	RecipientId      string `json:"recipient_id"`
 	MessageId        string `json:"message_id"`
 	Category         string `json:"category"`
-	Data             string `json:"data"`
+	DataBase64       string `json:"data_base64"`
 	RepresentativeId string `json:"representative_id"`
 	QuoteMessageId   string `json:"quote_message_id"`
 }
@@ -101,13 +101,13 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUse
 	return nil
 }
 
-func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, user *SafeUser) error {
+func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, dataBase64 string, user *SafeUser) error {
 	request := MessageRequest{
 		ConversationId: conversationId,
 		RecipientId:    recipientId,
 		MessageId:      messageId,
 		Category:       category,
-		Data:           data,
+		DataBase64:     dataBase64,
 	}
 	return PostMessages(ctx, []*MessageRequest{&request}, user)
 }

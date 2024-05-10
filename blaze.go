@@ -59,7 +59,7 @@ type MessageView struct {
 	UserId           string    `json:"user_id"`
 	MessageId        string    `json:"message_id"`
 	Category         string    `json:"category"`
-	Data             string    `json:"data"`
+	DataBase64       string    `json:"data_base64"`
 	RepresentativeId string    `json:"representative_id"`
 	QuoteMessageId   string    `json:"quote_message_id"`
 	Status           string    `json:"status"`
@@ -187,7 +187,7 @@ func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipient
 		"recipient_id":      recipientId,
 		"message_id":        messageId,
 		"category":          category,
-		"data":              base64.StdEncoding.EncodeToString([]byte(content)),
+		"data_base64":       base64.RawURLEncoding.EncodeToString([]byte(content)),
 		"representative_id": representativeId,
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
@@ -202,7 +202,7 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 		"recipient_id":    msg.UserId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryPlainText,
-		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
+		"data_base64":     base64.RawURLEncoding.EncodeToString([]byte(content)),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
 		return BlazeServerError(ctx, err)
@@ -220,7 +220,7 @@ func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, rec
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryMessageRecall,
-		"data":            base64.StdEncoding.EncodeToString(a),
+		"data_base64":     base64.RawURLEncoding.EncodeToString(a),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
 		return BlazeServerError(ctx, err)
@@ -234,7 +234,7 @@ func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content str
 		"recipient_id":    msg.UserId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryPlainPost,
-		"data":            base64.StdEncoding.EncodeToString([]byte(content)),
+		"data_base64":     base64.RawURLEncoding.EncodeToString([]byte(content)),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
 		return BlazeServerError(ctx, err)
@@ -250,7 +250,7 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryPlainContact,
-		"data":            base64.StdEncoding.EncodeToString(contactData),
+		"data_base64":     base64.RawURLEncoding.EncodeToString(contactData),
 	}
 	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
 		return BlazeServerError(ctx, err)
@@ -273,7 +273,7 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryAppCard,
-		"data":            base64.StdEncoding.EncodeToString(data),
+		"data_base64":     base64.RawURLEncoding.EncodeToString(data),
 	}
 	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
 	if err != nil {
@@ -296,7 +296,7 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryAppButtonGroup,
-		"data":            base64.StdEncoding.EncodeToString(btns),
+		"data_base64":     base64.RawURLEncoding.EncodeToString(btns),
 	}
 	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
 	if err != nil {
@@ -318,7 +318,7 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
 		"category":        MessageCategoryAppButtonGroup,
-		"data":            base64.StdEncoding.EncodeToString(btns),
+		"data_base64":     base64.RawURLEncoding.EncodeToString(btns),
 	}
 	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
 	if err != nil {
