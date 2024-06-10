@@ -8,7 +8,7 @@ require (
 	github.com/MixinNetwork/mixin v0.18.8
 	github.com/gofrs/uuid/v5 v5.2.0
 	github.com/golang-jwt/jwt/v5 v5.2.1
-	github.com/gorilla/websocket v1.5.1
+	github.com/gorilla/websocket v1.5.2
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.2
