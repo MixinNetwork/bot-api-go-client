@@ -7,21 +7,35 @@ import (
 	"time"
 )
 
+type OutputReceiverView struct {
+	Members     []string `json:"members"`
+	MembersHash string   `json:"members_hash"`
+	Threshold   int      `json:"threshold"`
+
+	Destination    string `json:"destination"`
+	Tag            string `json:"tag"`
+	WithdrawalHash string `json:"withdrawal_hash"`
+}
+
 type SafeMultisigRequest struct {
+	Type             string    `json:"type"`
 	RequestID        string    `json:"request_id"`
 	TransactionHash  string    `json:"transaction_hash"`
-	AssetID          string    `json:"asset_id"`
+	AssetId          string    `json:"asset_id"`
 	KernelAssetID    string    `json:"kernel_asset_id"`
 	Amount           string    `json:"amount"`
 	SendersHash      string    `json:"senders_hash"`
-	SendersThreshold uint8     `json:"senders_threshold"`
+	SendersThreshold int64     `json:"senders_threshold"`
 	Senders          []string  `json:"senders"`
 	Signers          []string  `json:"signers"`
 	Extra            string    `json:"extra"`
 	RawTransaction   string    `json:"raw_transaction"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
-	Views            []string  `json:"views"`
+
+	InscriptionHash string                `json:"inscription_hash,omitempty"`
+	Receivers       []*OutputReceiverView `json:"receivers,omitempty"`
+	Views           []string              `json:"views,omitempty"`
 }
 
 func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUser) (*SafeMultisigRequest, error) {
