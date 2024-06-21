@@ -173,9 +173,9 @@ func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *S
 
 func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	// build the unsigned raw transaction
-	tx, err := buildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
+	tx, err := BuildRawTransaction(ctx, asset, utxos, recipients, extra, references, u)
 	if err != nil {
-		return nil, fmt.Errorf("buildRawTransaction(%s) => %v", asset, err)
+		return nil, fmt.Errorf("BuildRawTransaction(%s) => %v", asset, err)
 	}
 	ver := tx.AsVersioned()
 	// verify the raw transaction, the same trace id may have been signed already
@@ -204,7 +204,7 @@ func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, re
 	return result, nil
 }
 
-func buildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, extra []byte, references []string, u *SafeUser) (*common.Transaction, error) {
+func BuildRawTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, recipients []*TransactionRecipient, extra []byte, references []string, u *SafeUser) (*common.Transaction, error) {
 	tx := common.NewTransactionV5(asset)
 	for _, in := range utxos {
 		h, err := crypto.HashFromString(in.TransactionHash)
