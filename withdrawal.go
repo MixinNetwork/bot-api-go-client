@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
@@ -92,12 +93,12 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			})
 		}
 
-		transaction, err := buildRawTransaction(ctx, asset, utxos, recipients, []byte(memo), nil, u)
+		transaction, err := BuildRawTransaction(ctx, asset, utxos, recipients, []byte(memo), nil, u)
 		if err != nil {
-			return nil, fmt.Errorf("buildRawTransaction(%s): %w", asset, err)
+			return nil, fmt.Errorf("BuildRawTransaction(%s): %w", asset, err)
 		}
 		ver := transaction.AsVersioned()
-		feeTransaction, err := buildRawTransaction(ctx, feeAsset, feeUtxos, feeRecipients, []byte(memo), []string{crypto.Blake3Hash(ver.Marshal()).String()}, u)
+		feeTransaction, err := BuildRawTransaction(ctx, feeAsset, feeUtxos, feeRecipients, []byte(memo), []string{crypto.Blake3Hash(ver.Marshal()).String()}, u)
 		if err != nil {
 			return nil, fmt.Errorf("buildFeeRawTransaction(%s): %w", feeAsset, err)
 		}
