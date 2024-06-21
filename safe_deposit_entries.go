@@ -29,7 +29,7 @@ func CreateDepositEntry(ctx context.Context, chainID string, members []string, t
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/users", data, token)
+	body, err := Request(ctx, "POST", endpoint, data, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

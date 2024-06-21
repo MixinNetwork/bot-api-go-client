@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// ./cli transfer -keystore=/path/to/keystore-7000105125.json -spend=2bca...ec0 -asset=965e5c6e-434c-3fa9-b780-c50f43cd955c -receiver=e9e5b807-xxxx-455a-8dfa-b189d28310ff -amount=0.0012
 var transferCmdCli = &cli.Command{
 	Name:   "transfer",
 	Action: transferCmd,
@@ -71,7 +72,7 @@ func transferCmd(c *cli.Context) error {
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 	memo := c.String("trace")
 	if trace == "" {
@@ -154,7 +155,7 @@ func batchTransferCmd(c *cli.Context) error {
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 	memo := c.String("trace")
 	traceID, _ := bot.UuidFromString(trace)
@@ -206,7 +207,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		trace := record[7]
 		memo := record[7]
 		ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
-		tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+		tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 
 		traceID, _ := bot.UuidFromString(trace)
 		if traceID.String() != trace {

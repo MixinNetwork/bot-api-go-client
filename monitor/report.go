@@ -12,6 +12,9 @@ import (
 )
 
 const (
+	AppMessageRunningPeriodShort = "p"
+	AppMessageRunningTimeShort   = "t"
+
 	AppMessageRunningPeriod = "period"
 	AppMessageRunningTime   = "time"
 )
@@ -19,12 +22,16 @@ const (
 type MessageData struct {
 	Name  string `yaml:"name" json:"name"`
 	Value string `yaml:"value" json:"value"`
-	Score int    `yaml:"score" json:"score"`
 }
 
+// Tag: service name
+// Running: period, time
+// Duration: 0m 10m, 30m, 60m
+// project example:
+// 1. rpc-bsc|p|30|rpc
+// 2. rpc-deposit|t|0|rpc
 type AppMessage struct {
 	Project string         `yaml:"project"`
-	Running string         `yaml:"running"`
 	Status  int            `yaml:"status"`
 	Data    []*MessageData `yaml:"data"`
 }
@@ -47,7 +54,7 @@ func ReportToMonitor(ctx context.Context, asset, amount, trace string, receivers
 		return nil, err
 	}
 	ma := bot.NewUUIDMixAddress(receivers, byte(threshold))
-	tr := &bot.TransactionRecipient{MixAddress: ma.String(), Amount: amount}
+	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
 	if trace == "" {
 		trace = bot.UniqueObjectId(ma.String(), asset, amount, u.UserId, hex.EncodeToString(memo), fmt.Sprint(minutes))
 	}

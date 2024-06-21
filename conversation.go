@@ -39,7 +39,7 @@ func CreateContactConversation(ctx context.Context, participantID string, user *
 			UserId: participantID,
 		},
 	}
-	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, uid), "", "", participants, user)
+	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, user.UserId), "", "", participants, user)
 }
 
 func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, user *SafeUser) (*Conversation, error) {
@@ -112,6 +112,8 @@ func ConversationShowByToken(ctx context.Context, conversationId string, accessT
 			return nil, AuthorizationError(ctx)
 		} else if resp.Error.Code == 403 {
 			return nil, ForbiddenError(ctx)
+		} else if resp.Error.Code == 404 {
+			return nil, NotFoundError(ctx)
 		}
 		return nil, ServerError(ctx, resp.Error)
 	}

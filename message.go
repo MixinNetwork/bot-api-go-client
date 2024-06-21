@@ -39,7 +39,7 @@ type MessageRequest struct {
 	RecipientId      string `json:"recipient_id"`
 	MessageId        string `json:"message_id"`
 	Category         string `json:"category"`
-	Data             string `json:"data"`
+	DataBase64       string `json:"data_base64"`
 	RepresentativeId string `json:"representative_id"`
 	QuoteMessageId   string `json:"quote_message_id"`
 }
@@ -47,6 +47,32 @@ type MessageRequest struct {
 type ReceiptAcknowledgementRequest struct {
 	MessageId string `json:"message_id"`
 	Status    string `json:"status"`
+}
+
+func PostMessageRequest(ctx context.Context, message *MessageRequest, user *SafeUser) error {
+	msg, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+	accessToken, err := SignAuthenticationToken("POST", "/messages", string(msg), user)
+	if err != nil {
+		return err
+	}
+	body, err := Request(ctx, "POST", "/messages", msg, accessToken)
+	if err != nil {
+		return err
+	}
+	var resp struct {
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.Error.Code > 0 {
+		return resp.Error
+	}
+	return nil
 }
 
 func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUser) error {
@@ -75,13 +101,13 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUse
 	return nil
 }
 
-func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, data string, user *SafeUser) error {
+func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, dataBase64 string, user *SafeUser) error {
 	request := MessageRequest{
 		ConversationId: conversationId,
 		RecipientId:    recipientId,
 		MessageId:      messageId,
 		Category:       category,
-		Data:           data,
+		DataBase64:     dataBase64,
 	}
 	return PostMessages(ctx, []*MessageRequest{&request}, user)
 }
