@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -51,13 +52,13 @@ type SequencerTransactionRequest struct {
 	Views []string `json:"views"`
 }
 
-type UtxoError struct {
+type UtxoInsufficientError struct {
 	TotalInput  common.Integer
 	TotalOutput common.Integer
 	OutputSize  int
 }
 
-func (ue *UtxoError) Error() string {
+func (ue *UtxoInsufficientError) Error() string {
 	return fmt.Sprintf("insufficient outputs %s@%d %s", ue.TotalInput, ue.OutputSize, ue.TotalOutput)
 }
 
@@ -71,6 +72,21 @@ func SendTransferTransaction(ctx context.Context, assetId, receiver, amount, tra
 		Amount:     amount,
 	}
 	return SendTransaction(ctx, assetId, []*TransactionRecipient{tr}, traceId, extra, nil, u)
+}
+
+func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amount, traceId string, extra []byte, u *SafeUser) (*SequencerTransactionRequest, error) {
+	for {
+		str, err := SendTransferTransaction(ctx, assetId, receiver, amount, traceId, extra, u)
+		if err == nil {
+			return str, nil
+		}
+		if ue, ok := err.(*UtxoInsufficientError); ok {
+			log.Println(ue)
+			time.Sleep(2 * time.Second)
+		} else {
+			return nil, err
+		}
+	}
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
@@ -121,7 +137,7 @@ func SendTransactionWithOutput(ctx context.Context, assetId string, recipients [
 	totalInput := common.NewIntegerFromString(utxo.Amount)
 	changeAmount := totalInput.Sub(totalOutput)
 	if changeAmount.Sign() < 0 {
-		return nil, &UtxoError{
+		return nil, &UtxoInsufficientError{
 			TotalInput:  totalInput,
 			TotalOutput: totalOutput,
 			OutputSize:  1,
@@ -395,12 +411,12 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	}
 
 	membersHash := HashMembers([]string{u.UserId})
-	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, u)
+	unspentOutputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, u)
 	if err != nil {
 		return nil, common.Zero, err
 	}
-	if len(outputs) == 0 {
-		return nil, common.Zero, &UtxoError{
+	if len(unspentOutputs) == 0 {
+		return nil, common.Zero, &UtxoInsufficientError{
 			TotalInput:  common.Zero,
 			TotalOutput: totalOutput,
 			OutputSize:  0,
@@ -408,18 +424,18 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	}
 
 	var totalInput common.Integer
-	for i, o := range outputs {
+	for i, o := range unspentOutputs {
 		amt := common.NewIntegerFromString(o.Amount)
 		totalInput = totalInput.Add(amt)
 		if totalInput.Cmp(totalOutput) < 0 {
 			continue
 		}
-		return outputs[:i+1], totalInput.Sub(totalOutput), nil
+		return unspentOutputs[:i+1], totalInput.Sub(totalOutput), nil
 	}
-	return nil, common.Zero, &UtxoError{
+	return nil, common.Zero, &UtxoInsufficientError{
 		TotalInput:  totalInput,
 		TotalOutput: totalOutput,
-		OutputSize:  len(outputs),
+		OutputSize:  len(unspentOutputs),
 	}
 }
 
