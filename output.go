@@ -80,3 +80,24 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	}
 	return resp.Data, nil
 }
+
+func GetOutput(ctx context.Context, id string, u *SafeUser) (*Output, error) {
+	method, path := "GET", fmt.Sprintf("/safe/outputs/%s", id)
+	token, err := SignAuthenticationToken(method, path, "", u)
+	body, err := Request(ctx, method, path, []byte{}, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *Output `json:"data"`
+		Error Error   `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}

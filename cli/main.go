@@ -23,6 +23,8 @@ func main() {
 			// botMigrateTIPCmdCli,
 			// registerSafeCMDCli,
 			safeSnapshotsCmdCli,
+			safeOutputsCmdCli,
+			safeOutputCmdCli,
 			withdrawalCmdCli,
 		},
 	}
