@@ -41,6 +41,7 @@ func safeOutputsCmd(c *cli.Context) error {
 		panic(err)
 	}
 	for _, o := range outputs {
+		o.Extra = ""
 		log.Printf("output %#v", o)
 	}
 	return nil
@@ -71,6 +72,7 @@ func safeOutputCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
+	output.Extra = ""
 	log.Printf("output %#v", output)
 	return nil
 }
