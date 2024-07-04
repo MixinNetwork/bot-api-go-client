@@ -23,7 +23,7 @@ const (
 	pingPeriod      = (pongWait * 9) / 10
 
 	createMessageAction = "CREATE_MESSAGE"
-	maximumButtons      = 6
+	maximumButtons      = 18
 )
 
 const (
