@@ -29,18 +29,12 @@ func appMeCmd(c *cli.Context) error {
 		panic(err)
 	}
 	log.Println(string(dat))
-	var u SafeUser
-	err = json.Unmarshal([]byte(dat), &u)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
-
-	su := &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		SessionPrivateKey: u.SessionPrivateKey,
-	}
-	me, err := bot.RequestUserMe(context.Background(), su)
+	me, err := bot.RequestUserMe(context.Background(), &su)
 	if err != nil {
 		panic(err)
 	}
@@ -72,18 +66,13 @@ func userCmd(c *cli.Context) error {
 		panic(err)
 	}
 	log.Println(string(dat))
-	var u SafeUser
-	err = json.Unmarshal([]byte(dat), &u)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
 
-	su := &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		SessionPrivateKey: u.SessionPrivateKey,
-	}
-	user, err := bot.GetUser(context.Background(), id, su)
+	user, err := bot.GetUser(context.Background(), id, &su)
 	if err != nil {
 		panic(err)
 	}

@@ -57,19 +57,12 @@ func transferCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var u SafeUser
-	err = json.Unmarshal([]byte(dat), &u)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
-
-	su := &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		ServerPublicKey:   u.ServerPublicKey,
-		SessionPrivateKey: u.SessionPrivateKey,
-		SpendPrivateKey:   spend,
-	}
+	su.SpendPrivateKey = spend
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
 	tr := &bot.TransactionRecipient{MixAddress: ma, Amount: amount}
@@ -87,7 +80,7 @@ func transferCmd(c *cli.Context) error {
 	log.Println("receiver:", receiver)
 	log.Println("origin trace is memo:", memo)
 	log.Println("trace:", trace)
-	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, su)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, &su)
 	if err != nil {
 		return err
 	}
@@ -139,19 +132,14 @@ func batchTransferCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var user SafeUser
-	err = json.Unmarshal([]byte(dat), &user)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
 
-	su := &bot.SafeUser{
-		UserId:            user.AppID,
-		SessionId:         user.SessionID,
-		SessionPrivateKey: user.SessionPrivateKey,
-	}
 	if inputPath != "" {
-		return transferCSV(c, inputPath, asset, su)
+		return transferCSV(c, inputPath, asset, &su)
 	}
 
 	ma := bot.NewUUIDMixAddress([]string{receiver}, 1)
@@ -173,7 +161,7 @@ func batchTransferCmd(c *cli.Context) error {
 	if strings.ToUpper(input) != "Y" {
 		return nil
 	}
-	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, su)
+	tx, err := bot.SendTransaction(context.Background(), asset, []*bot.TransactionRecipient{tr}, trace, []byte(memo), nil, &su)
 	if err != nil {
 		return err
 	}

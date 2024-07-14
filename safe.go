@@ -10,19 +10,19 @@ import (
 type SafeUser struct {
 	// this is the app children user uuid or the app uuid of messenger api
 	// user id can never change
-	UserId string
+	UserId string `json:"app_id"`
 
 	// session id could be rotated by the app owner
-	SessionId string
+	SessionId string `json:"session_id"`
 
 	// session private key rotates with the session id
 	// this key is used for all authentication of messenger api
-	SessionPrivateKey string // hex
+	SessionPrivateKey string `json:"session_private_key"` // hex
 
 	// server public key rotates with the session id
 	// server public key is used to verify signature of server response
 	// could also be used to do ecdh with session private key
-	ServerPublicKey string // hex
+	ServerPublicKey string `json:"server_public_key"` // hex
 
 	// spend private key is used to query or send money
 	// this is the mixin kernel spend private key
