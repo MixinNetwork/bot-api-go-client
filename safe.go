@@ -27,7 +27,7 @@ type SafeUser struct {
 	// spend private key is used to query or send money
 	// this is the mixin kernel spend private key
 	// spend private key can never change
-	SpendPrivateKey string // hex
+	SpendPrivateKey string `json:"spend_private_key"` // hex
 }
 
 type GhostKeys struct {

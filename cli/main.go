@@ -27,6 +27,7 @@ func main() {
 			safeOutputCmdCli,
 			withdrawalCmdCli,
 			spendKernelUTXOsCmdCli,
+			claimMintDistributionCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
