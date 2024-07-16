@@ -53,6 +53,8 @@ var spendKernelUTXOsCmdCli = &cli.Command{
 func SpendKernelUTXOs(c *cli.Context) error {
 	ctx := context.Background()
 
+	traceId := uuid.Must(uuid.NewV4()).String()
+
 	dat, err := os.ReadFile(c.String("keystore"))
 	if err != nil {
 		panic(err)
@@ -136,7 +138,7 @@ func SpendKernelUTXOs(c *cli.Context) error {
 			Amount:     amount.String(),
 		})
 	}
-	mks, err := bot.RequestGhostRecipients(ctx, recipients, &su)
+	mks, err := bot.RequestGhostRecipientsWithTraceId(ctx, recipients, traceId, &su)
 	if err != nil || len(mks) != len(recipients) {
 		return err
 	}

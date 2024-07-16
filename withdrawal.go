@@ -93,12 +93,12 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			})
 		}
 
-		transaction, err := BuildRawTransaction(ctx, asset, utxos, recipients, []byte(memo), nil, u)
+		transaction, err := BuildRawTransaction(ctx, asset, utxos, recipients, []byte(memo), nil, traceId, u)
 		if err != nil {
 			return nil, fmt.Errorf("BuildRawTransaction(%s): %w", asset, err)
 		}
 		ver := transaction.AsVersioned()
-		feeTransaction, err := BuildRawTransaction(ctx, feeAsset, feeUtxos, feeRecipients, []byte(memo), []string{crypto.Blake3Hash(ver.Marshal()).String()}, u)
+		feeTransaction, err := BuildRawTransaction(ctx, feeAsset, feeUtxos, feeRecipients, []byte(memo), []string{crypto.Blake3Hash(ver.Marshal()).String()}, feeTraceId, u)
 		if err != nil {
 			return nil, fmt.Errorf("buildFeeRawTransaction(%s): %w", feeAsset, err)
 		}
