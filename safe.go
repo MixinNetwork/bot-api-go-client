@@ -42,6 +42,14 @@ type GhostKeyRequest struct {
 	Hint      string   `json:"hint"`
 }
 
+func NewSafeUser(userId, sessionId, sessionPrivateKey string) *SafeUser {
+	return &SafeUser{
+		UserId:            userId,
+		SessionId:         sessionId,
+		SessionPrivateKey: sessionPrivateKey,
+	}
+}
+
 func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, user *SafeUser) ([]*GhostKeys, error) {
 	data, err := json.Marshal(gkr)
 	if err != nil {
