@@ -85,6 +85,17 @@ type AppButtonView struct {
 	Color  string `json:"color"`
 }
 
+type AppCardAction = AppButtonView
+
+type AppCardView struct {
+	AppID       string          `json:"app_id"`
+	CoverURL    string          `json:"cover_url"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Actions     []AppCardAction `json:"actions"`
+	Shareable   bool            `json:"shareable"`
+}
+
 type messageContext struct {
 	transactions *tmap
 	readDone     chan bool
