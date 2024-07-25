@@ -104,7 +104,7 @@ type messageContext struct {
 	writeBuffer  chan []byte
 }
 
-type systemConversationPayload struct {
+type SystemConversationPayload struct {
 	Action        string `json:"action"`
 	ParticipantId string `json:"participant_id"`
 	UserId        string `json:"user_id,omitempty"`
@@ -121,7 +121,7 @@ type BlazeClient struct {
 
 type BlazeListener interface {
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
-	OnAckReceipt(ctx context.Context, msg MessageView, userID string) error
+	OnAckReceipt(ctx context.Context, msg MessageView, userId string) error
 	SyncAck() bool
 }
 
