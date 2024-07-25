@@ -28,6 +28,7 @@ type SafeMultisigRequest struct {
 	SendersThreshold int64     `json:"senders_threshold"`
 	Senders          []string  `json:"senders"`
 	Signers          []string  `json:"signers"`
+	RevokedBy        string    `json:"revoked_by"`
 	Extra            string    `json:"extra"`
 	RawTransaction   string    `json:"raw_transaction"`
 	CreatedAt        time.Time `json:"created_at"`
