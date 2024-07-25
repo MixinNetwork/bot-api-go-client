@@ -208,8 +208,9 @@ func ClaimMintDistribution(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	if mints[0].Inputs[0].Mint.Batch != c.Uint64("batch") {
-		panic(mints[0].PayloadHash().String())
+	if b := mints[0].Inputs[0].Mint.Batch; b != c.Uint64("batch") {
+		fmt.Printf("MINT %s %d %d", mints[0].PayloadHash(), b, c.Uint64("batch"))
+		return nil
 	}
 
 	safe, err := rpc.GetUTXO(KernelRPC, mints[0].PayloadHash().String(), uint64(len(mints[0].Outputs)-2))
@@ -261,7 +262,8 @@ func ClaimMintDistribution(c *cli.Context) error {
 		})
 	}
 	change := total.Sub(outputTotal)
-	if change.String() == "0.00000001" {
+	threshold := common.NewIntegerFromString("0.00000005")
+	if change.Sign() > 0 && change.Cmp(threshold) < 0 {
 		r := recipients[len(recipients)-1]
 		r.Amount = common.NewIntegerFromString(r.Amount).Add(change).String()
 	}
