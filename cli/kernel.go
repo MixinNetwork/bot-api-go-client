@@ -36,6 +36,10 @@ var spendKernelUTXOsCmdCli = &cli.Command{
 			Usage: "the asset id",
 		},
 		&cli.StringFlag{
+			Name:  "extra",
+			Usage: "hex encoded extra data",
+		},
+		&cli.StringFlag{
 			Name:  "inputs",
 			Usage: "comma sperated inputs of hash:index",
 		},

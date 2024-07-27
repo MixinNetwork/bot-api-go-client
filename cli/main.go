@@ -27,6 +27,7 @@ func main() {
 			safeOutputCmdCli,
 			withdrawalCmdCli,
 			requestDepositEntryCmdCli,
+			buildMixAddressCmdCli,
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
 		},
