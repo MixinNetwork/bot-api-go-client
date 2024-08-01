@@ -118,6 +118,20 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
 }
 
+func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, outputs []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+	if uuid.FromStringOrNil(assetId).String() == assetId {
+		assetId = crypto.Sha256Hash([]byte(assetId)).String()
+	}
+	asset, err := crypto.HashFromString(assetId)
+	if err != nil {
+		return nil, fmt.Errorf("invalid asset id %s", assetId)
+	}
+	if len(references) > 2 {
+		return nil, fmt.Errorf("too many references %d", len(references))
+	}
+	return sendTransaction(ctx, asset, outputs, recipients, traceId, extra, references, u)
+}
+
 func SendTransactionWithOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, utxo *Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
