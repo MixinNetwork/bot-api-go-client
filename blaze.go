@@ -43,7 +43,8 @@ const (
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 	MessageCategoryAppCard               = "APP_CARD"
 
-	MessageCategorySystemSafeSnapshot = "SYSTEM_SAFE_SNAPSHOT"
+	MessageCategorySystemSafeSnapshot    = "SYSTEM_SAFE_SNAPSHOT"
+	MessageCategorySystemSafeInscription = "SYSTEM_SAFE_INSCRIPTION"
 )
 
 type BlazeMessage struct {
@@ -77,6 +78,20 @@ type TransferView struct {
 	TraceId       string    `json:"trace_id"`
 	Memo          string    `json:"memo"`
 	CreatedAt     time.Time `json:"created_at"`
+}
+
+type TransferSafeView struct {
+	Type            string    `json:"type"`
+	SnapshotId      string    `json:"snapshot_id"`
+	UserId          string    `json:"user_id"`
+	OpponentId      string    `json:"opponent_id"`
+	TransactionHash string    `json:"transaction_hash"`
+	AssetId         string    `json:"asset_id"`
+	Amount          string    `json:"amount"`
+	Memo            string    `json:"memo"`
+	CreatedAt       time.Time `json:"created_at"`
+	DepositHash     string    `json:"deposit_hash"`     // deposit only
+	InscriptionHash string    `json:"inscription_hash"` // inscription only
 }
 
 type AppButtonView struct {
