@@ -184,7 +184,7 @@ func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *S
 	}
 	body, err := Request(ctx, method, path, nil, accessToken)
 	if err != nil {
-		return nil, ServerError(ctx, err)
+		return nil, err
 	}
 	var resp struct {
 		Data  *SequencerTransactionRequest `json:"data"`
