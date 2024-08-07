@@ -140,6 +140,25 @@ func AssetBalanceWithSafeUser(ctx context.Context, kernelAssetId string, su *Saf
 	return total, nil
 }
 
+
+func UserAssetBalance(ctx context.Context, userID, assetID, accessToken string) (common.Integer, error) {
+	if id, _ := uuid.FromString(assetID); assetID == id.String() {
+		assetID = crypto.Sha256Hash([]byte(assetID)).String()
+	}
+
+	membersHash := HashMembers([]string{userID})
+	outputs, err := ListUnspentOutputsByToken(ctx, membersHash, 1, assetID, accessToken)
+	if err != nil {
+		return common.Zero, err
+	}
+	var total common.Integer
+	for _, o := range outputs {
+		amt := common.NewIntegerFromString(o.Amount)
+		total = total.Add(amt)
+	}
+	return total, nil
+}
+
 func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser) ([]*AssetFee, error) {
 	params := url.Values{}
 	params.Set("destination", destination)
