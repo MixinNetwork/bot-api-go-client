@@ -63,6 +63,9 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	}
 	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
 	token, err := SignAuthenticationToken(method, path, "", u)
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, method, path, []byte{}, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
@@ -101,8 +104,10 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 	}
 	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
 	body, err := Request(ctx, method, path, []byte{}, accessToken)
-  
-  var resp struct {
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
 		Data  []*Output `json:"data"`
 		Error Error     `json:"error"`
 	}
@@ -115,10 +120,13 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 	}
 	return resp.Data, nil
 }
-  
+
 func GetOutput(ctx context.Context, id string, u *SafeUser) (*Output, error) {
 	method, path := "GET", fmt.Sprintf("/safe/outputs/%s", id)
 	token, err := SignAuthenticationToken(method, path, "", u)
+	if err != nil {
+		return nil, err
+	}
 	body, err := Request(ctx, method, path, []byte{}, token)
 	if err != nil {
 		return nil, ServerError(ctx, err)
