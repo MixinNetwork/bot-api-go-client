@@ -20,10 +20,16 @@ func main() {
 			transferCmdCli,
 			verifyPINCmdCli,
 			// batchTransferCmdCli,
-			// botMigrateTIPCmdCli,
-			// registerSafeCMDCli,
+			botMigrateTIPCmdCli,
+			registerSafeCMDCli,
 			safeSnapshotsCmdCli,
+			safeOutputsCmdCli,
+			safeOutputCmdCli,
 			withdrawalCmdCli,
+			requestDepositEntryCmdCli,
+			buildMixAddressCmdCli,
+			spendKernelUTXOsCmdCli,
+			claimMintDistributionCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
@@ -37,16 +43,10 @@ func loadKeystore(keystore string) *bot.SafeUser {
 	if err != nil {
 		panic(err)
 	}
-	var u SafeUser
+	var u bot.SafeUser
 	err = json.Unmarshal([]byte(dat), &u)
 	if err != nil {
 		panic(err)
 	}
-
-	return &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		ServerPublicKey:   u.ServerPublicKey,
-		SessionPrivateKey: u.SessionPrivateKey,
-	}
+	return &u
 }

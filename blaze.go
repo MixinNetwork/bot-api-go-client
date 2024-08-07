@@ -23,7 +23,7 @@ const (
 	pingPeriod      = (pongWait * 9) / 10
 
 	createMessageAction = "CREATE_MESSAGE"
-	maximumButtons      = 6
+	maximumButtons      = 18
 )
 
 const (
@@ -43,7 +43,8 @@ const (
 	MessageCategoryAppButtonGroup        = "APP_BUTTON_GROUP"
 	MessageCategoryAppCard               = "APP_CARD"
 
-	MessageCategorySystemSafeSnapshot = "SYSTEM_SAFE_SNAPSHOT"
+	MessageCategorySystemSafeSnapshot    = "SYSTEM_SAFE_SNAPSHOT"
+	MessageCategorySystemSafeInscription = "SYSTEM_SAFE_INSCRIPTION"
 )
 
 type BlazeMessage struct {
@@ -79,10 +80,35 @@ type TransferView struct {
 	CreatedAt     time.Time `json:"created_at"`
 }
 
+type TransferSafeView struct {
+	Type            string    `json:"type"`
+	SnapshotId      string    `json:"snapshot_id"`
+	UserId          string    `json:"user_id"`
+	OpponentId      string    `json:"opponent_id"`
+	TransactionHash string    `json:"transaction_hash"`
+	AssetId         string    `json:"asset_id"`
+	Amount          string    `json:"amount"`
+	Memo            string    `json:"memo"`
+	CreatedAt       time.Time `json:"created_at"`
+	DepositHash     string    `json:"deposit_hash"`     // deposit only
+	InscriptionHash string    `json:"inscription_hash"` // inscription only
+}
+
 type AppButtonView struct {
 	Label  string `json:"label"`
 	Action string `json:"action"`
 	Color  string `json:"color"`
+}
+
+type AppCardAction = AppButtonView
+
+type AppCardView struct {
+	AppID       string          `json:"app_id"`
+	CoverURL    string          `json:"cover_url"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Actions     []AppCardAction `json:"actions"`
+	Shareable   bool            `json:"shareable"`
 }
 
 type messageContext struct {
@@ -93,7 +119,7 @@ type messageContext struct {
 	writeBuffer  chan []byte
 }
 
-type systemConversationPayload struct {
+type SystemConversationPayload struct {
 	Action        string `json:"action"`
 	ParticipantId string `json:"participant_id"`
 	UserId        string `json:"user_id,omitempty"`
@@ -110,7 +136,7 @@ type BlazeClient struct {
 
 type BlazeListener interface {
 	OnMessage(ctx context.Context, msg MessageView, userId string) error
-	OnAckReceipt(ctx context.Context, msg MessageView, userID string) error
+	OnAckReceipt(ctx context.Context, msg MessageView, userId string) error
 	SyncAck() bool
 }
 

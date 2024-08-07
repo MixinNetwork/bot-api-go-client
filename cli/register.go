@@ -32,8 +32,8 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var u SafeUser
-	err = json.Unmarshal([]byte(dat), &u)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
@@ -41,14 +41,7 @@ func botMigrateTIPCmd(c *cli.Context) error {
 	tipPub, tipPriv, _ := ed25519.GenerateKey(rand.Reader)
 	log.Printf("Your tip private seed: %s", hex.EncodeToString(tipPriv.Seed()))
 
-	su := &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		ServerPublicKey:   u.ServerPublicKey,
-		SessionPrivateKey: u.SessionPrivateKey,
-	}
-
-	err = bot.UpdateTipPin(context.Background(), "", hex.EncodeToString(tipPub), su)
+	err = bot.UpdateTipPin(context.Background(), "", hex.EncodeToString(tipPub), &su)
 	if err != nil {
 		return fmt.Errorf("bot.UpdateTipPin() => %v", err)
 	}
@@ -78,22 +71,16 @@ func registerSafeCMD(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	var u SafeUser
-	err = json.Unmarshal([]byte(dat), &u)
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
 	if err != nil {
 		panic(err)
 	}
 
-	su := &bot.SafeUser{
-		UserId:            u.AppID,
-		SessionId:         u.SessionID,
-		ServerPublicKey:   u.ServerPublicKey,
-		SessionPrivateKey: u.SessionPrivateKey,
-	}
 	ctx := context.Background()
 	method := "GET"
 	path := "/safe/me"
-	token, err := bot.SignAuthenticationTokenWithoutBody(method, path, su)
+	token, err := bot.SignAuthenticationTokenWithoutBody(method, path, &su)
 	if err != nil {
 		return err
 	}
@@ -116,7 +103,7 @@ func registerSafeCMD(c *cli.Context) error {
 	privateKey := ed25519.NewKeyFromSeed(s)
 	sd := hex.EncodeToString(privateKey.Seed())
 
-	me, err = bot.RegisterSafe(ctx, su.UserId, sd, su)
+	me, err = bot.RegisterSafe(ctx, su.UserId, sd, &su)
 	if err != nil {
 		return err
 	}
