@@ -45,7 +45,7 @@ var spendKernelUTXOsCmdCli = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "outputs",
-			Usage: "comma seperated outputs of receiver:amount",
+			Usage: "comma separated outputs of receiver:amount",
 		},
 		&cli.StringFlag{
 			Name:  "keystore,k",
@@ -68,7 +68,7 @@ var claimMintDistributionCmdCli = &cli.Command{
 		},
 		&cli.StringFlag{
 			Name:  "outputs",
-			Usage: "comma seperated outputs of receiver:amount",
+			Usage: "comma separated outputs of receiver:amount",
 		},
 		&cli.StringFlag{
 			Name:  "keystore,k",
