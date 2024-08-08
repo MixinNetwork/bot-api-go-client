@@ -90,7 +90,7 @@ func registerSafeCMD(c *cli.Context) error {
 		return err
 	}
 	if me.HasSafe {
-		log.Println("user has registed")
+		log.Println("user has registered")
 		return nil
 	}
 	s, err := hex.DecodeString(seed)
@@ -108,10 +108,10 @@ func registerSafeCMD(c *cli.Context) error {
 		return err
 	}
 	if me.HasSafe {
-		log.Println("user registed")
+		log.Println("user registered")
 		return nil
 	}
 
-	log.Println("user not registed")
+	log.Println("user not registered")
 	return nil
 }

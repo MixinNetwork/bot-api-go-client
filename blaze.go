@@ -497,7 +497,7 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if err = json.NewDecoder(gzReader).Decode(&message); err != nil {
 		return err
 	}
-	transaction := mc.transactions.retrive(message.Id)
+	transaction := mc.transactions.retrieve(message.Id)
 	if transaction != nil {
 		return transaction(message)
 	}
@@ -535,7 +535,7 @@ func newTmap() *tmap {
 	}
 }
 
-func (m *tmap) retrive(key string) mixinTransaction {
+func (m *tmap) retrieve(key string) mixinTransaction {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	defer delete(m.m, key)

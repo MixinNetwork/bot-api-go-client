@@ -227,7 +227,7 @@ func DecryptMessageData(data string, sessionId, private string) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	size := 16 + 48 // session id bytes + encypted key bytes size
+	size := 16 + 48 // session id bytes + encrypted key bytes size
 	total := len(bytes)
 	if total < 1+2+32+size+12 {
 		return "", nil

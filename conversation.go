@@ -28,6 +28,7 @@ type Conversation struct {
 	IconURL        string    `json:"icon_url"`
 	Announcement   string    `json:"announcement"`
 	CreatedAt      time.Time `json:"created_at"`
+	CodeUrl        string    `json:"code_url"`
 
 	Participants        []Participant            `json:"participants"`
 	ParticipantSessions []ParticipantSessionView `json:"participant_sessions"`
@@ -55,7 +56,7 @@ func CreateConversation(ctx context.Context, category, conversationId string, na
 	}
 	if category == "CONTACT" {
 		if len(participants) != 1 {
-			return nil, fmt.Errorf("bad particpants members length %d", len(participants))
+			return nil, fmt.Errorf("bad participants members length %d", len(participants))
 		}
 	}
 	accessToken, err := SignAuthenticationToken("POST", "/conversations", string(params), user)
@@ -122,6 +123,35 @@ func ConversationShowByToken(ctx context.Context, conversationId string, accessT
 
 func JoinConversation(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := fmt.Sprintf("/conversations/%s/join", conversationId)
+	accessToken, err := SignAuthenticationToken("POST", path, "", user)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := Request(ctx, "POST", path, nil, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  Conversation `json:"data"`
+		Error Error        `json:"error"`
+	}
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		if resp.Error.Code == 401 {
+			return nil, AuthorizationError(ctx)
+		} else if resp.Error.Code == 403 {
+			return nil, ForbiddenError(ctx)
+		}
+		return nil, ServerError(ctx, resp.Error)
+	}
+	return &resp.Data, nil
+}
+
+func RotateConversation(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
+	path := fmt.Sprintf("/conversations/%s/rotate", conversationId)
 	accessToken, err := SignAuthenticationToken("POST", path, "", user)
 	if err != nil {
 		return nil, err
