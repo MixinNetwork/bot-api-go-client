@@ -156,6 +156,7 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	}
 	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
 }
+
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, 0, 0, u)
 }
