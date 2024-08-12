@@ -12,8 +12,8 @@ import (
 )
 
 // If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
-func RegisterSafe(ctx context.Context, userId, seed string, su *SafeUser) (*User, error) {
-	s, err := hex.DecodeString(seed)
+func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *SafeUser) (*User, error) {
+	s, err := hex.DecodeString(spendPrivateKeySeed)
 	if err != nil {
 		return nil, err
 	}
