@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"strings"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -91,7 +90,7 @@ func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amou
 	}
 }
 
-func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount uint64, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -111,43 +110,43 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	// change to the sender
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
-		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(10)) > 0 {
+		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(splitAmount)) > 0 {
 			if splitCount > (256 - len(recipients)) {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
 			if splitCount%2 != 0 {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
-			ca := strings.Split(changeAmount.String(), ".")
-			if len(ca) != 2 {
-				return nil, fmt.Errorf("invalid change amount %s", changeAmount)
-			}
-			changeIntegerPart := common.NewIntegerFromString(ca[0])
-			changeDecimal := changeAmount.Sub(changeIntegerPart)
 
-			amt := changeIntegerPart.Div(splitCount)
 			var rs []*TransactionRecipient
+			totalAmount := common.Zero
+			splitAmt := common.NewInteger(splitAmount)
 			for i := 0; i < splitCount; i++ {
-				rs = append(rs, &TransactionRecipient{
+				var amount common.Integer
+				if totalAmount.Add(splitAmt).Cmp(changeAmount) <= 0 && i < splitCount-1 {
+					amount = splitAmt
+				} else {
+					amount = changeAmount.Sub(totalAmount)
+				}
+				recipient := &TransactionRecipient{
 					MixAddress: ma,
-					Amount:     amt.String(),
-				})
+					Amount:     amount.String(),
+				}
+				rs = append(rs, recipient)
+				totalAmount = totalAmount.Add(amount)
+				if totalAmount.Cmp(changeAmount) >= 0 {
+					break
+				}
 			}
 			// validate change amount
 			validateAmount := common.Zero
 			for _, r := range rs {
 				validateAmount = validateAmount.Add(common.NewIntegerFromString(r.Amount))
 			}
-			if validateAmount.Add(changeDecimal).Cmp(changeAmount) != 0 {
+			if validateAmount.Cmp(changeAmount) != 0 {
 				return nil, fmt.Errorf("invalid split change amount %s != %s", validateAmount, changeAmount)
 			}
 			recipients = append(recipients, rs...)
-			if changeDecimal.Cmp(common.Zero) > 0 {
-				recipients = append(recipients, &TransactionRecipient{
-					MixAddress: ma,
-					Amount:     changeDecimal.String(),
-				})
-			}
 		} else {
 			recipients = append(recipients, &TransactionRecipient{
 				MixAddress: ma,
@@ -158,7 +157,7 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
 }
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
-	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, 0, u)
+	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, 0, 0, u)
 }
 
 func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, outputs []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
@@ -262,7 +261,7 @@ func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, re
 	if len(str.Views) != len(ver.Inputs) {
 		return nil, fmt.Errorf("invalid view keys count %d %d", len(str.Views), len(ver.Inputs))
 	}
-	ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendPrivateKey)
+	ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey)
 	if err != nil {
 		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
@@ -385,7 +384,7 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	return verified[0], nil
 }
 
-func signRawTransaction(ctx context.Context, ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
+func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
 	msg := ver.PayloadHash()
 	spent, err := crypto.KeyFromString(spendKey)
 	if err != nil {

@@ -140,11 +140,11 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			return nil, fmt.Errorf("invalid fee inputs count %d/%d", len(feeStr.Views), len(feeVer.Inputs))
 		}
 
-		ver, err = signRawTransaction(ctx, ver, str.Views, u.SpendPrivateKey)
+		ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("signRawTransaction(%s): %w", asset, err)
 		}
-		feeVer, err = signRawTransaction(ctx, feeVer, feeStr.Views, u.SpendPrivateKey)
+		feeVer, err = signRawTransaction(feeVer, feeStr.Views, u.SpendPrivateKey)
 		if err != nil {
 			return nil, fmt.Errorf("signFeeRawTransaction(%s): %w", feeAsset, err)
 		}

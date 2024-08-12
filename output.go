@@ -68,7 +68,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	}
 	body, err := Request(ctx, method, path, []byte{}, token)
 	if err != nil {
-		return nil, ServerError(ctx, err)
+		return nil, err
 	}
 	var resp struct {
 		Data  []*Output `json:"data"`
