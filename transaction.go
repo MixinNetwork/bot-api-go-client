@@ -90,7 +90,7 @@ func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amou
 	}
 }
 
-func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -110,12 +110,38 @@ func SendTransaction(ctx context.Context, assetId string, recipients []*Transact
 	// change to the sender
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
-		recipients = append(recipients, &TransactionRecipient{
-			MixAddress: ma,
-			Amount:     changeAmount.String(),
-		})
+		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(100)) > 0 {
+			if splitCount > (256 - len(recipients)) {
+				return nil, fmt.Errorf("invalid split count %d", splitCount)
+			}
+			amt := changeAmount.Div(splitCount)
+			var rs []*TransactionRecipient
+			for i := 0; i < splitCount; i++ {
+				rs = append(rs, &TransactionRecipient{
+					MixAddress: ma,
+					Amount:     amt.String(),
+				})
+			}
+			// validate change amount
+			validateAmount := common.Zero
+			for _, r := range rs {
+				validateAmount = validateAmount.Add(common.NewIntegerFromString(r.Amount))
+			}
+			if validateAmount.Cmp(changeAmount) != 0 {
+				return nil, fmt.Errorf("invalid split change amount %s != %s", validateAmount, changeAmount)
+			}
+			recipients = append(recipients, rs...)
+		} else {
+			recipients = append(recipients, &TransactionRecipient{
+				MixAddress: ma,
+				Amount:     changeAmount.String(),
+			})
+		}
 	}
 	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
+}
+func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, 0, u)
 }
 
 func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, outputs []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
