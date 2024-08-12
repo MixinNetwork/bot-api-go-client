@@ -178,3 +178,36 @@ func RotateConversation(ctx context.Context, conversationId string, user *SafeUs
 	}
 	return &resp.Data, nil
 }
+
+func UpdateParticipants(ctx context.Context, conversationId, action string, requests []Participant, user *SafeUser) (*Conversation, error) {
+	path := fmt.Sprintf("/conversations/%s/participants/%s", conversationId, action)
+	params, err := json.Marshal(requests)
+	if err != nil {
+		return nil, err
+	}
+	accessToken, err := SignAuthenticationToken("POST", path, string(params), user)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := Request(ctx, "POST", path, params, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  Conversation `json:"data"`
+		Error Error        `json:"error"`
+	}
+	if err = json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		if resp.Error.Code == 401 {
+			return nil, AuthorizationError(ctx)
+		} else if resp.Error.Code == 403 {
+			return nil, ForbiddenError(ctx)
+		}
+		return nil, ServerError(ctx, resp.Error)
+	}
+	return &resp.Data, nil
+}
