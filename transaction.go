@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"strings"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -117,7 +118,14 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 			if splitCount%2 != 0 {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
-			amt := changeAmount.Div(splitCount)
+			ca := strings.Split(changeAmount.String(), ".")
+			if len(ca) != 2 {
+				return nil, fmt.Errorf("invalid change amount %s", changeAmount)
+			}
+			changeIntegerPart := common.NewIntegerFromString(ca[0])
+			changeDecimal := changeAmount.Sub(changeIntegerPart)
+
+			amt := changeIntegerPart.Div(splitCount)
 			var rs []*TransactionRecipient
 			for i := 0; i < splitCount; i++ {
 				rs = append(rs, &TransactionRecipient{
@@ -130,10 +138,14 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 			for _, r := range rs {
 				validateAmount = validateAmount.Add(common.NewIntegerFromString(r.Amount))
 			}
-			if validateAmount.Cmp(changeAmount) != 0 {
+			if validateAmount.Add(changeDecimal).Cmp(changeAmount) != 0 {
 				return nil, fmt.Errorf("invalid split change amount %s != %s", validateAmount, changeAmount)
 			}
 			recipients = append(recipients, rs...)
+			recipients = append(recipients, &TransactionRecipient{
+				MixAddress: ma,
+				Amount:     changeDecimal.String(),
+			})
 		} else {
 			recipients = append(recipients, &TransactionRecipient{
 				MixAddress: ma,
