@@ -110,8 +110,11 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	// change to the sender
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
-		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(100)) > 0 {
+		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(10)) > 0 {
 			if splitCount > (256 - len(recipients)) {
+				return nil, fmt.Errorf("invalid split count %d", splitCount)
+			}
+			if splitCount%2 != 0 {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
 			amt := changeAmount.Div(splitCount)
