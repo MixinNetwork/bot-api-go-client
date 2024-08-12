@@ -142,10 +142,12 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 				return nil, fmt.Errorf("invalid split change amount %s != %s", validateAmount, changeAmount)
 			}
 			recipients = append(recipients, rs...)
-			recipients = append(recipients, &TransactionRecipient{
-				MixAddress: ma,
-				Amount:     changeDecimal.String(),
-			})
+			if changeDecimal.Cmp(common.Zero) > 0 {
+				recipients = append(recipients, &TransactionRecipient{
+					MixAddress: ma,
+					Amount:     changeDecimal.String(),
+				})
+			}
 		} else {
 			recipients = append(recipients, &TransactionRecipient{
 				MixAddress: ma,
