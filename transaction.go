@@ -110,7 +110,8 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	// change to the sender
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
-		if splitCount > 0 && changeAmount.Cmp(common.NewInteger(splitAmount)) > 0 {
+		splitAmt := common.NewInteger(splitAmount)
+		if splitCount > 0 && changeAmount.Cmp(splitAmt) > 0 && splitAmt.Sign() > 0 {
 			if splitCount > (256 - len(recipients)) {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
@@ -120,7 +121,6 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 
 			var rs []*TransactionRecipient
 			totalAmount := common.Zero
-			splitAmt := common.NewInteger(splitAmount)
 			for i := 0; i < splitCount; i++ {
 				var amount common.Integer
 				if totalAmount.Add(splitAmt).Cmp(changeAmount) <= 0 && i < splitCount-1 {
