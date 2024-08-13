@@ -25,6 +25,7 @@ func main() {
 			safeSnapshotsCmdCli,
 			safeOutputsCmdCli,
 			safeOutputCmdCli,
+			safeMultisigRequestCmdCli,
 			withdrawalCmdCli,
 			requestDepositEntryCmdCli,
 			buildMixAddressCmdCli,
