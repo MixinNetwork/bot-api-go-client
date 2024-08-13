@@ -122,21 +122,24 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 			totalAmount := common.Zero
 			splitAmt := common.NewInteger(splitAmount)
 			for i := 0; i < splitCount; i++ {
-				var amount common.Integer
-				if totalAmount.Add(splitAmt).Cmp(changeAmount) <= 0 && i < splitCount-1 {
-					amount = splitAmt
-				} else {
+				amount := splitAmt
+				if changeAmount.Sub(totalAmount).Cmp(splitAmt) < 0 {
 					amount = changeAmount.Sub(totalAmount)
 				}
-				recipient := &TransactionRecipient{
-					MixAddress: ma,
-					Amount:     amount.String(),
+				if i == splitCount-1 {
+					amount = changeAmount.Sub(totalAmount)
 				}
-				rs = append(rs, recipient)
-				totalAmount = totalAmount.Add(amount)
-				if totalAmount.Cmp(changeAmount) >= 0 {
+				if amount.Cmp(common.Zero) > 0 {
+					recipient := &TransactionRecipient{
+						MixAddress: ma,
+						Amount:     amount.String(),
+					}
+					rs = append(rs, recipient)
+				}
+				if amount.Cmp(splitAmt) < 0 {
 					break
 				}
+				totalAmount = totalAmount.Add(amount)
 			}
 			// validate change amount
 			validateAmount := common.Zero
