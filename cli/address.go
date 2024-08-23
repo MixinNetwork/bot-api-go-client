@@ -29,3 +29,20 @@ func buildMixAddress(c *cli.Context) error {
 	fmt.Println(mix.String())
 	return nil
 }
+
+var hashMembersCmdCli = &cli.Command{
+	Name:   "hashmembers",
+	Action: hashMembers,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "members",
+			Usage: "comma separated UUIDs",
+		},
+	},
+}
+
+func hashMembers(c *cli.Context) error {
+	members := strings.Split(c.String("members"), ",")
+	fmt.Println(bot.HashMembers(members))
+	return nil
+}

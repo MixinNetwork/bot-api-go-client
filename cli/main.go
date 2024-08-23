@@ -29,6 +29,7 @@ func main() {
 			withdrawalCmdCli,
 			requestDepositEntryCmdCli,
 			buildMixAddressCmdCli,
+			hashMembersCmdCli,
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
 		},
