@@ -90,7 +90,8 @@ func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amou
 	}
 }
 
-func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmt common.Integer, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionWithChangeOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount string, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
+	splitAmt := common.NewIntegerFromString(splitAmount)
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -157,7 +158,7 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
-	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, common.Zero, 0, u)
+	return SendTransactionWithChangeOutputs(ctx, assetId, recipients, traceId, extra, references, "0", 0, u)
 }
 
 func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, utxos []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
