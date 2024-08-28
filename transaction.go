@@ -90,7 +90,7 @@ func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amou
 	}
 }
 
-func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount uint64, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmt common.Integer, splitCount int, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -110,8 +110,7 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 	// change to the sender
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
-		splitAmt := common.NewInteger(splitAmount)
-		if splitCount > 0 && changeAmount.Cmp(splitAmt) > 0 && splitAmt.Sign() > 0 {
+		if splitCount > 0 && splitAmt.Sign() > 0 && changeAmount.Cmp(splitAmt) > 0 {
 			if splitCount > (256 - len(recipients)) {
 				return nil, fmt.Errorf("invalid split count %d", splitCount)
 			}
@@ -158,24 +157,10 @@ func SendTransactionSplitChangeOutput(ctx context.Context, assetId string, recip
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
-	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, 0, 0, u)
+	return SendTransactionSplitChangeOutput(ctx, assetId, recipients, traceId, extra, references, common.Zero, 0, u)
 }
 
-func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, outputs []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
-	if uuid.FromStringOrNil(assetId).String() == assetId {
-		assetId = crypto.Sha256Hash([]byte(assetId)).String()
-	}
-	asset, err := crypto.HashFromString(assetId)
-	if err != nil {
-		return nil, fmt.Errorf("invalid asset id %s", assetId)
-	}
-	if len(references) > 2 {
-		return nil, fmt.Errorf("too many references %d", len(references))
-	}
-	return sendTransaction(ctx, asset, outputs, recipients, traceId, extra, references, u)
-}
-
-func SendTransactionWithOutput(ctx context.Context, assetId string, recipients []*TransactionRecipient, utxo *Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, utxos []*Output, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
 	}
@@ -192,7 +177,11 @@ func SendTransactionWithOutput(ctx context.Context, assetId string, recipients [
 		amt := common.NewIntegerFromString(r.Amount)
 		totalOutput = totalOutput.Add(amt)
 	}
-	totalInput := common.NewIntegerFromString(utxo.Amount)
+	var totalInput common.Integer
+	for _, in := range utxos {
+		amt := common.NewIntegerFromString(in.Amount)
+		totalInput = totalInput.Add(amt)
+	}
 	changeAmount := totalInput.Sub(totalOutput)
 	if changeAmount.Sign() < 0 {
 		return nil, &UtxoInsufficientError{
@@ -208,7 +197,7 @@ func SendTransactionWithOutput(ctx context.Context, assetId string, recipients [
 			Amount:     changeAmount.String(),
 		})
 	}
-	return sendTransaction(ctx, asset, []*Output{utxo}, recipients, traceId, extra, references, u)
+	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
 }
 
 func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
