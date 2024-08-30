@@ -7,7 +7,7 @@ import (
 	"github.com/MixinNetwork/mixin/common"
 )
 
-func CreateObjectStorageTransaction(ctx context.Context, recipients []*TransactionRecipient, extra []byte, traceId string, references []string, limit string, u *SafeUser) (*SequencerTransactionRequest, error) {
+func CreateObjectStorageTransaction(ctx context.Context, recipients []*TransactionRecipient, utxos []*Output, extra []byte, traceId string, references []string, limit string, u *SafeUser) (*SequencerTransactionRequest, error) {
 	if len(extra) > common.ExtraSizeStorageCapacity {
 		return nil, fmt.Errorf("too large extra %d > %d", len(extra), common.ExtraSizeStorageCapacity)
 	}
@@ -28,6 +28,9 @@ func CreateObjectStorageTransaction(ctx context.Context, recipients []*Transacti
 	}}
 	if len(recipients) > 0 {
 		rec = append(rec, recipients...)
+	}
+	if len(utxos) > 0 {
+		return SendTransactionWithOutputs(ctx, common.XINAssetId.String(), rec, utxos, traceId, extra, references, u)
 	}
 	return SendTransaction(ctx, common.XINAssetId.String(), rec, traceId, extra, references, u)
 }
