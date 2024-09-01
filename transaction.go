@@ -183,14 +183,14 @@ func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients 
 		amt := common.NewIntegerFromString(in.Amount)
 		totalInput = totalInput.Add(amt)
 	}
-	changeAmount := totalInput.Sub(totalOutput)
-	if changeAmount.Sign() < 0 {
+	if totalInput.Cmp(totalOutput) < 0 {
 		return nil, &UtxoInsufficientError{
 			TotalInput:  totalInput,
 			TotalOutput: totalOutput,
 			OutputSize:  1,
 		}
 	}
+	changeAmount := totalInput.Sub(totalOutput)
 	if changeAmount.Sign() > 0 {
 		ma := NewUUIDMixAddress([]string{u.UserId}, 1)
 		recipients = append(recipients, &TransactionRecipient{
