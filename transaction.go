@@ -459,7 +459,7 @@ func requestUnspentOutputsForRecipients(ctx context.Context, assetId string, rec
 	}
 
 	membersHash := HashMembers([]string{u.UserId})
-	unspentOutputs, err := ListUnspentOutputs(ctx, membersHash, 1, assetId, u)
+	unspentOutputs, err := ListOutputs(ctx, membersHash, 1, assetId, "unspent", 0, 250, u)
 	if err != nil {
 		return nil, common.Zero, err
 	}
