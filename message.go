@@ -43,6 +43,7 @@ type MessageRequest struct {
 	MessageId        string `json:"message_id"`
 	Category         string `json:"category"`
 	Data             string `json:"data"`
+	DataBase64       string `json:"data_base64"`
 	RepresentativeId string `json:"representative_id"`
 	QuoteMessageId   string `json:"quote_message_id"`
 }
