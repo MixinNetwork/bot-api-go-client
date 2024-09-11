@@ -17,6 +17,10 @@ func SignAuthenticationTokenWithoutBody(method, uri string, user *SafeUser) (str
 }
 
 func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, error) {
+	return SignAuthenticationTokenWithRequestID(method, uri, body, UuidNewV4().String(), su)
+}
+
+func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, su *SafeUser) (string, error) {
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
@@ -25,7 +29,7 @@ func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, er
 		"sid": su.SessionId,
 		"iat": time.Now().UTC().Unix(),
 		"exp": expire.Unix(),
-		"jti": UuidNewV4().String(),
+		"jti": requestID,
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
