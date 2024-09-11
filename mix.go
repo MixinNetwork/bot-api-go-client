@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/MixinNetwork/mixin/common"
@@ -74,6 +75,7 @@ func (ma *MixAddress) Members() []string {
 			members = append(members, a.String())
 		}
 	}
+	slices.Sort(members)
 	return members
 }
 
