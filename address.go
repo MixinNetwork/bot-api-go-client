@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -23,6 +24,11 @@ type Address struct {
 	Fee         string `json:"fee"`
 	Dust        string `json:"dust"`
 	UpdatedAt   string `json:"updated_at"`
+}
+
+type SimpleAddress struct {
+	Destination string `json:"destination"`
+	Tag         string `json:"tag"`
 }
 
 func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Address, error) {
@@ -155,6 +161,32 @@ func GetAddressesByAssetId(ctx context.Context, assetId string, user *SafeUser) 
 		return nil, BadDataError(ctx)
 	}
 	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func CheckAddress(ctx context.Context, asset, destination, tag string) (*SimpleAddress, error) {
+	v := url.Values{}
+	v.Set("asset", asset)
+	v.Set("destination", destination)
+	if tag != "" {
+		v.Set("tag", tag)
+	}
+	path := fmt.Sprintf("/external/addresses/check?" + v.Encode())
+	body, err := Request(ctx, "GET", path, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *SimpleAddress `json:"data"`
+		Error Error          `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
