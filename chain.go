@@ -94,7 +94,7 @@ func ReadNetworkChainById(ctx context.Context, chainId string) (*NetworkChain, e
 	return resp.Data, nil
 }
 
-func ReadNetworkChains(ctx context.Context, chainId string) ([]*NetworkChain, error) {
+func ReadNetworkChains(ctx context.Context) ([]*NetworkChain, error) {
 	body, err := Request(ctx, "GET", "/network/chains", nil, "")
 	if err != nil {
 		return nil, err
