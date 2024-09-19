@@ -39,6 +39,35 @@ type SafeMultisigRequest struct {
 	Views           []string              `json:"views,omitempty"`
 }
 
+func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransactionRequestCreateRequest, user *SafeUser) (*SafeMultisigRequest, error) {
+	data, err := json.Marshal(request)
+	if err != nil {
+		return nil, err
+	}
+	endpoint := "/safe/multisigs"
+	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", endpoint, data, token)
+	if err != nil {
+		fmt.Println(err)
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  SafeMultisigRequest `json:"data"`
+		Error Error               `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return &resp.Data, nil
+}
+
 func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUser) (*SafeMultisigRequest, error) {
 	endpoint := "/safe/multisigs/" + idOrHash
 	token, err := SignAuthenticationToken("GET", endpoint, "", user)
