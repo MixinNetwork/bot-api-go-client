@@ -26,6 +26,8 @@ type Asset struct {
 	AssetKey       string  `json:"asset_key"`
 	Precision      int     `json:"precision"`
 	KernelAssetId  string  `json:"kernel_asset_id"`
+	DisplaySymbol  string  `json:"display_symbol"`
+	DisplayName    string  `json:"display_name"`
 	Symbol         string  `json:"symbol"`
 	Name           string  `json:"name"`
 	IconURL        string  `json:"icon_url"`
@@ -139,7 +141,6 @@ func AssetBalanceWithSafeUser(ctx context.Context, kernelAssetId string, su *Saf
 	}
 	return total, nil
 }
-
 
 func UserAssetBalance(ctx context.Context, userID, assetID, accessToken string) (common.Integer, error) {
 	if id, _ := uuid.FromString(assetID); assetID == id.String() {
