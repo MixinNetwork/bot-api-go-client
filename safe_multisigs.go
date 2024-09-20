@@ -39,7 +39,7 @@ type SafeMultisigRequest struct {
 	Views           []string              `json:"views,omitempty"`
 }
 
-func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransactionRequestCreateRequest, user *SafeUser) (*SafeMultisigRequest, error) {
+func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransactionRequestCreateRequest, user *SafeUser) ([]*SafeMultisigRequest, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -55,8 +55,8 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  SafeMultisigRequest `json:"data"`
-		Error Error               `json:"error"`
+		Data  []*SafeMultisigRequest `json:"data"`
+		Error Error                  `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -65,7 +65,7 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
-	return &resp.Data, nil
+	return resp.Data, nil
 }
 
 func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUser) (*SafeMultisigRequest, error) {
