@@ -60,7 +60,7 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		return nil, BadDataError(ctx)
+		return nil, err
 	}
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
@@ -85,7 +85,7 @@ func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUs
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		return nil, BadDataError(ctx)
+		return nil, err
 	}
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
