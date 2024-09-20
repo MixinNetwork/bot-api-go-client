@@ -185,3 +185,31 @@ func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser
 	}
 	return resp.Data, nil
 }
+
+func FetchNetworkAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]*Asset, error) {
+	body, err := json.Marshal(assetIds)
+	if err != nil {
+		return nil, err
+	}
+
+	token, err := SignAuthenticationToken("POST", "/safe/assets/fetch", string(body), safeUser)
+	if err != nil {
+		return nil, err
+	}
+	result, err := Request(ctx, "POST", "/safe/assets/fetch", body, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  []*Asset `json:"data"`
+		Error Error    `json:"error"`
+	}
+	err = json.Unmarshal(result, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
