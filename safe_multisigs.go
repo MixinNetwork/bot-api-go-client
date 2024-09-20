@@ -3,7 +3,6 @@ package bot
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -51,8 +50,7 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 	}
 	body, err := Request(ctx, "POST", endpoint, data, token)
 	if err != nil {
-		fmt.Println(err)
-		return nil, ServerError(ctx, err)
+		return nil, err
 	}
 	var resp struct {
 		Data  []*SafeMultisigRequest `json:"data"`
@@ -76,8 +74,7 @@ func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUs
 	}
 	body, err := Request(ctx, "GET", endpoint, nil, token)
 	if err != nil {
-		fmt.Println(err)
-		return nil, ServerError(ctx, err)
+		return nil, err
 	}
 	var resp struct {
 		Data  SafeMultisigRequest `json:"data"`
