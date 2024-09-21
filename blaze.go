@@ -140,6 +140,10 @@ type BlazeListener interface {
 	SyncAck() bool
 }
 
+func NewBlazeClientWithSafeUser(user *SafeUser) *BlazeClient {
+	return NewBlazeClient(user.UserId, user.SessionId, user.SessionPrivateKey)
+}
+
 func NewBlazeClient(uid, sid, key string) *BlazeClient {
 	client := BlazeClient{
 		mc: &messageContext{
