@@ -246,6 +246,9 @@ func ClaimMintDistribution(c *cli.Context) error {
 		tx.AddInput(stx.PayloadHash(), uint(i))
 		total = total.Add(out.Amount)
 	}
+	if total.Sign() == 0 {
+		return nil
+	}
 
 	var outputTotal common.Integer
 	var recipients []*bot.TransactionRecipient
