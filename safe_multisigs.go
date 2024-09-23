@@ -2,8 +2,13 @@ package bot
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"time"
+
+	"github.com/MixinNetwork/mixin/common"
+	"github.com/MixinNetwork/mixin/crypto"
 )
 
 type OutputReceiverView struct {
@@ -88,4 +93,81 @@ func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUs
 		return nil, resp.Error
 	}
 	return &resp.Data, nil
+}
+
+func CreateMultisigRawTx(ctx context.Context, asset crypto.Hash, senders, receivers []string, threshold byte, inputs []*common.UTXO, amount common.Integer, traceId, extra string, su *SafeUser) (string, error) {
+	out := &GhostKeyRequest{
+		Receivers: receivers,
+		Index:     0,
+		Hint:      UniqueObjectId(traceId, "OUTPUT", "0"),
+	}
+	change := &GhostKeyRequest{
+		Receivers: senders,
+		Index:     1,
+		Hint:      UniqueObjectId(traceId, "OUTPUT", "1"),
+	}
+	ghostKeys, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{out, change}, su)
+	if err != nil {
+		return "", err
+	}
+
+	var receiverKeys []*crypto.Key
+	for _, key := range ghostKeys[0].Keys {
+		k, _ := crypto.KeyFromString(key)
+		receiverKeys = append(receiverKeys, &k)
+	}
+	receiverMask, _ := crypto.KeyFromString(ghostKeys[0].Mask)
+	var changeKeys []*crypto.Key
+	for _, key := range ghostKeys[1].Keys {
+		k, _ := crypto.KeyFromString(key)
+		changeKeys = append(changeKeys, &k)
+	}
+	changeMask, _ := crypto.KeyFromString(ghostKeys[1].Mask)
+
+	var total common.Integer
+	tx := common.NewTransactionV5(asset)
+	for _, in := range inputs {
+		tx.AddInput(in.Hash, in.Index)
+		total = total.Add(in.Amount)
+	}
+	if total.Cmp(amount) < 0 {
+		return "", errors.New("insufficient funds")
+	}
+	if !receiverMask.CheckKey() {
+		return "", errors.New("invalid receiver mask")
+	}
+	if !changeMask.CheckKey() {
+		return "", errors.New("invalid change mask")
+	}
+	output := &common.Output{
+		Type:   common.OutputTypeScript,
+		Amount: amount,
+		Keys:   receiverKeys,
+		Mask:   receiverMask,
+		Script: common.NewThresholdScript(1),
+	}
+	tx.Outputs = append(tx.Outputs, output)
+
+	if total.Cmp(amount) > 0 {
+		change := total.Sub(amount)
+		out := &common.Output{
+			Type:   common.OutputTypeScript,
+			Amount: change,
+			Script: common.NewThresholdScript(uint8(threshold)),
+			Mask:   changeMask,
+			Keys:   changeKeys,
+		}
+		tx.Outputs = append(tx.Outputs, out)
+	}
+
+	if extra != "" {
+		extraBytes := []byte(extra)
+		if len(extraBytes) > 512 {
+			return "", errors.New("extra data is too long")
+		}
+		tx.Extra = extraBytes
+	}
+
+	ver := tx.AsVersioned()
+	return hex.EncodeToString(ver.Marshal()), nil
 }
