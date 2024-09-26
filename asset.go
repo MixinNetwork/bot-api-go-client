@@ -18,6 +18,7 @@ const (
 	USDC_ERC20  = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
 	USDT_TRC20  = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
 	USDT_SOLANA = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
+	USDC_SOLANA = "64692c23-8971-4cf4-84a7-4dd1271dd887"
 )
 
 type Asset struct {
