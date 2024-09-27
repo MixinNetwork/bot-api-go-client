@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"maps"
 	"net/url"
 	"slices"
 
@@ -220,7 +221,7 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 	return resp.Data, nil
 }
 
-func ListAssetWithBalance(ctx context.Context, su *SafeUser) map[string]number.Decimal {
+func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
 	offset := uint64(0)
 	m := make(map[string]number.Decimal)
@@ -249,5 +250,17 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) map[string]number.D
 			break
 		}
 	}
-	return m
+	assets := []*Asset{}
+	var err error
+	if len(m) > 0 {
+		assetIds := slices.Collect(maps.Keys(m))
+		assets, err = FetchAssets(ctx, assetIds, su)
+		if err != nil {
+			return nil, err
+		}
+		for _, asset := range assets {
+			asset.Amount = m[asset.AssetID].Persist()
+		}
+	}
+	return assets, nil
 }
