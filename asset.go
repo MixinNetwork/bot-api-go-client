@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"slices"
 
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/mixin/common"
@@ -223,6 +224,7 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) map[string]number.D
 	membersHash := HashMembers([]string{su.UserId})
 	offset := uint64(0)
 	m := make(map[string]number.Decimal)
+	filter := []string{}
 	for {
 		outputs, err := ListOutputs(ctx, membersHash, 1, "", "unspent", offset, 500, su)
 		if err != nil {
@@ -230,6 +232,10 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) map[string]number.D
 			continue
 		}
 		for i, output := range outputs {
+			if slices.Contains(filter, output.OutputID) {
+				continue
+			}
+			filter = append(filter, output.OutputID)
 			if aa, ok := m[output.AssetId]; ok {
 				m[output.AssetId] = aa.Add(number.FromString(output.Amount))
 			} else {
