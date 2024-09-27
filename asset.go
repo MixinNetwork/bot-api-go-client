@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/url"
 
+	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
 	"github.com/gofrs/uuid/v5"
@@ -215,4 +217,31 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func ListAssetWithBalance(ctx context.Context, su *SafeUser) map[string]number.Decimal {
+	membersHash := HashMembers([]string{su.UserId})
+	offset := uint64(0)
+	m := make(map[string]number.Decimal)
+	for {
+		outputs, err := ListOutputs(ctx, membersHash, 1, "", "unspent", offset, 500, su)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		for i, output := range outputs {
+			if aa, ok := m[output.AssetId]; ok {
+				m[output.AssetId] = aa.Add(number.FromString(output.Amount))
+			} else {
+				m[output.AssetId] = number.FromString(output.Amount)
+			}
+			if i == len(outputs)-1 {
+				offset = uint64(outputs[len(outputs)-1].Sequence)
+			}
+		}
+		if len(outputs) < 500 {
+			break
+		}
+	}
+	return m
 }
