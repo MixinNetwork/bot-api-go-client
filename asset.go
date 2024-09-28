@@ -265,7 +265,7 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	return assets, nil
 }
 
-func (asset *Asset) getSymbol() string {
+func (asset *Asset) GetSymbol() string {
 	if asset.AssetID == USDT_ERC20 {
 		return "USDT (ERC20)"
 	} else if asset.AssetID == USDC_ERC20 {
