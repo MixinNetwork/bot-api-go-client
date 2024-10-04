@@ -16,13 +16,15 @@ import (
 )
 
 const (
-	BTC         = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
-	ETH         = "43d61dcd-e413-450d-80b8-101d5e903357"
-	USDT_ERC20  = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
-	USDC_ERC20  = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
-	USDT_TRC20  = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
-	USDT_SOLANA = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
-	USDC_SOLANA = "64692c23-8971-4cf4-84a7-4dd1271dd887"
+	BTC          = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+	ETH          = "43d61dcd-e413-450d-80b8-101d5e903357"
+	USDT_ERC20   = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
+	USDC_ERC20   = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
+	USDT_TRC20   = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
+	USDT_POLYGON = "218bc6f4-7927-3f8e-8568-3a3725b74361"
+	USDT_BSC     = "94213408-4ee7-3150-a9c4-9c5cce421c78"
+	USDT_SOLANA  = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
+	USDC_SOLANA  = "64692c23-8971-4cf4-84a7-4dd1271dd887"
 )
 
 type Asset struct {
@@ -272,6 +274,10 @@ func (asset *Asset) GetSymbol() string {
 		return "USDC (ERC20)"
 	} else if asset.AssetID == USDT_TRC20 {
 		return "USDT (TRC20)"
+	} else if asset.AssetID == USDT_POLYGON {
+		return "USDT (Polygon)"
+	} else if asset.AssetID == USDT_BSC {
+		return "USDT (BSC)"
 	} else if asset.AssetID == USDT_SOLANA {
 		return "USDT (Solana)"
 	}
