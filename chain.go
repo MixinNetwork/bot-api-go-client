@@ -15,6 +15,7 @@ const (
 	EthereumClassicChainId = "2204c1ee-0ea2-4add-bb9a-b3719cfff93a"
 	BSCChainId             = "1949e683-6a08-49e2-b087-d6b72398588f"
 	PolygonChainId         = "b7938396-3f94-4e0a-9179-d3440718156f"
+	BaseChainId            = "21753aa4-f840-4510-8794-e47a408dcfe5"
 	MVMChainId             = "a0ffd769-5850-4b48-9651-d2ae44a3e64d"
 	DecredChainId          = "8f5caf2a-283d-4c85-832a-91e83bbf290b"
 	RippleChainId          = "23dfb5a5-5d7b-48b6-905f-3970e3176e27"
