@@ -4,8 +4,8 @@ filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/MixinNetwork/go-number v0.1.1 h1:Ui/xi0WGiBWI6cPrZaffB6q8lP7m2Zw0CXgOqLXb/3c=
 github.com/MixinNetwork/go-number v0.1.1/go.mod h1:4kaXQW9NOjjO3uZ5ehRVn3m+G+5ENGEKgiwfxea3zGQ=
-github.com/MixinNetwork/mixin v0.18.14 h1:qzoGVIbB6YW8xI++K0mB463vWQ8iLUlFSO8cdeJczno=
-github.com/MixinNetwork/mixin v0.18.14/go.mod h1:3def81L2q9wZdjz45KMTP9kc8tcpwQQI4YquE1AyFc8=
+github.com/MixinNetwork/mixin v0.18.15 h1:F75II74rrSwWIWGg5L0KFUsDWXaKrAMROvedY33A85k=
+github.com/MixinNetwork/mixin v0.18.15/go.mod h1:3def81L2q9wZdjz45KMTP9kc8tcpwQQI4YquE1AyFc8=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
