@@ -104,10 +104,14 @@ func assetBalanceCmd(c *cli.Context) error {
 	su := loadKeystore(keystore)
 	su.SpendPrivateKey = spend
 
-	balance, err := bot.AssetBalanceWithSafeUser(context.Background(), asset, su)
+	assets, err := bot.ListAssetWithBalance(context.Background(), su)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("balance %s", balance.String())
+	for _, a := range assets {
+		if a.KernelAssetId == asset || a.AssetID == asset {
+			log.Printf("%s balance %s", a.Symbol, a.Amount)
+		}
+	}
 	return nil
 }
