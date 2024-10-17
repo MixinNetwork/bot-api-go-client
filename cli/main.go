@@ -33,6 +33,7 @@ func main() {
 			hashMembersCmdCli,
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
+			assetBalanceCmdCli,
 		},
 	}
 	err := app.Run(os.Args)

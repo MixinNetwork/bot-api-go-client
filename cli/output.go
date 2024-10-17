@@ -76,3 +76,38 @@ func safeOutputCmd(c *cli.Context) error {
 	log.Printf("output %#v", output)
 	return nil
 }
+
+var assetBalanceCmdCli = &cli.Command{
+	Name:   "asset_balance",
+	Action: assetBalanceCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+		&cli.StringFlag{
+			Name:  "spend,s",
+			Usage: "spend",
+		},
+		&cli.StringFlag{
+			Name:  "asset,a",
+			Usage: "asset",
+		},
+	},
+}
+
+func assetBalanceCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	spend := c.String("spend")
+	asset := c.String("asset")
+
+	su := loadKeystore(keystore)
+	su.SpendPrivateKey = spend
+
+	balance, err := bot.AssetBalanceWithSafeUser(context.Background(), asset, su)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("balance %s", balance.String())
+	return nil
+}
