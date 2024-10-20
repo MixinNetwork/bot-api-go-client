@@ -30,6 +30,7 @@ type AssetNetwork struct {
 	Liquidity                 string  `json:"liquidity"`
 	PriceUpdatedAt            string  `json:"price_updated_at"`
 	WithdrawalMemoPossibility string  `json:"withdrawal_memo_possibility"`
+	PrimitiveAssetId          string  `json:"primitive_asset_id,omitempty"`
 }
 
 func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {
