@@ -27,7 +27,7 @@ type AssetNetwork struct {
 	KernelAssetID             string  `json:"kernel_asset_id"`
 	Reserve                   string  `json:"reserve"`
 	Dust                      string  `json:"dust"`
-	Confirmations             int     `json:"confirmations"`
+	Confirmations             int64   `json:"confirmations"`
 	Capitalization            float64 `json:"capitalization"`
 	Liquidity                 string  `json:"liquidity"`
 	PriceUpdatedAt            string  `json:"price_updated_at"`
