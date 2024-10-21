@@ -19,7 +19,7 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 	if err != nil {
 		return nil, err
 	}
-	var chain *Asset
+	var chain *AssetNetwork
 	if asset.ChainID == asset.AssetID {
 		chain = asset
 	} else {

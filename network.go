@@ -9,6 +9,8 @@ type AssetNetwork struct {
 	AssetID                   string  `json:"asset_id"`
 	ChainID                   string  `json:"chain_id"`
 	FeeAssetID                string  `json:"fee_asset_id"`
+	DisplaySymbol             string  `json:"display_symbol"`
+	DisplayName               string  `json:"display_name"`
 	Symbol                    string  `json:"symbol"`
 	Name                      string  `json:"name"`
 	IconURL                   string  `json:"icon_url"`
@@ -25,7 +27,7 @@ type AssetNetwork struct {
 	KernelAssetID             string  `json:"kernel_asset_id"`
 	Reserve                   string  `json:"reserve"`
 	Dust                      string  `json:"dust"`
-	Confirmations             int     `json:"confirmations"`
+	Confirmations             int64   `json:"confirmations"`
 	Capitalization            float64 `json:"capitalization"`
 	Liquidity                 string  `json:"liquidity"`
 	PriceUpdatedAt            string  `json:"price_updated_at"`

@@ -43,14 +43,14 @@ func ReadAssetTicker(ctx context.Context, assetId string) (*AssetTicker, error) 
 	return resp.Data, nil
 }
 
-func AssetSearch(ctx context.Context, name string) ([]*Asset, error) {
+func AssetSearch(ctx context.Context, name string) ([]*AssetNetwork, error) {
 	body, err := Request(ctx, "GET", "/network/assets/search/"+name, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	var resp struct {
-		Data  []*Asset `json:"data"`
-		Error Error    `json:"error"`
+		Data  []*AssetNetwork `json:"data"`
+		Error Error           `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
