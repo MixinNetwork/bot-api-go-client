@@ -9,6 +9,8 @@ type AssetNetwork struct {
 	AssetID                   string  `json:"asset_id"`
 	ChainID                   string  `json:"chain_id"`
 	FeeAssetID                string  `json:"fee_asset_id"`
+	DisplaySymbol             string  `json:"display_symbol"`
+	DisplayName               string  `json:"display_name"`
 	Symbol                    string  `json:"symbol"`
 	Name                      string  `json:"name"`
 	IconURL                   string  `json:"icon_url"`
