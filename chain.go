@@ -284,6 +284,7 @@ func GetFullChains() map[string]bool {
 		EthereumClassicChainId: true,
 		BSCChainId:             true,
 		PolygonChainId:         true,
+		BaseChainId:            true,
 		MVMChainId:             true,
 		DecredChainId:          true,
 		RippleChainId:          true,
