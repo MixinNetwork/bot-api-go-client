@@ -75,6 +75,18 @@ func SendTransferTransaction(ctx context.Context, assetId, receiver, amount, tra
 	return SendTransaction(ctx, assetId, []*TransactionRecipient{tr}, traceId, extra, nil, u)
 }
 
+func SendTransferTransactionWithOutputs(ctx context.Context, assetId, receiver, amount string, utxos []*Output, traceId string, extra []byte, u *SafeUser) (*SequencerTransactionRequest, error) {
+	if uuid.FromStringOrNil(receiver).String() != receiver {
+		return nil, fmt.Errorf("invalid receiver %s", receiver)
+	}
+	ma := NewUUIDMixAddress([]string{receiver}, 1)
+	tr := &TransactionRecipient{
+		MixAddress: ma,
+		Amount:     amount,
+	}
+	return SendTransactionWithOutputs(ctx, assetId, []*TransactionRecipient{tr}, utxos, traceId, extra, nil, u)
+}
+
 func SendTransactionUntilSufficient(ctx context.Context, assetId, receiver, amount, traceId string, extra []byte, u *SafeUser) (*SequencerTransactionRequest, error) {
 	for {
 		str, err := SendTransferTransaction(ctx, assetId, receiver, amount, traceId, extra, u)
