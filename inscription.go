@@ -1,5 +1,12 @@
 package bot
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
 const (
 	InscriptionModeInstant = 1
 	InscriptionModeDone    = 2
@@ -78,4 +85,101 @@ type InscriptionOccupy struct {
 
 	// the integer sequence number of the NFT inscription
 	Sequence uint64 `json:"sequence"`
+}
+
+type InscriptionTreasury struct {
+	Ratio     string `json:"ratio"`
+	Recipient string `json:"recipient"`
+}
+
+type InscriptionCollection struct {
+	Type           string               `json:"type"`
+	CollectionHash string               `json:"collection_hash"`
+	Supply         string               `json:"supply"`
+	Unit           string               `json:"unit"`
+	Symbol         string               `json:"symbol"`
+	Name           string               `json:"name"`
+	Description    string               `json:"description"`
+	MinimumPrice   string               `json:"minimum_price,omitempty"`
+	IconURL        string               `json:"icon_url"`
+	Treasury       *InscriptionTreasury `json:"treasury,omitempty"`
+	AssetKey       string               `json:"asset_key"`
+	KernelAssetId  string               `json:"kernel_asset_id"`
+	CreatedAt      time.Time            `json:"created_at"`
+	UpdatedAt      time.Time            `json:"updated_at"`
+}
+
+type InscriptionItem struct {
+	Type            string    `json:"type"`
+	InscriptionHash string    `json:"inscription_hash"`
+	CollectionHash  string    `json:"collection_hash"`
+	Sequence        uint64    `json:"sequence"`
+	ContentType     string    `json:"content_type"`
+	Traits          string    `json:"traits,omitempty"`
+	ContentURL      string    `json:"content_url"`
+	Recipient       string    `json:"recipient"`
+	Owner           string    `json:"owner,omitempty"`
+	OccupiedBy      string    `json:"occupied_by,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+func GetInscriptionCollection(ctx context.Context, collectionHash string, su *SafeUser) (*InscriptionCollection, error) {
+	url := fmt.Sprintf("/inscription/collections/%s", collectionHash)
+	body, err := Request(ctx, "GET", url, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *InscriptionCollection `json:"data"`
+		Error Error                  `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func GetInscriptionItems(ctx context.Context, collectionHash, state, offset string, su *SafeUser) ([]*InscriptionItem, error) {
+	url := fmt.Sprintf("/safe/inscriptions/collections/%s/items?state=%s&offset=%s", collectionHash, state, offset)
+	body, err := Request(ctx, "GET", url, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*InscriptionItem `json:"data"`
+		Error Error              `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func GetInscriptionItem(ctx context.Context, collectionHash string, hash string, su *SafeUser) (*InscriptionItem, error) {
+	url := fmt.Sprintf("/safe/inscriptions/items/%s", hash)
+	body, err := Request(ctx, "GET", url, nil, "")
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  *InscriptionItem `json:"data"`
+		Error Error            `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
 }
