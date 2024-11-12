@@ -130,6 +130,8 @@ func GetChainName(chainId string) string {
 		return "BNB Smart Chain"
 	case PolygonChainId:
 		return "Polygon"
+	case BaseChainId:
+		return "Base"
 	case MVMChainId:
 		return "Mixin Virtual Machine"
 	case BitcoinChainId:
