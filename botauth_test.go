@@ -1,4 +1,4 @@
-package botauth
+package bot
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/MixinNetwork/bot-api-go-client/v3"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,9 +21,9 @@ func TestSignRequest(t *testing.T) {
 	su := keystore.BuildSafeUser()
 	logger := slog.Default()
 	ctx := context.Background()
-	client := NewDefaultClient(su, logger, "/tmp/auth/rose/signRequest")
+	client := NewDefaultClient(su, logger)
 
-	r, err := http.NewRequest(http.MethodGet, "https://test.com/account_addresses?user_id=2f73822c-56e8-4e5d-99a4-cdbf75cd", nil)
+	r, err := http.NewRequest(http.MethodGet, "https://test.com/account_addresses?chain_id=solana&user_id=2f73822c-56e8-4e5d-99a4-cdbf75cd", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -44,8 +43,8 @@ type keystore struct {
 	SpendPrivateKey   string `json:"pin"`
 }
 
-func (k *keystore) BuildSafeUser() *bot.SafeUser {
-	return &bot.SafeUser{
+func (k *keystore) BuildSafeUser() *SafeUser {
+	return &SafeUser{
 		UserId:            k.AppID,
 		SessionId:         k.SessionID,
 		SessionPrivateKey: k.SessionPrivateKey,
