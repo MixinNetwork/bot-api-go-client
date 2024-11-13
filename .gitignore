@@ -16,3 +16,5 @@ vendor
 .glide/
 
 cli/cli
+
+test_config.json
