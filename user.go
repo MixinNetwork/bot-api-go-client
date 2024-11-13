@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"sort"
 	"time"
 )
@@ -103,6 +104,32 @@ func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 	var resp struct {
 		Data  *User `json:"data"`
 		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, error) {
+	url := "/users/fetch"
+	data, _ := json.Marshal(userIds)
+	token, err := SignAuthenticationToken("POST", url, string(data), su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", url, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	log.Println(string(body))
+	var resp struct {
+		Data  []*User `json:"data"`
+		Error Error   `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
