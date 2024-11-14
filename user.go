@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"sort"
 	"time"
 )
@@ -126,7 +125,6 @@ func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, err
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
-	log.Println(string(body))
 	var resp struct {
 		Data  []*User `json:"data"`
 		Error Error   `json:"error"`
