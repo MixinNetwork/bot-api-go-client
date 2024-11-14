@@ -114,6 +114,31 @@ func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 	return resp.Data, nil
 }
 
+func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, error) {
+	url := "/users/fetch"
+	data, _ := json.Marshal(userIds)
+	token, err := SignAuthenticationToken("POST", url, string(data), su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", url, data, token)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp struct {
+		Data  []*User `json:"data"`
+		Error Error   `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func SearchUser(ctx context.Context, mixinId string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/search/%s", mixinId)
 	token, err := SignAuthenticationToken("GET", url, "", su)
