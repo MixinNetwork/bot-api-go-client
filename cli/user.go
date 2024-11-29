@@ -82,7 +82,7 @@ func searchUserCmd(ctx *cli.Context) error {
 		panic(err)
 	}
 
-	user, err := bot.SearchUser(context.Background(), id, &su)
+	user, err := bot.GetUser(context.Background(), id, &su)
 	if err != nil {
 		panic(err)
 	}
