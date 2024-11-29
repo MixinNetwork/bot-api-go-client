@@ -52,3 +52,45 @@ func getUsersCmd(ctx *cli.Context) error {
 	}
 	return nil
 }
+
+var searchUserCmdCli = &cli.Command{
+	Name:   "search",
+	Action: searchUserCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+		&cli.StringFlag{
+			Name:  "id",
+			Usage: "user id",
+		},
+	},
+}
+
+func searchUserCmd(ctx *cli.Context) error {
+	keystore := ctx.String("keystore")
+	id := ctx.String("id")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
+	if err != nil {
+		panic(err)
+	}
+
+	user, err := bot.GetUser(context.Background(), id, &su)
+	if err != nil {
+		panic(err)
+	}
+	data, err := json.MarshalIndent(user, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+	logger := log.New(os.Stdout, "", 0)
+	logger.Println(string(data))
+	return nil
+}
