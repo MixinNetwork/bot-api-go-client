@@ -17,6 +17,7 @@ func main() {
 		Commands: []*cli.Command{
 			appMeCmdCli,
 			userCmdCli,
+			searchUserCmdCli,
 			getUsersCmdCli,
 			transferCmdCli,
 			verifyPINCmdCli,
