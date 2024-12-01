@@ -12,6 +12,8 @@ type SafeDepositView struct {
 	DepositHash  string `json:"deposit_hash"`
 	DepositIndex int64  `json:"deposit_index"`
 	Sender       string `json:"sender"`
+	Destination  string `json:"destination"`
+	Tag          string `json:"tag"`
 }
 
 type SafeWithdrawalView struct {
