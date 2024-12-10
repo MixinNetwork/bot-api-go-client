@@ -96,6 +96,13 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 				amt := common.NewIntegerFromString(o.Amount)
 				totalFeeInput = totalFeeInput.Add(amt)
 			}
+			if totalFeeInput.Cmp(totalFeeOutput) < 0 {
+				return nil, &UtxoInsufficientError{
+					TotalInput:  totalFeeInput,
+					TotalOutput: totalFeeOutput,
+					OutputSize:  len(feeUtxos),
+				}
+			}
 			feeChange = totalFeeInput.Sub(totalFeeOutput)
 		} else {
 			feeUtxos, feeChange, err = requestUnspentOutputsForRecipients(ctx, feeAssetId, feeRecipients, u)
