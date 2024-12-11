@@ -5,11 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
 const (
-	mixinFeeUserId = "674d6776-d600-4346-af46-58e77d8df185"
+	MixinFeeUserId = "674d6776-d600-4346-af46-58e77d8df185"
 )
 
 // SendWithdrawal sends a withdrawal request to the Mixin Network.
@@ -49,11 +50,15 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 		fee = chainFee
 	}
 
-	return withdrawalTransaction(ctx, traceId, mixinFeeUserId, fee.AssetID, fee.Amount, assetId, destination, tag, memo, amount, u)
+	return withdrawalTransaction(ctx, traceId, MixinFeeUserId, fee.AssetID, fee.Amount, assetId, destination, tag, memo, amount, nil, u)
+}
+
+func WithdrawalWithFeeUtxos(ctx context.Context, traceId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount string, feeUtxos []*Output, u *SafeUser) ([]*SequencerTransactionRequest, error) {
+	return withdrawalTransaction(ctx, traceId, MixinFeeUserId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount, feeUtxos, u)
 }
 
 func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, feeAssetId string, feeAmount,
-	assetId, destination, tag, memo, amount string, u *SafeUser) ([]*SequencerTransactionRequest, error) {
+	assetId, destination, tag, memo, amount string, feeUtxos []*Output, u *SafeUser) ([]*SequencerTransactionRequest, error) {
 	isFeeDifferentAsset := feeAssetId != assetId
 	asset := crypto.Sha256Hash([]byte(assetId))
 	if isFeeDifferentAsset {
@@ -82,9 +87,28 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 				MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
 			},
 		}
-		feeUtxos, feeChange, err := requestUnspentOutputsForRecipients(ctx, feeAssetId, feeRecipients, u)
-		if err != nil {
-			return nil, err
+
+		var feeChange common.Integer
+		if len(feeUtxos) > 0 {
+			totalFeeOutput := common.NewIntegerFromString(feeAmount)
+			var totalFeeInput common.Integer
+			for _, o := range feeUtxos {
+				amt := common.NewIntegerFromString(o.Amount)
+				totalFeeInput = totalFeeInput.Add(amt)
+			}
+			if totalFeeInput.Cmp(totalFeeOutput) < 0 {
+				return nil, &UtxoInsufficientError{
+					TotalInput:  totalFeeInput,
+					TotalOutput: totalFeeOutput,
+					OutputSize:  len(feeUtxos),
+				}
+			}
+			feeChange = totalFeeInput.Sub(totalFeeOutput)
+		} else {
+			feeUtxos, feeChange, err = requestUnspentOutputsForRecipients(ctx, feeAssetId, feeRecipients, u)
+			if err != nil {
+				return nil, err
+			}
 		}
 		if feeChange.Sign() > 0 {
 			feeRecipients = append(feeRecipients, &TransactionRecipient{
@@ -171,7 +195,7 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			},
 			{
 				Amount:     feeAmount,
-				MixAddress: NewUUIDMixAddress([]string{mixinFeeUserId}, 1),
+				MixAddress: NewUUIDMixAddress([]string{MixinFeeUserId}, 1),
 			},
 		}
 		tx, err := SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
