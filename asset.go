@@ -25,6 +25,7 @@ const (
 	USDT_BSC     = "94213408-4ee7-3150-a9c4-9c5cce421c78"
 	USDT_SOLANA  = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
 	USDC_SOLANA  = "de6fa523-c596-398e-b12f-6d6980544b59"
+	USDC_BASE    = "2f845564-3898-3d17-8c24-3275e96235b5"
 )
 
 type Asset struct {
