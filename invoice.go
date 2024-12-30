@@ -18,17 +18,17 @@ const (
 
 type MixinInvoice struct {
 	version   byte
-	recipient *MixAddress
+	Recipient *MixAddress
 	Entries   []*InvoiceEntry
 }
 
 type InvoiceEntry struct {
-	traceId            uuid.UUID
-	assetId            uuid.UUID
-	amount             common.Integer
-	extra              []byte
-	indexReferences    []byte
-	externalReferences []crypto.Hash
+	TraceId         uuid.UUID
+	AssetId         uuid.UUID
+	Amount          common.Integer
+	Extra           []byte
+	IndexReferences []byte
+	HashReferences  []crypto.Hash
 }
 
 func NewMixinInvoice(recipient string) *MixinInvoice {
@@ -38,27 +38,27 @@ func NewMixinInvoice(recipient string) *MixinInvoice {
 	}
 	mi := &MixinInvoice{
 		version:   MixinInvoiceVersion,
-		recipient: r,
+		Recipient: r,
 	}
 	return mi
 }
 
 func (mi *MixinInvoice) AddEntry(traceId, assetId string, amount common.Integer, extra []byte, indexReferences []byte, externalReferences []crypto.Hash) {
 	e := &InvoiceEntry{
-		traceId:            uuid.Must(uuid.FromString(traceId)),
-		assetId:            uuid.Must(uuid.FromString(assetId)),
-		amount:             amount,
-		extra:              extra,
-		externalReferences: externalReferences,
+		TraceId:        uuid.Must(uuid.FromString(traceId)),
+		AssetId:        uuid.Must(uuid.FromString(assetId)),
+		Amount:         amount,
+		Extra:          extra,
+		HashReferences: externalReferences,
 	}
-	if len(e.externalReferences)+len(indexReferences) > common.ReferencesCountLimit {
+	if len(e.HashReferences)+len(indexReferences) > common.ReferencesCountLimit {
 		panic("too many references")
 	}
 	for _, ir := range indexReferences {
 		if int(ir) >= len(mi.Entries) {
 			panic(len(mi.Entries))
 		}
-		e.indexReferences = append(e.indexReferences, ir)
+		e.IndexReferences = append(e.IndexReferences, ir)
 	}
 	mi.Entries = append(mi.Entries, e)
 }
@@ -66,7 +66,7 @@ func (mi *MixinInvoice) AddEntry(traceId, assetId string, amount common.Integer,
 func (mi *MixinInvoice) BytesUnchecked() []byte {
 	enc := common.NewEncoder()
 	enc.Write([]byte{mi.version})
-	rb := mi.recipient.BytesUnchecked()
+	rb := mi.Recipient.BytesUnchecked()
 	if len(rb) > 1024 {
 		panic(len(rb))
 	}
@@ -79,29 +79,29 @@ func (mi *MixinInvoice) BytesUnchecked() []byte {
 	enc.Write([]byte{byte(len(mi.Entries))})
 
 	for _, e := range mi.Entries {
-		enc.Write(e.traceId.Bytes())
-		enc.Write(e.assetId.Bytes())
-		ab := len(e.amount.String())
+		enc.Write(e.TraceId.Bytes())
+		enc.Write(e.AssetId.Bytes())
+		ab := len(e.Amount.String())
 		if ab > 128 {
-			panic(e.amount.String())
+			panic(e.Amount.String())
 		}
-		enc.Write([]byte{byte(len(e.amount.String()))})
-		enc.Write([]byte(e.amount.String()))
-		if len(e.extra) >= common.ExtraSizeStorageCapacity {
-			panic(len(e.extra))
+		enc.Write([]byte{byte(len(e.Amount.String()))})
+		enc.Write([]byte(e.Amount.String()))
+		if len(e.Extra) >= common.ExtraSizeStorageCapacity {
+			panic(len(e.Extra))
 		}
-		enc.WriteInt(len(e.extra))
-		enc.Write(e.extra)
+		enc.WriteInt(len(e.Extra))
+		enc.Write(e.Extra)
 
-		rl := len(e.indexReferences) + len(e.externalReferences)
+		rl := len(e.IndexReferences) + len(e.HashReferences)
 		if rl > common.ReferencesCountLimit {
 			panic(rl)
 		}
 		enc.Write([]byte{byte(rl)})
-		for _, ir := range e.indexReferences {
+		for _, ir := range e.IndexReferences {
 			enc.Write([]byte{1, ir})
 		}
-		for _, er := range e.externalReferences {
+		for _, er := range e.HashReferences {
 			enc.Write([]byte{0})
 			enc.Write(er[:])
 		}
@@ -150,7 +150,7 @@ func NewMixinInvoiceFromString(s string) (*MixinInvoice, error) {
 	if err != nil {
 		return nil, err
 	}
-	mi.recipient, err = NewMixAddressFromBytesUnchecked(rb)
+	mi.Recipient, err = NewMixAddressFromBytesUnchecked(rb)
 	if err != nil {
 		return nil, err
 	}
@@ -166,12 +166,12 @@ func NewMixinInvoiceFromString(s string) (*MixinInvoice, error) {
 		if err != nil {
 			return nil, err
 		}
-		e.traceId = uuid.Must(uuid.FromBytes(b))
+		e.TraceId = uuid.Must(uuid.FromBytes(b))
 		err = dec.Read(b)
 		if err != nil {
 			return nil, err
 		}
-		e.assetId = uuid.Must(uuid.FromBytes(b))
+		e.AssetId = uuid.Must(uuid.FromBytes(b))
 
 		al, err := dec.ReadByte()
 		if err != nil {
@@ -182,9 +182,9 @@ func NewMixinInvoiceFromString(s string) (*MixinInvoice, error) {
 		if err != nil {
 			return nil, err
 		}
-		e.amount = common.NewIntegerFromString(string(b))
+		e.Amount = common.NewIntegerFromString(string(b))
 
-		e.extra, err = dec.ReadBytes()
+		e.Extra, err = dec.ReadBytes()
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +208,7 @@ func NewMixinInvoiceFromString(s string) (*MixinInvoice, error) {
 				if err != nil {
 					return nil, err
 				}
-				e.externalReferences = append(e.externalReferences, b)
+				e.HashReferences = append(e.HashReferences, b)
 			case 1:
 				ir, err := dec.ReadByte()
 				if err != nil {
@@ -217,7 +217,7 @@ func NewMixinInvoiceFromString(s string) (*MixinInvoice, error) {
 				if int(ir) >= len(mi.Entries) {
 					return nil, fmt.Errorf("invalid reference index %d", ir)
 				}
-				e.indexReferences = append(e.indexReferences, ir)
+				e.IndexReferences = append(e.IndexReferences, ir)
 			default:
 				return nil, fmt.Errorf("invalid reference type %d", rv)
 			}
