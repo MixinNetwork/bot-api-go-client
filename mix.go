@@ -79,7 +79,7 @@ func (ma *MixAddress) Members() []string {
 	return members
 }
 
-func (ma *MixAddress) String() string {
+func (ma *MixAddress) BytesUnchecked() []byte {
 	payload := []byte{ma.Version, ma.Threshold}
 	if l := len(ma.uuidMembers); l > 0 {
 		if l > 255 {
@@ -100,7 +100,11 @@ func (ma *MixAddress) String() string {
 			payload = append(payload, a.PublicViewKey[:]...)
 		}
 	}
+	return payload
+}
 
+func (ma *MixAddress) String() string {
+	payload := ma.BytesUnchecked()
 	data := append([]byte(MixAddressPrefix), payload...)
 	checksum := crypto.Sha256Hash(data)
 	payload = append(payload, checksum[:4]...)
@@ -108,7 +112,6 @@ func (ma *MixAddress) String() string {
 }
 
 func NewMixAddressFromString(s string) (*MixAddress, error) {
-	var ma MixAddress
 	if !strings.HasPrefix(s, MixAddressPrefix) {
 		return nil, fmt.Errorf("invalid address prefix %s", s)
 	}
@@ -122,6 +125,11 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 		return nil, fmt.Errorf("invalid address checksum %x", checksum[:4])
 	}
 
+	return NewMixAddressFromBytesUnchecked(payload)
+}
+
+func NewMixAddressFromBytesUnchecked(payload []byte) (*MixAddress, error) {
+	var ma MixAddress
 	total := payload[2]
 	ma.Version = payload[0]
 	ma.Threshold = payload[1]
@@ -137,7 +145,7 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 		for i := 0; i < int(total); i++ {
 			id, err := uuid.FromBytes(mp[i*16 : i*16+16])
 			if err != nil {
-				return nil, fmt.Errorf("invalid uuid member %s", s)
+				return nil, fmt.Errorf("invalid uuid member %v", err)
 			}
 			ma.uuidMembers = append(ma.uuidMembers, id)
 		}
@@ -149,9 +157,8 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 			ma.xinMembers = append(ma.xinMembers, &a)
 		}
 	} else {
-		return nil, fmt.Errorf("invalid address members list %s", s)
+		return nil, fmt.Errorf("invalid address members list %x", payload)
 	}
-
 	return &ma, nil
 }
 
