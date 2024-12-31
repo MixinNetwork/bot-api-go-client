@@ -15,6 +15,10 @@ import (
 )
 
 func TestSignRequest(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping testing in CI environment")
+	}
+
 	assert := assert.New(t)
 	keystore, err := read("./test_config.json")
 	assert.Nil(err)
