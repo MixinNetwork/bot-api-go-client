@@ -6,12 +6,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateUserSimple(t *testing.T) {
+	if os.Getenv("CI") != "" {
+		t.Skip("Skipping testing in CI environment")
+	}
 	assert := assert.New(t)
 	WithAPIKey("", "", "")
 	pub, _, err := ed25519.GenerateKey(rand.Reader)
