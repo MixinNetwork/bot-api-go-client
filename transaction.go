@@ -26,9 +26,12 @@ type TransactionRecipient struct {
 }
 
 type TransactionReceiver struct {
-	Members     []string    `json:"members"`
-	MembersHash crypto.Hash `json:"members_hash"`
-	Threshold   uint8       `json:"threshold"`
+	Members        []string `json:"members"`
+	MembersHash    string   `json:"members_hash"`
+	Threshold      uint8    `json:"threshold"`
+	Destination    string   `json:"destination"`
+	Tag            string   `json:"tag"`
+	WithdrawalHash string   `json:"withdrawal_hash"`
 }
 
 type SequencerTransactionRequest struct {
