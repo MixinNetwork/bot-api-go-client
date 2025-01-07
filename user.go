@@ -14,18 +14,24 @@ import (
 )
 
 type User struct {
-	UserId         string `json:"user_id"`
-	SessionId      string `json:"session_id"`
-	PinToken       string `json:"pin_token"`
-	PINTokenBase64 string `json:"pin_token_base64"`
-	IdentityNumber string `json:"identity_number"`
-	HasSafe        bool   `json:"has_safe"`
-	TIPKeyBase64   string `json:"tip_key_base64"`
-	Phone          string `json:"phone"`
-	FullName       string `json:"full_name"`
-	AvatarURL      string `json:"avatar_url"`
-	DeviceStatus   string `json:"device_status"`
-	CreatedAt      string `json:"created_at"`
+	UserId         string      `json:"user_id"`
+	SessionId      string      `json:"session_id"`
+	PinToken       string      `json:"pin_token"`
+	PINTokenBase64 string      `json:"pin_token_base64"`
+	IdentityNumber string      `json:"identity_number"`
+	HasSafe        bool        `json:"has_safe"`
+	TIPKeyBase64   string      `json:"tip_key_base64"`
+	Phone          string      `json:"phone"`
+	FullName       string      `json:"full_name"`
+	AvatarURL      string      `json:"avatar_url"`
+	DeviceStatus   string      `json:"device_status"`
+	CreatedAt      string      `json:"created_at"`
+	Memebership    Memebership `json:"membership"`
+}
+
+type Memebership struct {
+	Plan      string    `json:"plan"`
+	ExpiredAt time.Time `json:"expired_at"`
 }
 
 const (
