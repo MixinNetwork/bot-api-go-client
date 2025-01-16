@@ -53,9 +53,9 @@ func getUsersCmd(ctx *cli.Context) error {
 	return nil
 }
 
-var searchUserCmdCli = &cli.Command{
-	Name:   "search",
-	Action: searchUserCmd,
+var userCmdCli = &cli.Command{
+	Name:   "user",
+	Action: userCmd,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:  "keystore,k",
@@ -68,9 +68,47 @@ var searchUserCmdCli = &cli.Command{
 	},
 }
 
+func userCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	id := c.String("id")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	log.Println(string(dat))
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
+	if err != nil {
+		panic(err)
+	}
+
+	user, err := bot.GetUser(context.Background(), id, &su)
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("%#v", user)
+	return nil
+}
+
+var searchUserCmdCli = &cli.Command{
+	Name:   "search",
+	Action: searchUserCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+		&cli.StringFlag{
+			Name:  "query",
+			Usage: "query param",
+		},
+	},
+}
+
 func searchUserCmd(ctx *cli.Context) error {
 	keystore := ctx.String("keystore")
-	id := ctx.String("id")
+	q := ctx.String("query")
 
 	dat, err := os.ReadFile(keystore)
 	if err != nil {
@@ -82,7 +120,7 @@ func searchUserCmd(ctx *cli.Context) error {
 		panic(err)
 	}
 
-	user, err := bot.GetUser(context.Background(), id, &su)
+	user, err := bot.SearchUser(context.Background(), q, &su)
 	if err != nil {
 		panic(err)
 	}
