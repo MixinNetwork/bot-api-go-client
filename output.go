@@ -61,7 +61,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
 	token, err := SignAuthenticationToken(method, path, "", u)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
 	body, err := Request(ctx, method, path, []byte{}, accessToken)
 	if err != nil {
 		return nil, err

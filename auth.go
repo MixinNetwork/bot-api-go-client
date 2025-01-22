@@ -60,9 +60,7 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 
 	priv, err := hex.DecodeString(privateKey)
 	if err != nil {
-		if err != nil {
-			return "", err
-		}
+		return "", err
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	return token.SignedString(ed25519.NewKeyFromSeed(priv))

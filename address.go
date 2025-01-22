@@ -173,7 +173,7 @@ func CheckAddress(ctx context.Context, asset, destination, tag string) (*SimpleA
 	if tag != "" {
 		v.Set("tag", tag)
 	}
-	path := fmt.Sprintf("/external/addresses/check?" + v.Encode())
+	path := fmt.Sprintf("%s", "/external/addresses/check?"+v.Encode())
 	body, err := Request(ctx, "GET", path, nil, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
