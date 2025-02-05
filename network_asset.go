@@ -24,6 +24,25 @@ func ReadAsset(ctx context.Context, name string) (*AssetNetwork, error) {
 	return resp.Data, nil
 }
 
+func ReadAssetTickerWithOffset(ctx context.Context, assetId string, offset string) (*AssetTicker, error) {
+	body, err := Request(ctx, "GET", "/network/ticker?asset="+assetId+"&offset="+offset, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *AssetTicker `json:"data"`
+		Error Error        `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func ReadAssetTicker(ctx context.Context, assetId string) (*AssetTicker, error) {
 	body, err := Request(ctx, "GET", "/network/ticker?asset="+assetId, nil, "")
 	if err != nil {
