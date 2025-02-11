@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	LightningChainId       = "59c09123-95cc-3ffd-a659-0f9169074cee"
 	BitcoinChainId         = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	BitcoinCashChainId     = "fd11b6e3-0b87-41f1-a41f-f0e9b49e5bf0"
 	BitcoinSVChainId       = "574388fd-b93f-4034-a682-01c2bc095d17"
