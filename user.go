@@ -27,6 +27,7 @@ type User struct {
 	DeviceStatus   string      `json:"device_status"`
 	CreatedAt      string      `json:"created_at"`
 	Memebership    Memebership `json:"membership"`
+	AppId          string      `json:"app_id"`
 }
 
 type Memebership struct {
@@ -145,8 +146,8 @@ func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, err
 	return resp.Data, nil
 }
 
-func SearchUser(ctx context.Context, mixinId string, su *SafeUser) (*User, error) {
-	url := fmt.Sprintf("/search/%s", mixinId)
+func SearchUser(ctx context.Context, query string, su *SafeUser) (*User, error) {
+	url := fmt.Sprintf("/search/%s", query)
 	token, err := SignAuthenticationToken("GET", url, "", su)
 	if err != nil {
 		return nil, err
@@ -365,7 +366,10 @@ func GenerateUserChecksum(sessions []*Session) string {
 	})
 	h := md5.New()
 	for _, s := range sessions {
-		io.WriteString(h, s.SessionID)
+		n, err := io.WriteString(h, s.SessionID)
+		if err != nil || n != len(s.SessionID) {
+			panic(err)
+		}
 	}
 	sum := h.Sum(nil)
 	return hex.EncodeToString(sum[:])
