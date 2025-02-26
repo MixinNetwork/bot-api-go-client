@@ -7,7 +7,7 @@ import (
 )
 
 func TestFetchSafeDeposit(t *testing.T) {
-	pending, err := FetchSafeDeposit(context.Background())
+	pending, err := FetchPendingSafeDeposits(context.Background())
 	log.Println(err)
 	log.Println(len(pending))
 }

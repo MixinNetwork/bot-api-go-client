@@ -227,3 +227,20 @@ func (asset *Asset) GetSymbol() string {
 	}
 	return asset.DisplaySymbol
 }
+
+func (asset *AssetNetwork) GetSymbol() string {
+	if asset.AssetID == USDT_ERC20 {
+		return "USDT (ERC20)"
+	} else if asset.AssetID == USDC_ERC20 {
+		return "USDC (ERC20)"
+	} else if asset.AssetID == USDT_TRC20 {
+		return "USDT (TRC20)"
+	} else if asset.AssetID == USDT_POLYGON {
+		return "USDT (Polygon)"
+	} else if asset.AssetID == USDT_BSC {
+		return "USDT (BSC)"
+	} else if asset.AssetID == USDT_SOLANA {
+		return "USDT (Solana)"
+	}
+	return asset.DisplaySymbol
+}
