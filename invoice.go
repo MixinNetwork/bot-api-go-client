@@ -45,7 +45,7 @@ func NewMixinInvoice(recipient string) *MixinInvoice {
 
 func (e *InvoiceEntry) IsStorage() bool {
 	return e.AssetId.String() == XINAssetId &&
-		len(e.Extra) >= common.ExtraSizeGeneralLimit &&
+		len(e.Extra) > common.ExtraSizeGeneralLimit &&
 		e.Amount.Cmp(EstimateStorageCost(e.Extra)) == 0
 }
 
