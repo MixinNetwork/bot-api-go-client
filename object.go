@@ -11,17 +11,14 @@ func CreateObjectStorageTransaction(ctx context.Context, recipients []*Transacti
 	if len(extra) > common.ExtraSizeStorageCapacity {
 		return nil, fmt.Errorf("too large extra %d > %d", len(extra), common.ExtraSizeStorageCapacity)
 	}
-	step := common.NewIntegerFromString(common.ExtraStoragePriceStep)
-	amount := step.Mul(len(extra)/common.ExtraSizeStorageStep + 1)
+	amount := EstimateStorageCost(extra)
 	if limit != "" {
 		strl := common.NewIntegerFromString(limit)
 		if strl.Cmp(amount) > 0 {
 			amount = strl
 		}
 	}
-	addr := common.NewAddressFromSeed(make([]byte, 64))
-	mix := NewMainnetMixAddress([]string{addr.String()}, 1)
-	mix.Threshold = 64
+	mix := StorageRecipient()
 	rec := []*TransactionRecipient{{
 		MixAddress: mix,
 		Amount:     amount.String(),
@@ -33,4 +30,19 @@ func CreateObjectStorageTransaction(ctx context.Context, recipients []*Transacti
 		return SendTransactionWithOutputs(ctx, common.XINAssetId.String(), rec, utxos, traceId, extra, references, u)
 	}
 	return SendTransaction(ctx, common.XINAssetId.String(), rec, traceId, extra, references, u)
+}
+
+func EstimateStorageCost(extra []byte) common.Integer {
+	if len(extra) > common.ExtraSizeStorageCapacity {
+		panic(len(extra))
+	}
+	step := common.NewIntegerFromString(common.ExtraStoragePriceStep)
+	return step.Mul(len(extra)/common.ExtraSizeStorageStep + 1)
+}
+
+func StorageRecipient() *MixAddress {
+	addr := common.NewAddressFromSeed(make([]byte, 64))
+	mix := NewMainnetMixAddress([]string{addr.String()}, 1)
+	mix.Threshold = 64
+	return mix
 }

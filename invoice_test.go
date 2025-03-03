@@ -11,6 +11,13 @@ import (
 func TestMixinInvoice(t *testing.T) {
 	require := require.New(t)
 
+	require.Equal("MIXSK624cFT3CXbbjYxU17CeYWCwj6CZgkp2VsfiRsDMXw4MzpfYKPKKYwLmfDby2z85MLAbSWZbAB1dfPetCxUf7vwwJnToaG8", StorageRecipient().String())
+	require.Equal("0.00010000", EstimateStorageCost(make([]byte, 255)).String())
+	require.Equal("0.00010000", EstimateStorageCost(make([]byte, 256)).String())
+	require.Equal("0.00010000", EstimateStorageCost(make([]byte, 512)).String())
+	require.Equal("0.00020000", EstimateStorageCost(make([]byte, 1024)).String())
+	require.Equal("0.00020000", EstimateStorageCost(make([]byte, 1025)).String())
+
 	recipient := "MIX4fwusRK88p5GexHWddUQuYJbKMJTAuBvhudgahRXKndvaM8FdPHS2Hgeo7DQxNVoSkKSEDyZeD8TYBhiwiea9PvCzay1A9Vx1C2nugc4iAmhwLGGv4h3GnABeCXHTwWEto9wEe1MWB49jLzy3nuoM81tqE2XnLvUWv"
 	mi := NewMixinInvoice(recipient)
 

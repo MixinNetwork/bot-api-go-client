@@ -43,7 +43,27 @@ func NewMixinInvoice(recipient string) *MixinInvoice {
 	return mi
 }
 
+func (e *InvoiceEntry) IsStorage() bool {
+	return e.AssetId.String() == XINAssetId &&
+		len(e.Extra) >= common.ExtraSizeGeneralLimit &&
+		e.Amount.Cmp(EstimateStorageCost(e.Extra)) == 0
+}
+
+func (mi *MixinInvoice) AddStorageEntry(traceId string, extra []byte) {
+	amount := EstimateStorageCost(extra)
+	e := &InvoiceEntry{
+		TraceId: uuid.Must(uuid.FromString(traceId)),
+		AssetId: uuid.Must(uuid.FromString(XINAssetId)),
+		Amount:  amount,
+		Extra:   extra,
+	}
+	mi.Entries = append(mi.Entries, e)
+}
+
 func (mi *MixinInvoice) AddEntry(traceId, assetId string, amount common.Integer, extra []byte, indexReferences []byte, externalReferences []crypto.Hash) {
+	if len(extra) >= common.ExtraSizeGeneralLimit {
+		panic(len(extra))
+	}
 	e := &InvoiceEntry{
 		TraceId:        uuid.Must(uuid.FromString(traceId)),
 		AssetId:        uuid.Must(uuid.FromString(assetId)),
