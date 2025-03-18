@@ -45,7 +45,7 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 500 {
-		return nil, errors.Wrap(ServerError(ctx, nil), fmt.Sprintf("response status code %d", resp.StatusCode))
+		return nil, errors.Wrap(ServerError(ctx, nil), fmt.Sprintf("response status code %d %s", resp.StatusCode, requestID))
 	}
 	return io.ReadAll(resp.Body)
 }
