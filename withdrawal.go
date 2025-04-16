@@ -7,6 +7,7 @@ import (
 
 	"github.com/MixinNetwork/mixin/common"
 	"github.com/MixinNetwork/mixin/crypto"
+	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -55,9 +56,12 @@ func WithdrawalWithUtxos(ctx context.Context, traceId, feeAssetId, feeAmount, as
 	return withdrawalTransaction(ctx, traceId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount, utxos, feeUtxos, u)
 }
 
-func withdrawalTransaction(ctx context.Context, traceId string, feeAssetId string, feeAmount,
+func withdrawalTransaction(ctx context.Context, traceId, feeAssetId string, feeAmount,
 	assetId, destination, tag, memo, amount string, utxos, feeUtxos []*Output, u *SafeUser) ([]*SequencerTransactionRequest, error) {
-	asset := crypto.Sha256Hash([]byte(assetId))
+	var asset crypto.Hash
+	if id, _ := uuid.FromString(assetId); assetId == id.String() {
+		asset = crypto.Sha256Hash([]byte(assetId))
+	}
 	feeTraceId := UniqueObjectId(traceId, "FEE")
 	feeAsset := crypto.Sha256Hash([]byte(feeAssetId))
 	recipients := []*TransactionRecipient{
@@ -139,7 +143,7 @@ func withdrawalTransaction(ctx context.Context, traceId string, feeAssetId strin
 
 	transaction, err := BuildRawTransaction(ctx, asset, utxos, recipients, []byte(memo), nil, traceId, u)
 	if err != nil {
-		return nil, fmt.Errorf("BuildRawTransaction(%s): %w", asset, err)
+		return nil, fmt.Errorf("BuildRawTransaction(%s): %w", assetId, err)
 	}
 	ver := transaction.AsVersioned()
 	feeTransaction, err := BuildRawTransaction(ctx, feeAsset, feeUtxos, feeRecipients, []byte(memo), []string{crypto.Blake3Hash(ver.Marshal()).String()}, feeTraceId, u)
