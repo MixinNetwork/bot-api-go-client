@@ -43,21 +43,19 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 			chainFee = fee
 		}
 	}
-	var fee *AssetFee
+	fee := chainFee
 	if preferAssetFeeOverChainFee && assetFee != nil {
 		fee = assetFee
-	} else {
-		fee = chainFee
 	}
 
-	return withdrawalTransaction(ctx, traceId, MixinFeeUserId, fee.AssetID, fee.Amount, assetId, destination, tag, memo, amount, nil, nil, u)
+	return withdrawalTransaction(ctx, traceId, fee.AssetID, fee.Amount, assetId, destination, tag, memo, amount, nil, nil, u)
 }
 
 func WithdrawalWithUtxos(ctx context.Context, traceId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount string, utxos, feeUtxos []*Output, u *SafeUser) ([]*SequencerTransactionRequest, error) {
-	return withdrawalTransaction(ctx, traceId, MixinFeeUserId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount, utxos, feeUtxos, u)
+	return withdrawalTransaction(ctx, traceId, feeAssetId, feeAmount, assetId, destination, tag, memo, amount, utxos, feeUtxos, u)
 }
 
-func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, feeAssetId string, feeAmount,
+func withdrawalTransaction(ctx context.Context, traceId string, feeAssetId string, feeAmount,
 	assetId, destination, tag, memo, amount string, utxos, feeUtxos []*Output, u *SafeUser) ([]*SequencerTransactionRequest, error) {
 	asset := crypto.Sha256Hash([]byte(assetId))
 	feeTraceId := UniqueObjectId(traceId, "FEE")
@@ -106,7 +104,7 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 	feeRecipients := []*TransactionRecipient{
 		{
 			Amount:     feeAmount,
-			MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
+			MixAddress: NewUUIDMixAddress([]string{MixinFeeUserId}, 1),
 		},
 	}
 
