@@ -51,6 +51,7 @@ type Asset struct {
 	SnapshotsCount int64   `json:"snapshots_count"`
 	Capitalization float64 `json:"capitalization"`
 	Liquidity      string  `json:"liquidity"`
+	Level          int64   `json:"level"`
 
 	CollectionHash string `json:"collection_hash,omitempty"`
 }

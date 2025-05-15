@@ -33,6 +33,7 @@ type SafeSnapshot struct {
 	Memo            string    `json:"memo"`
 	RequestId       string    `json:"request_id"`
 	CreatedAt       time.Time `json:"created_at"`
+	Level           int64     `json:"level"`
 
 	Deposit    *SafeDepositView    `json:"deposit,omitempty"`
 	Withdrawal *SafeWithdrawalView `json:"withdrawal,omitempty"`
