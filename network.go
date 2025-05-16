@@ -34,6 +34,7 @@ type AssetNetwork struct {
 	WithdrawalMemoPossibility string  `json:"withdrawal_memo_possibility"`
 	PrimitiveAssetId          string  `json:"primitive_asset_id,omitempty"`
 	Level                     int64   `json:"level"`
+	CollectionHash            string  `json:"collection_hash,omitempty"`
 }
 
 func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {
