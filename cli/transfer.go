@@ -233,3 +233,50 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 	}
 	return nil
 }
+
+var notifySnapshotCmdCli = &cli.Command{
+	Name:   "notify_snapshot",
+	Action: notifySnapshotCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "hash,h",
+			Usage: "transaction hash",
+		},
+		&cli.Int64Flag{
+			Name:  "index,i",
+			Usage: "output index",
+		},
+		&cli.StringFlag{
+			Name:  "receiver,r",
+			Usage: "receiver id",
+		},
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+	},
+}
+
+func notifySnapshotCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	receiver := c.String("receiver")
+	hash := c.String("hash")
+	index := c.Int64("index")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var su bot.SafeUser
+	err = json.Unmarshal([]byte(dat), &su)
+	if err != nil {
+		panic(err)
+	}
+
+	msg, err := bot.SafeNotifySnapshot(context.Background(), hash, index, receiver, &su)
+	if err != nil {
+		return err
+	}
+	log.Printf("message: %#v", msg)
+	return nil
+}
