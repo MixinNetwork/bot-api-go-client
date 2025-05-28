@@ -58,7 +58,8 @@ const (
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
 
-	XINAssetId = "c94ac88f-4671-3976-b60a-09064f1811e8"
+	XINAssetId    = "c94ac88f-4671-3976-b60a-09064f1811e8"
+	VaultaAssetId = "ac2b79f3-ec9c-3d87-b4ca-3e825228dda5"
 )
 
 type NetworkChain struct {
