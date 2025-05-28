@@ -37,6 +37,7 @@ func main() {
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
 			assetBalanceCmdCli,
+			notifySnapshotCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
