@@ -396,19 +396,24 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	return verified[0], nil
 }
 
-func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string, isSum bool) (*common.VersionedTransaction, error) {
+func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string, isSumAlready bool) (*common.VersionedTransaction, error) {
 	msg := ver.PayloadHash()
 	spent, err := crypto.KeyFromString(spendKey)
 	if err != nil {
 		return nil, err
 	}
-	spenty := sha512.Sum512(spent[:])
-	if isSum {
-		copy(spenty[:], spent[:])
-	}
-	y, err := edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
-	if err != nil {
-		return nil, err
+	var y *edwards25519.Scalar
+	if isSumAlready {
+		y, err = edwards25519.NewScalar().SetCanonicalBytes(spent[:])
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		spenty := sha512.Sum512(spent[:])
+		y, err = edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
+		if err != nil {
+			return nil, err
+		}
 	}
 	signaturesMap := make([]map[uint16]*crypto.Signature, len(ver.Inputs))
 	for i := range ver.Inputs {
