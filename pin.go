@@ -77,7 +77,7 @@ func VerifyPIN(ctx context.Context, pin string, user *SafeUser) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
@@ -109,13 +109,16 @@ func VerifyPIN(ctx context.Context, pin string, user *SafeUser) (*User, error) {
 func VerifyPINTip(ctx context.Context, su *SafeUser) (*User, error) {
 	TIPVerify := "TIP:VERIFY:"
 	timestamp := time.Now().UnixNano()
-	tb := []byte(fmt.Sprintf("%s%032d", TIPVerify, timestamp))
-	pin, err := signTipBody(tb, su.SpendPrivateKey)
+	tb := fmt.Appendf(nil, "%s%032d", TIPVerify, timestamp)
+	pin, err := signTipBody(tb, su.SpendPrivateKey, su.IsSpendPrivateSum)
+	if err != nil {
+		panic(err)
+	}
 	source, err := EncryptEd25519PIN(pin, uint64(timestamp), su)
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"pin_base64": source,
 		"timestamp":  timestamp,
 	})
@@ -147,13 +150,17 @@ func VerifyPINTip(ctx context.Context, su *SafeUser) (*User, error) {
 	return resp.Data, nil
 }
 
-func signTipBody(body []byte, pin string) (string, error) {
+func signTipBody(body []byte, pin string, isSum bool) (string, error) {
 	pinBuf, err := hex.DecodeString(pin)
 	if err != nil {
 		return "", err
 	}
 	if len(pinBuf) != 32 {
 		return "", errors.New("invalid ed25519 private")
+	}
+	key := ed25519.NewKeyFromSeed(pinBuf)
+	if isSum {
+		copy(key[:], pinBuf)
 	}
 	sigBuf := ed25519.Sign(ed25519.NewKeyFromSeed(pinBuf), body)
 	return hex.EncodeToString(sigBuf), nil

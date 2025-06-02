@@ -38,8 +38,8 @@ func UniqueConversationId(userId, recipientId string) string {
 	return id.String()
 }
 
-func Chunked(source []interface{}, size int) [][]interface{} {
-	var result [][]interface{}
+func Chunked(source []any, size int) [][]any {
+	var result [][]any
 	index := 0
 	for index < len(source) {
 		end := index + size

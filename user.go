@@ -255,7 +255,7 @@ func RequestUserMe(ctx context.Context, su *SafeUser) (*User, error) {
 }
 
 func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"full_name":     fullName,
 		"avatar_base64": avatarBase64,
 	})
@@ -287,7 +287,7 @@ func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUs
 }
 
 func UpdatePreference(ctx context.Context, messageSource, conversationSource, currency string, threshold float64, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"receive_message_source":          messageSource,
 		"accept_conversation_source":      conversationSource,
 		"fiat_currency":                   currency,
@@ -320,7 +320,7 @@ func UpdatePreference(ctx context.Context, messageSource, conversationSource, cu
 }
 
 func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"user_id": userId,
 		"action":  action,
 	})

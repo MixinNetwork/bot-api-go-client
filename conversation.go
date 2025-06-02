@@ -44,7 +44,7 @@ func CreateContactConversation(ctx context.Context, participantID string, user *
 }
 
 func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, user *SafeUser) (*Conversation, error) {
-	params, err := json.Marshal(map[string]interface{}{
+	params, err := json.Marshal(map[string]any{
 		"category":        category,
 		"conversation_id": conversationId,
 		"name":            name,

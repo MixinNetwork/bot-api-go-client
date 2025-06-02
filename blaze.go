@@ -48,11 +48,11 @@ const (
 )
 
 type BlazeMessage struct {
-	Id     string                 `json:"id"`
-	Action string                 `json:"action"`
-	Params map[string]interface{} `json:"params,omitempty"`
-	Data   json.RawMessage        `json:"data,omitempty"`
-	Error  *Error                 `json:"error,omitempty"`
+	Id     string          `json:"id"`
+	Action string          `json:"action"`
+	Params map[string]any  `json:"params,omitempty"`
+	Data   json.RawMessage `json:"data,omitempty"`
+	Error  *Error          `json:"error,omitempty"`
 }
 
 type MessageView struct {
@@ -201,7 +201,7 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 					return err
 				}
 				if listener.SyncAck() {
-					params := map[string]interface{}{"message_id": msg.MessageId, "status": "READ"}
+					params := map[string]any{"message_id": msg.MessageId, "status": "READ"}
 					if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
 						return BlazeServerError(ctx, err)
 					}
@@ -212,7 +212,7 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 }
 
 func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipientId, messageId, category, content, representativeId string) error {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id":   conversationId,
 		"recipient_id":      recipientId,
 		"message_id":        messageId,
@@ -227,7 +227,7 @@ func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipient
 }
 
 func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, content string) error {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": msg.ConversationId,
 		"recipient_id":    msg.UserId,
 		"message_id":      UuidNewV4().String(),
@@ -245,7 +245,7 @@ func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, rec
 		MessageId: recallMessageId,
 	}
 	a, _ := json.Marshal(c)
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
@@ -259,7 +259,7 @@ func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, rec
 }
 
 func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content string) error {
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": msg.ConversationId,
 		"recipient_id":    msg.UserId,
 		"message_id":      UuidNewV4().String(),
@@ -275,7 +275,7 @@ func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content str
 func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipientId, contactId string) error {
 	contactMap := map[string]string{"user_id": contactId}
 	contactData, _ := json.Marshal(contactMap)
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
@@ -298,7 +298,7 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 	if err != nil {
 		return err
 	}
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
@@ -313,7 +313,7 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 }
 
 func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipientId, label, action, color string) error {
-	btns, err := json.Marshal([]interface{}{map[string]string{
+	btns, err := json.Marshal([]any{map[string]string{
 		"label":  label,
 		"action": action,
 		"color":  color,
@@ -321,7 +321,7 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 	if err != nil {
 		return err
 	}
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
@@ -343,7 +343,7 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 	if err != nil {
 		return err
 	}
-	params := map[string]interface{}{
+	params := map[string]any{
 		"conversation_id": conversationId,
 		"recipient_id":    recipientId,
 		"message_id":      UuidNewV4().String(),
@@ -440,7 +440,7 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *messageContext) er
 	}
 }
 
-func writeMessageAndWait(ctx context.Context, mc *messageContext, action string, params map[string]interface{}) error {
+func writeMessageAndWait(ctx context.Context, mc *messageContext, action string, params map[string]any) error {
 	var resp = make(chan BlazeMessage, 1)
 	var id = UuidNewV4().String()
 	mc.transactions.set(id, func(t BlazeMessage) error {

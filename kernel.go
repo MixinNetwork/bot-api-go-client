@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 )
 
-func CallKernelRPC(ctx context.Context, user *SafeUser, method string, params ...interface{}) ([]byte, error) {
-	p := map[string]interface{}{
+func CallKernelRPC(ctx context.Context, user *SafeUser, method string, params ...any) ([]byte, error) {
+	p := map[string]any{
 		"method": method,
 		"params": params,
 	}

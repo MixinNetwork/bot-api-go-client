@@ -26,7 +26,7 @@ type App struct {
 
 func Migrate(ctx context.Context, receiver string, user *SafeUser) (*App, error) {
 	tipBody := TipBodyForOwnershipTransfer(receiver)
-	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey, user.IsSpendPrivateSum)
 	if err != nil {
 		return nil, err
 	}

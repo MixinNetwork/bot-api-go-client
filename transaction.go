@@ -142,7 +142,7 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 
 			var rs []*TransactionRecipient
 			totalAmount := common.Zero
-			for i := 0; i < splitCount; i++ {
+			for i := range splitCount {
 				var amount common.Integer
 				if totalAmount.Add(splitAmt).Cmp(changeAmount) <= 0 && i < splitCount-1 {
 					amount = splitAmt
@@ -273,7 +273,7 @@ func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, re
 	if len(str.Views) != len(ver.Inputs) {
 		return nil, fmt.Errorf("invalid view keys count %d %d", len(str.Views), len(ver.Inputs))
 	}
-	ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey)
+	ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey, u.IsSpendPrivateSum)
 	if err != nil {
 		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
@@ -396,13 +396,16 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	return verified[0], nil
 }
 
-func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
+func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string, isSum bool) (*common.VersionedTransaction, error) {
 	msg := ver.PayloadHash()
 	spent, err := crypto.KeyFromString(spendKey)
 	if err != nil {
 		return nil, err
 	}
 	spenty := sha512.Sum512(spent[:])
+	if isSum {
+		copy(spenty[:], spent[:])
+	}
 	y, err := edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
 	if err != nil {
 		return nil, err
