@@ -109,7 +109,7 @@ func SendTransactionWithChangeOutputs(ctx context.Context, assetId string, recip
 	return SendTransactionWithUtxosAndChangeOutputs(ctx, assetId, recipients, traceId, extra, references, splitAmount, splitCount, nil, common.Zero, u)
 }
 
-func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount string, splitCount int, utxos []*Output, changeAmount common.Integer, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount string, splitCount int, outputs []*Output, changeAmount common.Integer, u *SafeUser) (*SequencerTransactionRequest, error) {
 	splitAmt := common.NewIntegerFromString(splitAmount)
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
@@ -122,9 +122,9 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 		return nil, fmt.Errorf("too many references %d", len(references))
 	}
 
-	if len(utxos) <= 0 {
+	if len(outputs) <= 0 {
 		// get unspent outputs for asset and may return insufficient outputs error
-		utxos, changeAmount, err = requestUnspentOutputsForRecipients(ctx, assetId, recipients, u)
+		outputs, changeAmount, err = requestUnspentOutputsForRecipients(ctx, assetId, recipients, u)
 		if err != nil {
 			return nil, fmt.Errorf("requestUnspentOutputsForRecipients(%s) => %v", assetId, err)
 		}
@@ -175,7 +175,7 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 			})
 		}
 	}
-	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
+	return sendTransaction(ctx, asset, outputs, recipients, traceId, extra, references, u)
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
