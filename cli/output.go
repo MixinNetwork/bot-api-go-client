@@ -17,10 +17,6 @@ var safeOutputsCmdCli = &cli.Command{
 			Usage: "keystore download from https://developers.mixin.one/dashboard",
 		},
 		&cli.StringFlag{
-			Name:  "spend,s",
-			Usage: "spend",
-		},
-		&cli.StringFlag{
 			Name:  "asset,a",
 			Usage: "asset",
 		},
@@ -29,11 +25,9 @@ var safeOutputsCmdCli = &cli.Command{
 
 func safeOutputsCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
-	spend := c.String("spend")
 	asset := c.String("asset")
 
 	su := loadKeystore(keystore)
-	su.SpendPrivateKey = spend
 
 	hash := bot.HashMembers([]string{su.UserId})
 	outputs, err := bot.ListUnspentOutputs(context.Background(), hash, 1, asset, su)
@@ -86,10 +80,6 @@ var assetBalanceCmdCli = &cli.Command{
 			Usage: "keystore download from https://developers.mixin.one/dashboard",
 		},
 		&cli.StringFlag{
-			Name:  "spend,s",
-			Usage: "spend",
-		},
-		&cli.StringFlag{
 			Name:  "asset,a",
 			Usage: "asset",
 		},
@@ -98,11 +88,9 @@ var assetBalanceCmdCli = &cli.Command{
 
 func assetBalanceCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
-	spend := c.String("spend")
 	asset := c.String("asset")
 
 	su := loadKeystore(keystore)
-	su.SpendPrivateKey = spend
 
 	assets, err := bot.ListAssetWithBalance(context.Background(), su)
 	if err != nil {
