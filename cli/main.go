@@ -37,6 +37,7 @@ func main() {
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
 			assetBalanceCmdCli,
+			assetsBalanceCmdCli,
 			notifySnapshotCmdCli,
 		},
 	}

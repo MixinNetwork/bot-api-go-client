@@ -115,3 +115,29 @@ func assetBalanceCmd(c *cli.Context) error {
 	}
 	return nil
 }
+
+func assetsBalanceCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+
+	su := loadKeystore(keystore)
+
+	assets, err := bot.ListAssetWithBalance(context.Background(), su)
+	if err != nil {
+		panic(err)
+	}
+	for _, a := range assets {
+		log.Printf("%s(%s) balance %s", a.Symbol, a.AssetID, a.Amount)
+	}
+	return nil
+}
+
+var assetsBalanceCmdCli = &cli.Command{
+	Name:   "assets_balance",
+	Action: assetsBalanceCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "keystore,k",
+			Usage: "keystore download from https://developers.mixin.one/dashboard",
+		},
+	},
+}
