@@ -7,35 +7,35 @@ import (
 )
 
 type AssetNetwork struct {
-	AssetID                   string  `json:"asset_id"`
-	ChainID                   string  `json:"chain_id"`
-	FeeAssetID                string  `json:"fee_asset_id"`
-	DisplaySymbol             string  `json:"display_symbol"`
-	DisplayName               string  `json:"display_name"`
-	Symbol                    string  `json:"symbol"`
-	Name                      string  `json:"name"`
-	IconURL                   string  `json:"icon_url"`
-	Balance                   string  `json:"balance"`
-	Destination               string  `json:"destination"`
-	Tag                       string  `json:"tag"`
-	PriceBTC                  string  `json:"price_btc"`
-	PriceUSD                  string  `json:"price_usd"`
-	ChangeBTC                 string  `json:"change_btc"`
-	ChangeUSD                 string  `json:"change_usd"`
-	AssetKey                  string  `json:"asset_key"`
-	Precision                 int     `json:"precision"`
-	MixinID                   string  `json:"mixin_id"`
-	KernelAssetID             string  `json:"kernel_asset_id"`
-	Reserve                   string  `json:"reserve"`
-	Dust                      string  `json:"dust"`
+	AssetID                   string    `json:"asset_id"`
+	ChainID                   string    `json:"chain_id"`
+	FeeAssetID                string    `json:"fee_asset_id"`
+	DisplaySymbol             string    `json:"display_symbol"`
+	DisplayName               string    `json:"display_name"`
+	Symbol                    string    `json:"symbol"`
+	Name                      string    `json:"name"`
+	IconURL                   string    `json:"icon_url"`
+	Balance                   string    `json:"balance"`
+	Destination               string    `json:"destination"`
+	Tag                       string    `json:"tag"`
+	PriceBTC                  string    `json:"price_btc"`
+	PriceUSD                  string    `json:"price_usd"`
+	ChangeBTC                 string    `json:"change_btc"`
+	ChangeUSD                 string    `json:"change_usd"`
+	AssetKey                  string    `json:"asset_key"`
+	Precision                 int       `json:"precision"`
+	MixinID                   string    `json:"mixin_id"`
+	KernelAssetID             string    `json:"kernel_asset_id"`
+	Reserve                   string    `json:"reserve"`
+	Dust                      string    `json:"dust"`
 	Confirmations             int64     `json:"confirmations"`
 	Capitalization            float64   `json:"capitalization"`
 	Liquidity                 string    `json:"liquidity"`
 	PriceUpdatedAt            time.Time `json:"price_updated_at"`
 	WithdrawalMemoPossibility string    `json:"withdrawal_memo_possibility"`
-	PrimitiveAssetId          string  `json:"primitive_asset_id,omitempty"`
-	Level                     int64   `json:"level"`
-	CollectionHash            string  `json:"collection_hash,omitempty"`
+	PrimitiveAssetId          string    `json:"primitive_asset_id,omitempty"`
+	Level                     int64     `json:"level"`
+	CollectionHash            string    `json:"collection_hash,omitempty"`
 }
 
 func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {

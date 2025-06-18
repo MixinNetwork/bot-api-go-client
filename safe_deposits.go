@@ -7,12 +7,12 @@ import (
 )
 
 type SafeDepositPending struct {
-	Amount          string `json:"amount"`
-	AssetID         string `json:"asset_id"`
-	AssetKey        string `json:"asset_key"`
-	BlockHash       string `json:"block_hash"`
-	BlockNumber     int    `json:"block_number"`
-	ChainID         string `json:"chain_id"`
+	Amount          string    `json:"amount"`
+	AssetID         string    `json:"asset_id"`
+	AssetKey        string    `json:"asset_key"`
+	BlockHash       string    `json:"block_hash"`
+	BlockNumber     int       `json:"block_number"`
+	ChainID         string    `json:"chain_id"`
 	Confirmations   int       `json:"confirmations"`
 	CreatedAt       time.Time `json:"created_at"`
 	DepositID       string    `json:"deposit_id"`
