@@ -16,14 +16,14 @@ type AddressInput struct {
 }
 
 type Address struct {
-	AddressId   string `json:"address_id"`
-	AssetId     string `json:"asset_id"`
-	Label       string `json:"label"`
-	Destination string `json:"destination"`
-	Tag         string `json:"tag"`
-	Fee         string `json:"fee"`
-	Dust        string `json:"dust"`
-	UpdatedAt   string `json:"updated_at"`
+	AddressId   string    `json:"address_id"`
+	AssetId     string    `json:"asset_id"`
+	Label       string    `json:"label"`
+	Destination string    `json:"destination"`
+	Tag         string    `json:"tag"`
+	Fee         string    `json:"fee"`
+	Dust        string    `json:"dust"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type SimpleAddress struct {

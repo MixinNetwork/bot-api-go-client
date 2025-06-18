@@ -1,5 +1,12 @@
 package bot
 
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"time"
+)
+
 const (
 	InscriptionModeInstant = 1
 	InscriptionModeDone    = 2
@@ -78,4 +85,107 @@ type InscriptionOccupy struct {
 
 	// the integer sequence number of the NFT inscription
 	Sequence uint64 `json:"sequence"`
+}
+
+// Collection represents the API response structure for collection data
+type Collection struct {
+	AssetKey       string                 `json:"asset_key"`
+	CollectionHash string                 `json:"collection_hash"`
+	KernelAssetID  string                 `json:"kernel_asset_id"`
+	Name           string                 `json:"name"`
+	Symbol         string                 `json:"symbol"`
+	Description    string                 `json:"description"`
+	IconURL        string                 `json:"icon_url"`
+	Supply         string                 `json:"supply"`
+	Unit           string                 `json:"unit"`
+	MinimumPrice   string                 `json:"minimum_price"`
+	Treasury       map[string]interface{} `json:"treasury"`
+	Type           string                 `json:"type"`
+	CreatedAt      time.Time              `json:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at"`
+}
+
+// Inscription represents the API response structure for inscription data
+type Inscription struct {
+	InscriptionHash string    `json:"inscription_hash"`
+	CollectionHash  string    `json:"collection_hash"`
+	ContentType     string    `json:"content_type"`
+	ContentURL      string    `json:"content_url"`
+	CreatedAt       time.Time `json:"created_at"`
+	OccupiedBy      string    `json:"occupied_by"`
+	Owner           string    `json:"owner"`
+	Recipient       string    `json:"recipient"`
+	Sequence        int64     `json:"sequence"`
+	Type            string    `json:"type"`
+	UpdatedAt       time.Time `json:"updated_at"`
+}
+
+// ReadCollection reads collection information from Mixin API
+func ReadCollection(ctx context.Context, collectionHash string) (*Collection, error) {
+	body, err := Request(ctx, "GET", "/safe/inscriptions/collections/"+collectionHash, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Collection `json:"data"`
+		Error Error       `json:"error"`
+	}
+
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+
+	return resp.Data, nil
+}
+
+// ReadInscription reads inscription information from Mixin API
+func ReadInscription(ctx context.Context, inscriptionHash string) (*Inscription, error) {
+	body, err := Request(ctx, "GET", "/safe/inscriptions/items/"+inscriptionHash, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *Inscription `json:"data"`
+		Error Error        `json:"error"`
+	}
+
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+
+	return resp.Data, nil
+}
+
+// ReadCollectionItems reads all items in a collection from Mixin API
+func ReadCollectionItems(ctx context.Context, collectionHash string) ([]*Inscription, error) {
+	path := fmt.Sprintf("/safe/inscriptions/collections/%s/items", collectionHash)
+	body, err := Request(ctx, "GET", path, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  []*Inscription `json:"data"`
+		Error Error          `json:"error"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+
+	return resp.Data, nil
 }
