@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 const (
@@ -100,23 +101,23 @@ type Collection struct {
 	MinimumPrice   string                 `json:"minimum_price"`
 	Treasury       map[string]interface{} `json:"treasury"`
 	Type           string                 `json:"type"`
-	CreatedAt      string                 `json:"created_at"`
-	UpdatedAt      string                 `json:"updated_at"`
+	CreatedAt      time.Time              `json:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at"`
 }
 
 // Inscription represents the API response structure for inscription data
 type Inscription struct {
-	InscriptionHash string `json:"inscription_hash"`
-	CollectionHash  string `json:"collection_hash"`
-	ContentType     string `json:"content_type"`
-	ContentURL      string `json:"content_url"`
-	CreatedAt       string `json:"created_at"`
-	OccupiedBy      string `json:"occupied_by"`
-	Owner           string `json:"owner"`
-	Recipient       string `json:"recipient"`
-	Sequence        int64  `json:"sequence"`
-	Type            string `json:"type"`
-	UpdatedAt       string `json:"updated_at"`
+	InscriptionHash string    `json:"inscription_hash"`
+	CollectionHash  string    `json:"collection_hash"`
+	ContentType     string    `json:"content_type"`
+	ContentURL      string    `json:"content_url"`
+	CreatedAt       time.Time `json:"created_at"`
+	OccupiedBy      string    `json:"occupied_by"`
+	Owner           string    `json:"owner"`
+	Recipient       string    `json:"recipient"`
+	Sequence        int64     `json:"sequence"`
+	Type            string    `json:"type"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // ReadCollection reads collection information from Mixin API

@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 type SafeDepositPending struct {
@@ -12,19 +13,19 @@ type SafeDepositPending struct {
 	BlockHash       string `json:"block_hash"`
 	BlockNumber     int    `json:"block_number"`
 	ChainID         string `json:"chain_id"`
-	Confirmations   int    `json:"confirmations"`
-	CreatedAt       string `json:"created_at"`
-	DepositID       string `json:"deposit_id"`
-	Destination     string `json:"destination"`
-	Extra           string `json:"extra"`
-	KernelAssetID   string `json:"kernel_asset_id"`
-	OutputIndex     int    `json:"output_index"`
-	Sender          string `json:"sender"`
-	State           string `json:"state"`
-	Tag             string `json:"tag"`
-	Threshold       int    `json:"threshold"`
-	TransactionHash string `json:"transaction_hash"`
-	UpdatedAt       string `json:"updated_at"`
+	Confirmations   int       `json:"confirmations"`
+	CreatedAt       time.Time `json:"created_at"`
+	DepositID       string    `json:"deposit_id"`
+	Destination     string    `json:"destination"`
+	Extra           string    `json:"extra"`
+	KernelAssetID   string    `json:"kernel_asset_id"`
+	OutputIndex     int       `json:"output_index"`
+	Sender          string    `json:"sender"`
+	State           string    `json:"state"`
+	Tag             string    `json:"tag"`
+	Threshold       int       `json:"threshold"`
+	TransactionHash string    `json:"transaction_hash"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 func FetchPendingSafeDeposits(ctx context.Context) ([]*SafeDepositPending, error) {

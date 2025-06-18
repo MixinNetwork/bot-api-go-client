@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"time"
 )
 
 type AssetNetwork struct {
@@ -27,11 +28,11 @@ type AssetNetwork struct {
 	KernelAssetID             string  `json:"kernel_asset_id"`
 	Reserve                   string  `json:"reserve"`
 	Dust                      string  `json:"dust"`
-	Confirmations             int64   `json:"confirmations"`
-	Capitalization            float64 `json:"capitalization"`
-	Liquidity                 string  `json:"liquidity"`
-	PriceUpdatedAt            string  `json:"price_updated_at"`
-	WithdrawalMemoPossibility string  `json:"withdrawal_memo_possibility"`
+	Confirmations             int64     `json:"confirmations"`
+	Capitalization            float64   `json:"capitalization"`
+	Liquidity                 string    `json:"liquidity"`
+	PriceUpdatedAt            time.Time `json:"price_updated_at"`
+	WithdrawalMemoPossibility string    `json:"withdrawal_memo_possibility"`
 	PrimitiveAssetId          string  `json:"primitive_asset_id,omitempty"`
 	Level                     int64   `json:"level"`
 	CollectionHash            string  `json:"collection_hash,omitempty"`
