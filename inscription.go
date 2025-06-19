@@ -87,22 +87,27 @@ type InscriptionOccupy struct {
 	Sequence uint64 `json:"sequence"`
 }
 
+type Treasury struct {
+	Ratio     string `json:"ratio"`
+	Recipient string `json:"recipient"`
+}
+
 // Collection represents the API response structure for collection data
 type Collection struct {
-	AssetKey       string                 `json:"asset_key"`
-	CollectionHash string                 `json:"collection_hash"`
-	KernelAssetID  string                 `json:"kernel_asset_id"`
-	Name           string                 `json:"name"`
-	Symbol         string                 `json:"symbol"`
-	Description    string                 `json:"description"`
-	IconURL        string                 `json:"icon_url"`
-	Supply         string                 `json:"supply"`
-	Unit           string                 `json:"unit"`
-	MinimumPrice   string                 `json:"minimum_price"`
-	Treasury       map[string]interface{} `json:"treasury"`
-	Type           string                 `json:"type"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
+	AssetKey       string    `json:"asset_key"`
+	CollectionHash string    `json:"collection_hash"`
+	KernelAssetID  string    `json:"kernel_asset_id"`
+	Name           string    `json:"name"`
+	Symbol         string    `json:"symbol"`
+	Description    string    `json:"description"`
+	IconURL        string    `json:"icon_url"`
+	Supply         string    `json:"supply"`
+	Unit           string    `json:"unit"`
+	MinimumPrice   string    `json:"minimum_price"`
+	Treasury       *Treasury `json:"treasury,omitempty"`
+	Type           string    `json:"type"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 // Inscription represents the API response structure for inscription data
