@@ -3,20 +3,27 @@ package bot
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/pkg/errors"
 )
 
-var (
-	SolanaChainID  = "64692c23-8971-4cf4-84a7-4dd1271dd887"
-	computerUri    = "https://computer.mixin.one"
-	computerClient = &http.Client{Timeout: 10 * time.Second}
+const (
+	OperationTypeAddUser     = 1
+	OperationTypeSystemCall  = 2
+	OperationTypeUserDeposit = 3
+
+	SolanaChainID = "64692c23-8971-4cf4-84a7-4dd1271dd887"
+	computerUri   = "https://computer.mixin.one"
 )
+
+var computerClient = &http.Client{Timeout: 10 * time.Second}
 
 type ComputerInfoResponse struct {
 	ObserverId string `json:"observer"`
@@ -218,4 +225,34 @@ func GetFeeOnXINBasedOnSOL(ctx context.Context, solAmount string) (*ComputerFeeR
 		return nil, BadDataError(ctx)
 	}
 	return resp, nil
+}
+
+func RegisterComputer(ctx context.Context, su *SafeUser) (*SequencerTransactionRequest, error) {
+	info, err := GetComputerInfo(ctx)
+	if err != nil {
+		return nil, err
+	}
+	mix := NewUUIDMixAddress([]string{su.UserId}, 1).String()
+	memo := EncodeMtgExtra(info.Members.AppId, EncodeOperationMemo(OperationTypeAddUser, []byte(mix)))
+
+	trace := UniqueObjectId(mix, "computer_register")
+	rs := []*TransactionRecipient{
+		{
+			MixAddress: NewUUIDMixAddress(info.Members.Members, byte(info.Members.Threshold)),
+			Amount:     info.Parans.Operation.Price,
+		},
+	}
+	return SendTransaction(ctx, info.Parans.Operation.Asset, rs, trace, []byte(memo), nil, su)
+}
+
+func EncodeOperationMemo(operation byte, extra []byte) []byte {
+	memo := []byte{operation}
+	memo = append(memo, extra...)
+	return memo
+}
+
+func EncodeMtgExtra(appID string, extra []byte) string {
+	data := uuid.Must(uuid.FromString(appID)).Bytes()
+	data = append(data, extra...)
+	return base64.RawURLEncoding.EncodeToString(data)
 }
