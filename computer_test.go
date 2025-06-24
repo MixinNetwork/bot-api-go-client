@@ -21,8 +21,8 @@ func TestComptuer(t *testing.T) {
 	assert.Equal("0acfe278-714f-4cfc-ae52-70ce34e3eb11", info.Members.AppId)
 	assert.Len(info.Members.Members, 7)
 	assert.Equal(5, info.Members.Threshold)
-	assert.Equal("c94ac88f-4671-3976-b60a-09064f1811e8", info.Parans.Operation.Asset)
-	assert.Equal("0.001", info.Parans.Operation.Price)
+	assert.Equal("c94ac88f-4671-3976-b60a-09064f1811e8", info.Params.Operation.Asset)
+	assert.Equal("0.001", info.Params.Operation.Price)
 
 	err = ComputerDeployExternalAsset(ctx, []string{XINAssetId})
 	assert.Nil(err)
