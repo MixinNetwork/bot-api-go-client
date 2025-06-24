@@ -34,7 +34,7 @@ type ComputerInfoResponse struct {
 		Members   []string `json:"members"`
 		Threshold int      `json:"threshold"`
 	} `json:"members"`
-	Parans struct {
+	Params struct {
 		Operation struct {
 			Asset string `json:"asset"`
 			Price string `json:"price"`
@@ -239,10 +239,10 @@ func RegisterComputer(ctx context.Context, su *SafeUser) (*SequencerTransactionR
 	rs := []*TransactionRecipient{
 		{
 			MixAddress: NewUUIDMixAddress(info.Members.Members, byte(info.Members.Threshold)),
-			Amount:     info.Parans.Operation.Price,
+			Amount:     info.Params.Operation.Price,
 		},
 	}
-	return SendTransaction(ctx, info.Parans.Operation.Asset, rs, trace, []byte(memo), nil, su)
+	return SendTransaction(ctx, info.Params.Operation.Asset, rs, trace, []byte(memo), nil, su)
 }
 
 func EncodeOperationMemo(operation byte, extra []byte) []byte {
