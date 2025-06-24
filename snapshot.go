@@ -33,6 +33,7 @@ type SafeSnapshot struct {
 	Memo            string    `json:"memo"`
 	RequestId       string    `json:"request_id"`
 	CreatedAt       time.Time `json:"created_at"`
+	Level           int64     `json:"level"`
 
 	Deposit    *SafeDepositView    `json:"deposit,omitempty"`
 	Withdrawal *SafeWithdrawalView `json:"withdrawal,omitempty"`
@@ -115,6 +116,58 @@ func SafeSnapshotByToken(ctx context.Context, snapshotId string, accessToken str
 	var resp struct {
 		Data  *SafeSnapshot `json:"data"`
 		Error Error         `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+type MessageWithSession struct {
+	Type             string    `json:"type"`
+	RepresentativeId string    `json:"representative_id"`
+	QuoteMessageId   string    `json:"quote_message_id"`
+	ConversationId   string    `json:"conversation_id"`
+	UserId           string    `json:"user_id"`
+	SessionId        string    `json:"session_id"`
+	MessageId        string    `json:"message_id"`
+	Category         string    `json:"category"`
+	Data             string    `json:"data"`
+	DataBase64       string    `json:"data_base64"`
+	Status           string    `json:"status"`
+	Source           string    `json:"source"`
+	Silent           bool      `json:"silent"`
+	ExpireIn         int64     `json:"expire_in"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
+}
+
+func SafeNotifySnapshot(ctx context.Context, transactionHash string, outputIndex int64, receiverID string, su *SafeUser) (*MessageWithSession, error) {
+	data, err := json.Marshal(map[string]any{
+		"transaction_hash": transactionHash,
+		"output_index":     outputIndex,
+		"receiver_id":      receiverID,
+	})
+	if err != nil {
+		return nil, err
+	}
+	method, path := "POST", "/safe/snapshots/notifications"
+	token, err := SignAuthenticationToken(method, path, string(data), su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, method, path, data, token)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		Data  *MessageWithSession `json:"data"`
+		Error Error               `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {

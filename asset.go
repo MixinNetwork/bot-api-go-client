@@ -19,13 +19,15 @@ const (
 	BTC          = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
 	ETH          = "43d61dcd-e413-450d-80b8-101d5e903357"
 	USDT_ERC20   = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
-	USDC_ERC20   = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
 	USDT_TRC20   = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
 	USDT_POLYGON = "218bc6f4-7927-3f8e-8568-3a3725b74361"
 	USDT_BSC     = "94213408-4ee7-3150-a9c4-9c5cce421c78"
 	USDT_SOLANA  = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
-	USDC_SOLANA  = "de6fa523-c596-398e-b12f-6d6980544b59"
-	USDC_BASE    = "2f845564-3898-3d17-8c24-3275e96235b5"
+
+	USDC_ERC20  = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
+	USDC_SOLANA = "de6fa523-c596-398e-b12f-6d6980544b59"
+	USDC_BASE   = "2f845564-3898-3d17-8c24-3275e96235b5"
+	USDC_BSC    = "3d3d69f1-6742-34cf-95fe-3f8964e6d307"
 )
 
 type Asset struct {
@@ -51,6 +53,7 @@ type Asset struct {
 	SnapshotsCount int64   `json:"snapshots_count"`
 	Capitalization float64 `json:"capitalization"`
 	Liquidity      string  `json:"liquidity"`
+	Level          int64   `json:"level"`
 
 	CollectionHash string `json:"collection_hash,omitempty"`
 }

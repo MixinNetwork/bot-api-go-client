@@ -28,6 +28,9 @@ type SafeUser struct {
 	// this is the mixin kernel spend private key
 	// spend private key can never change
 	SpendPrivateKey string `json:"spend_private_key"` // hex
+
+	// for some legacy private key already hash sum
+	IsSpendPrivateSum bool `json:"-"`
 }
 
 type GhostKeys struct {

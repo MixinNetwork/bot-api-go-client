@@ -64,13 +64,11 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 	if isFeeDifferentAsset {
 		feeTraceId := UniqueObjectId(traceId, "FEE")
 		feeAsset := crypto.Sha256Hash([]byte(feeAssetId))
-		recipients := []*TransactionRecipient{
-			{
-				Amount:      amount,
-				Destination: destination,
-				Tag:         tag,
-			},
-		}
+		recipients := []*TransactionRecipient{{
+			Amount:      amount,
+			Destination: destination,
+			Tag:         tag,
+		}}
 		var err error
 		var change common.Integer
 		if len(utxos) > 0 {
@@ -105,12 +103,10 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			})
 		}
 
-		feeRecipients := []*TransactionRecipient{
-			{
-				Amount:     feeAmount,
-				MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
-			},
-		}
+		feeRecipients := []*TransactionRecipient{{
+			Amount:     feeAmount,
+			MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
+		}}
 
 		var feeChange common.Integer
 		if len(feeUtxos) > 0 {
@@ -152,16 +148,13 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 		}
 		feeVer := feeTransaction.AsVersioned()
 
-		requests, err := VerifyRawTransaction(ctx, []*KernelTransactionRequestCreateRequest{
-			{
-				RequestID: traceId,
-				Raw:       hex.EncodeToString(ver.Marshal()),
-			},
-			{
-				RequestID: feeTraceId,
-				Raw:       hex.EncodeToString(feeVer.Marshal()),
-			},
-		}, u)
+		requests, err := VerifyRawTransaction(ctx, []*KernelTransactionRequestCreateRequest{{
+			RequestID: traceId,
+			Raw:       hex.EncodeToString(ver.Marshal()),
+		}, {
+			RequestID: feeTraceId,
+			Raw:       hex.EncodeToString(feeVer.Marshal()),
+		}}, u)
 		if err != nil {
 			return nil, err
 		} else if len(requests) != 2 {
@@ -188,40 +181,34 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			return nil, fmt.Errorf("invalid fee inputs count %d/%d", len(feeStr.Views), len(feeVer.Inputs))
 		}
 
-		ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey)
+		ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey, u.IsSpendPrivateSum)
 		if err != nil {
 			return nil, fmt.Errorf("signRawTransaction(%s): %w", asset, err)
 		}
-		feeVer, err = signRawTransaction(feeVer, feeStr.Views, u.SpendPrivateKey)
+		feeVer, err = signRawTransaction(feeVer, feeStr.Views, u.SpendPrivateKey, u.IsSpendPrivateSum)
 		if err != nil {
 			return nil, fmt.Errorf("signFeeRawTransaction(%s): %w", feeAsset, err)
 		}
-		results, err := SendRawTransaction(ctx, []*KernelTransactionRequestCreateRequest{
-			{
-				RequestID: traceId,
-				Raw:       hex.EncodeToString(ver.Marshal()),
-			},
-			{
-				RequestID: feeTraceId,
-				Raw:       hex.EncodeToString(feeVer.Marshal()),
-			},
-		}, u)
+		results, err := SendRawTransaction(ctx, []*KernelTransactionRequestCreateRequest{{
+			RequestID: traceId,
+			Raw:       hex.EncodeToString(ver.Marshal()),
+		}, {
+			RequestID: feeTraceId,
+			Raw:       hex.EncodeToString(feeVer.Marshal()),
+		}}, u)
 		if err != nil {
 			return nil, fmt.Errorf("SendRawTransaction(%s): %w", traceId, err)
 		}
 		return results, nil
 	} else {
-		recipients := []*TransactionRecipient{
-			{
-				Amount:      amount,
-				Destination: destination,
-				Tag:         tag,
-			},
-			{
-				Amount:     feeAmount,
-				MixAddress: NewUUIDMixAddress([]string{MixinFeeUserId}, 1),
-			},
-		}
+		recipients := []*TransactionRecipient{{
+			Amount:      amount,
+			Destination: destination,
+			Tag:         tag,
+		}, {
+			Amount:     feeAmount,
+			MixAddress: NewUUIDMixAddress([]string{MixinFeeUserId}, 1),
+		}}
 		tx, err := SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
 		if err != nil {
 			return nil, err

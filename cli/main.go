@@ -29,6 +29,7 @@ func main() {
 			safeOutputsCmdCli,
 			safeOutputCmdCli,
 			safeMultisigRequestCmdCli,
+			safeGhostKeysCmdCli,
 			withdrawalCmdCli,
 			requestDepositEntryCmdCli,
 			buildMixAddressCmdCli,
@@ -36,6 +37,8 @@ func main() {
 			spendKernelUTXOsCmdCli,
 			claimMintDistributionCmdCli,
 			assetBalanceCmdCli,
+			assetsBalanceCmdCli,
+			notifySnapshotCmdCli,
 		},
 	}
 	err := app.Run(os.Args)

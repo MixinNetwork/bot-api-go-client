@@ -14,12 +14,12 @@ import (
 
 var httpClient *http.Client
 
-func CallRPC(node, method string, params []interface{}) ([]byte, error) {
+func CallRPC(node, method string, params []any) ([]byte, error) {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 30 * time.Second}
 	}
 
-	body, err := json.Marshal(map[string]interface{}{
+	body, err := json.Marshal(map[string]any{
 		"method": method,
 		"params": params,
 	})
@@ -40,8 +40,8 @@ func CallRPC(node, method string, params []interface{}) ([]byte, error) {
 	defer resp.Body.Close()
 
 	var result struct {
-		Data  interface{} `json:"data"`
-		Error interface{} `json:"error"`
+		Data  any `json:"data"`
+		Error any `json:"error"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
@@ -86,7 +86,7 @@ func (raw signerInput) ReadUTXOKeys(hash crypto.Hash, index uint) (*common.UTXOK
 		}
 	}
 
-	data, err := CallRPC(raw.Node, "getutxo", []interface{}{hash.String(), index})
+	data, err := CallRPC(raw.Node, "getutxo", []any{hash.String(), index})
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,8 @@ func SignTransactionRaw(node string, account common.Address, rawStr string) (str
 	return hex.EncodeToString(d.Marshal()), nil
 }
 
-func SendRawTransaction(node string, raw string) (string, error) {
-	data, err := CallRPC(node, "sendrawtransaction", []interface{}{raw})
+func SendRawTransaction(node, raw string) (string, error) {
+	data, err := CallRPC(node, "sendrawtransaction", []any{raw})
 	if err != nil {
 		return "", err
 	}

@@ -109,7 +109,7 @@ func SendTransactionWithChangeOutputs(ctx context.Context, assetId string, recip
 	return SendTransactionWithUtxosAndChangeOutputs(ctx, assetId, recipients, traceId, extra, references, splitAmount, splitCount, nil, common.Zero, u)
 }
 
-func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount string, splitCount int, utxos []*Output, changeAmount common.Integer, u *SafeUser) (*SequencerTransactionRequest, error) {
+func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, splitAmount string, splitCount int, outputs []*Output, changeAmount common.Integer, u *SafeUser) (*SequencerTransactionRequest, error) {
 	splitAmt := common.NewIntegerFromString(splitAmount)
 	if uuid.FromStringOrNil(assetId).String() == assetId {
 		assetId = crypto.Sha256Hash([]byte(assetId)).String()
@@ -122,9 +122,9 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 		return nil, fmt.Errorf("too many references %d", len(references))
 	}
 
-	if len(utxos) <= 0 {
+	if len(outputs) <= 0 {
 		// get unspent outputs for asset and may return insufficient outputs error
-		utxos, changeAmount, err = requestUnspentOutputsForRecipients(ctx, assetId, recipients, u)
+		outputs, changeAmount, err = requestUnspentOutputsForRecipients(ctx, assetId, recipients, u)
 		if err != nil {
 			return nil, fmt.Errorf("requestUnspentOutputsForRecipients(%s) => %v", assetId, err)
 		}
@@ -142,7 +142,7 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 
 			var rs []*TransactionRecipient
 			totalAmount := common.Zero
-			for i := 0; i < splitCount; i++ {
+			for i := range splitCount {
 				var amount common.Integer
 				if totalAmount.Add(splitAmt).Cmp(changeAmount) <= 0 && i < splitCount-1 {
 					amount = splitAmt
@@ -175,7 +175,7 @@ func SendTransactionWithUtxosAndChangeOutputs(ctx context.Context, assetId strin
 			})
 		}
 	}
-	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
+	return sendTransaction(ctx, asset, outputs, recipients, traceId, extra, references, u)
 }
 
 func SendTransaction(ctx context.Context, assetId string, recipients []*TransactionRecipient, traceId string, extra []byte, references []string, u *SafeUser) (*SequencerTransactionRequest, error) {
@@ -273,7 +273,7 @@ func sendTransaction(ctx context.Context, asset crypto.Hash, utxos []*Output, re
 	if len(str.Views) != len(ver.Inputs) {
 		return nil, fmt.Errorf("invalid view keys count %d %d", len(str.Views), len(ver.Inputs))
 	}
-	ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey)
+	ver, err = signRawTransaction(ver, str.Views, u.SpendPrivateKey, u.IsSpendPrivateSum)
 	if err != nil {
 		return nil, fmt.Errorf("signRawTransaction(%v) => %v", ver, err)
 	}
@@ -396,16 +396,24 @@ func verifyRawTransactionBySequencer(ctx context.Context, traceId string, ver *c
 	return verified[0], nil
 }
 
-func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string) (*common.VersionedTransaction, error) {
+func signRawTransaction(ver *common.VersionedTransaction, views []string, spendKey string, isSumAlready bool) (*common.VersionedTransaction, error) {
 	msg := ver.PayloadHash()
 	spent, err := crypto.KeyFromString(spendKey)
 	if err != nil {
 		return nil, err
 	}
-	spenty := sha512.Sum512(spent[:])
-	y, err := edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
-	if err != nil {
-		return nil, err
+	var y *edwards25519.Scalar
+	if isSumAlready {
+		y, err = edwards25519.NewScalar().SetCanonicalBytes(spent[:])
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		spenty := sha512.Sum512(spent[:])
+		y, err = edwards25519.NewScalar().SetBytesWithClamping(spenty[:32])
+		if err != nil {
+			return nil, err
+		}
 	}
 	signaturesMap := make([]map[uint16]*crypto.Signature, len(ver.Inputs))
 	for i := range ver.Inputs {

@@ -16,14 +16,14 @@ type AddressInput struct {
 }
 
 type Address struct {
-	AddressId   string `json:"address_id"`
-	AssetId     string `json:"asset_id"`
-	Label       string `json:"label"`
-	Destination string `json:"destination"`
-	Tag         string `json:"tag"`
-	Fee         string `json:"fee"`
-	Dust        string `json:"dust"`
-	UpdatedAt   string `json:"updated_at"`
+	AddressId   string    `json:"address_id"`
+	AssetId     string    `json:"asset_id"`
+	Label       string    `json:"label"`
+	Destination string    `json:"destination"`
+	Tag         string    `json:"tag"`
+	Fee         string    `json:"fee"`
+	Dust        string    `json:"dust"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 type SimpleAddress struct {
@@ -34,7 +34,7 @@ type SimpleAddress struct {
 func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Address, error) {
 	tipBody := TipBodyForAddressAdd(in.AssetId, in.Destination, in.Tag, in.Label)
 	var err error
-	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey, user.IsSpendPrivateSum)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Addr
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"asset_id":    in.AssetId,
 		"label":       in.Label,
 		"destination": in.Destination,
@@ -76,7 +76,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Addr
 	return resp.Data, nil
 }
 
-func ReadAddress(ctx context.Context, addressId, user *SafeUser) (*Address, error) {
+func ReadAddress(ctx context.Context, addressId string, user *SafeUser) (*Address, error) {
 	endpoint := fmt.Sprintf("/addresses/%s", addressId)
 	token, err := SignAuthenticationToken("GET", endpoint, "", user)
 	if err != nil {
@@ -103,7 +103,7 @@ func ReadAddress(ctx context.Context, addressId, user *SafeUser) (*Address, erro
 
 func DeleteAddress(ctx context.Context, addressId string, user *SafeUser) error {
 	tipBody := TipBody(TIPAddressRemove + addressId)
-	pin, err := signTipBody(tipBody, user.SpendPrivateKey)
+	pin, err := signTipBody(tipBody, user.SpendPrivateKey, user.IsSpendPrivateSum)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func DeleteAddress(ctx context.Context, addressId string, user *SafeUser) error 
 	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"pin_base64": encryptedPIN,
 	})
 	if err != nil {
@@ -173,7 +173,7 @@ func CheckAddress(ctx context.Context, asset, destination, tag string) (*SimpleA
 	if tag != "" {
 		v.Set("tag", tag)
 	}
-	path := fmt.Sprintf("%s", "/external/addresses/check?"+v.Encode())
+	path := "/external/addresses/check?" + v.Encode()
 	body, err := Request(ctx, "GET", path, nil, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)

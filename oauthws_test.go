@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coder/websocket"
 	"github.com/gofrs/uuid/v5"
-	"nhooyr.io/websocket"
 )
 
 func TestOauthWS(t *testing.T) {
@@ -33,7 +33,7 @@ func TestOauthWS(t *testing.T) {
 	blazeMessage, _ := json.Marshal(BlazeMessage{
 		Id:     uuid.Must(uuid.NewV4()).String(),
 		Action: "REFRESH_OAUTH_CODE",
-		Params: map[string]interface{}{
+		Params: map[string]any{
 			"client_id": "67a87828-18f5-46a1-b6cc-c72a97a77c43",
 			"scope":     "PROFILE:READ",
 		},
@@ -44,10 +44,10 @@ func TestOauthWS(t *testing.T) {
 }
 
 type BlazeMessageTest struct {
-	Id     string                 `json:"id"`
-	Action string                 `json:"action"`
-	Params map[string]interface{} `json:"params,omitempty"`
-	Data   interface{}            `json:"data,omitempty"`
+	Id     string         `json:"id"`
+	Action string         `json:"action"`
+	Params map[string]any `json:"params,omitempty"`
+	Data   any            `json:"data,omitempty"`
 }
 
 func parseMessageTest(ctx context.Context, wsReader io.Reader) error {

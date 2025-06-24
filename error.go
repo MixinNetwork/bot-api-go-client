@@ -10,10 +10,10 @@ import (
 )
 
 type Error struct {
-	Status      int         `json:"status"`
-	Code        int         `json:"code"`
-	Description string      `json:"description"`
-	Extra       interface{} `json:"extra,omitempty"`
+	Status      int    `json:"status"`
+	Code        int    `json:"code"`
+	Description string `json:"description"`
+	Extra       any    `json:"extra,omitempty"`
 	trace       string
 }
 

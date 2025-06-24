@@ -14,23 +14,23 @@ import (
 )
 
 type User struct {
-	UserId         string      `json:"user_id"`
-	SessionId      string      `json:"session_id"`
-	PinToken       string      `json:"pin_token"`
-	PINTokenBase64 string      `json:"pin_token_base64"`
-	IdentityNumber string      `json:"identity_number"`
-	HasSafe        bool        `json:"has_safe"`
-	TIPKeyBase64   string      `json:"tip_key_base64"`
-	Phone          string      `json:"phone"`
-	FullName       string      `json:"full_name"`
-	AvatarURL      string      `json:"avatar_url"`
-	DeviceStatus   string      `json:"device_status"`
-	CreatedAt      string      `json:"created_at"`
-	Memebership    Memebership `json:"membership"`
-	AppId          string      `json:"app_id"`
+	UserId         string     `json:"user_id"`
+	SessionId      string     `json:"session_id"`
+	PinToken       string     `json:"pin_token"`
+	PINTokenBase64 string     `json:"pin_token_base64"`
+	IdentityNumber string     `json:"identity_number"`
+	HasSafe        bool       `json:"has_safe"`
+	TIPKeyBase64   string     `json:"tip_key_base64"`
+	Phone          string     `json:"phone"`
+	FullName       string     `json:"full_name"`
+	AvatarURL      string     `json:"avatar_url"`
+	DeviceStatus   string     `json:"device_status"`
+	CreatedAt      time.Time  `json:"created_at"`
+	Membership     Membership `json:"membership"`
+	AppId          string     `json:"app_id"`
 }
 
-type Memebership struct {
+type Membership struct {
 	Plan      string    `json:"plan"`
 	ExpiredAt time.Time `json:"expired_at"`
 }
@@ -255,7 +255,7 @@ func RequestUserMe(ctx context.Context, su *SafeUser) (*User, error) {
 }
 
 func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"full_name":     fullName,
 		"avatar_base64": avatarBase64,
 	})
@@ -287,7 +287,7 @@ func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUs
 }
 
 func UpdatePreference(ctx context.Context, messageSource, conversationSource, currency string, threshold float64, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"receive_message_source":          messageSource,
 		"accept_conversation_source":      conversationSource,
 		"fiat_currency":                   currency,
@@ -320,7 +320,7 @@ func UpdatePreference(ctx context.Context, messageSource, conversationSource, cu
 }
 
 func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*User, error) {
-	data, err := json.Marshal(map[string]interface{}{
+	data, err := json.Marshal(map[string]any{
 		"user_id": userId,
 		"action":  action,
 	})
