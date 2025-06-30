@@ -47,7 +47,13 @@ func TestComptuer(t *testing.T) {
 	assert.Nil(err)
 	assert.True(decimal.RequireFromString(fee.XINAmount).GreaterThan(decimal.RequireFromString("0.001")))
 
-	call, err := GetComputerSystemCall(ctx, "c0432023-9c60-492e-a74a-325c7949db99")
+	call, err := GetComputerSystemCall(ctx, "c4080ecf-044a-3ef5-8da6-de3e9beb1030")
 	assert.Nil(err)
-	assert.Equal("c0432023-9c60-492e-a74a-325c7949db99", call.ID)
+	assert.Equal("c4080ecf-044a-3ef5-8da6-de3e9beb1030", call.ID)
+	assert.Equal("main", call.Type)
+	assert.Len(call.SubCalls, 2)
+	assert.Equal("prepare", call.SubCalls[0].Type)
+	assert.Equal("3gwRRFbE4R9F1zx6EJQArht8GZW9cZ2YSHMKxDsah8H8sa5stPuYN8Q3KnX2wYhMNBc8VYBhmRGtKqDxAtXEnZpH", call.SubCalls[0].Hash)
+	assert.Equal("post_process", call.SubCalls[1].Type)
+	assert.Equal("4QNaXPsXttmD4pt9d2VydT56opyjrRGLqTu4iGc7fkZfCFJXKf1CUy8VeFTuTMEYkRv4RhXpMCni6urikXMBbr42", call.SubCalls[1].Hash)
 }

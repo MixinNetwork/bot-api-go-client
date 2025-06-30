@@ -59,14 +59,20 @@ type ComputerDeployedAsset struct {
 	IconURL  string `json:"uri"`
 }
 
-type ComputerSystemCallResponse struct {
+type ComputerSystemCall struct {
 	ID           string `json:"id"`
+	Type         string `json:"type"`
 	UserID       string `json:"user_id"`
 	NonceAccount string `json:"nonce_account"`
 	Raw          string `json:"raw"`
 	State        string `json:"state"`
 	Hash         string `json:"hash"`
-	Reason       string `json:"reason"`
+}
+
+type ComputerSystemCallResponse struct {
+	ComputerSystemCall
+	Reason   string               `json:"reason"`
+	SubCalls []ComputerSystemCall `json:"subs"`
 
 	Error `json:"error"`
 }
