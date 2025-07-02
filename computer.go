@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/big"
 	"net/http"
 	"time"
 
@@ -249,6 +250,33 @@ func RegisterComputer(ctx context.Context, su *SafeUser) (*SequencerTransactionR
 		},
 	}
 	return SendTransaction(ctx, info.Params.Operation.Asset, rs, trace, []byte(memo), nil, su)
+}
+
+func ComputerUserIDToBytes(id string) ([]byte, error) {
+	bid, ok := new(big.Int).SetString(id, 10)
+	if !ok {
+		return nil, fmt.Errorf("invalid user id: %s", id)
+	}
+	data := make([]byte, 8)
+	data = bid.FillBytes(data)
+	return data, nil
+}
+
+func BuildSystemCallExtra(uid, cid string, skipProcess bool, fid string) ([]byte, error) {
+	extra, err := ComputerUserIDToBytes(uid)
+	if err != nil {
+		return nil, err
+	}
+	extra = append(extra, uuid.Must(uuid.FromString(cid)).Bytes()...)
+	flag := 0
+	if skipProcess {
+		flag = 1
+	}
+	extra = append(extra, byte(flag))
+	if fid != "" {
+		extra = append(extra, uuid.Must(uuid.FromString(fid)).Bytes()...)
+	}
+	return extra, nil
 }
 
 func EncodeOperationMemo(operation byte, extra []byte) []byte {

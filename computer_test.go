@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"encoding/hex"
 	"testing"
 
 	"github.com/gofrs/uuid/v5"
@@ -56,4 +57,8 @@ func TestComptuer(t *testing.T) {
 	assert.Equal("3gwRRFbE4R9F1zx6EJQArht8GZW9cZ2YSHMKxDsah8H8sa5stPuYN8Q3KnX2wYhMNBc8VYBhmRGtKqDxAtXEnZpH", call.SubCalls[0].Hash)
 	assert.Equal("post_process", call.SubCalls[1].Type)
 	assert.Equal("4QNaXPsXttmD4pt9d2VydT56opyjrRGLqTu4iGc7fkZfCFJXKf1CUy8VeFTuTMEYkRv4RhXpMCni6urikXMBbr42", call.SubCalls[1].Hash)
+
+	extra, err := BuildSystemCallExtra("281474976710657", "ded9e592-111a-4272-a5b7-9e18e627ba3c", false, "1055985c-5759-3839-b5b5-977915ac424d")
+	assert.Nil(err)
+	assert.Equal("0001000000000001ded9e592111a4272a5b79e18e627ba3c001055985c57593839b5b5977915ac424d", hex.EncodeToString(extra))
 }
