@@ -49,7 +49,6 @@ func createBareUserCmd(c *cli.Context) error {
 	if name == "" {
 		name = fmt.Sprintf("%s-%d", su.UserId, time.Now().Unix())
 	}
-	log.Println("xx", str, name)
 
 	user, err := bot.CreateUser(context.Background(), base64.RawURLEncoding.EncodeToString(public.(ed25519.PublicKey)), name, su)
 	if err != nil {
