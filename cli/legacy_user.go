@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"os"
 
 	"github.com/MixinNetwork/bot-api-go-client/v3"
@@ -41,7 +42,7 @@ func upgradeLegacyUserCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
-	os.Stdout.Write(data)
+	log.Println("New Keystore:", string(data))
 	return nil
 }
 
