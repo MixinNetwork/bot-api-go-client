@@ -39,6 +39,7 @@ func main() {
 			assetBalanceCmdCli,
 			assetsBalanceCmdCli,
 			notifySnapshotCmdCli,
+			upgradeLegacyUserCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
