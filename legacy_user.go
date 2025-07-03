@@ -95,7 +95,7 @@ func UpgradeLegacyUser(ctx context.Context, kl *KeystoreLegacy) (*UserUpgrade, e
 		"session_id":            kl.SessionId,
 		"pin":                   base64.RawURLEncoding.EncodeToString(ciphertext),
 	})
-	body, err := Request(ctx, "POST", "/users/legacy_upgrade", data, "")
+	body, err := Request(ctx, "POST", "/legacy/users", data, "")
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
