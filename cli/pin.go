@@ -88,34 +88,3 @@ func updatePINCmd(c *cli.Context) error {
 	log.Println("update pin success")
 	return nil
 }
-
-// ./cli register_safe_bare_user -keystore=/path/to/keystore-700xxxx006.json -spend=31088c8....40dc0
-var registerSafeBareUserCmdCli = &cli.Command{
-	Name:   "register_safe_bare_user",
-	Action: registerSafeBareUserCmd,
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:  "keystore,k",
-			Usage: "keystore download from https://developers.mixin.one/dashboard",
-		},
-		&cli.StringFlag{
-			Name:  "spend,s",
-			Usage: "spend",
-		},
-	},
-}
-
-func registerSafeBareUserCmd(c *cli.Context) error {
-	keystore := c.String("keystore")
-	spend := c.String("spend")
-
-	su := loadKeystore(keystore)
-	su.SpendPrivateKey = spend
-
-	_, err := bot.RegisterSafeBareUser(context.Background(), su)
-	if err != nil {
-		return err
-	}
-	log.Println("register safe bare user success")
-	return nil
-}
