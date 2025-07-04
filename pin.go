@@ -22,6 +22,9 @@ import (
 )
 
 func EncryptEd25519PIN(pin string, iterator uint64, current *SafeUser) (string, error) {
+	if pin == "" {
+		return "", nil
+	}
 	privateBytes, err := hex.DecodeString(current.SessionPrivateKey)
 	if err != nil {
 		return "", err
