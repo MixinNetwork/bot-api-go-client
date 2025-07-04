@@ -22,6 +22,7 @@ func main() {
 			transferCmdCli,
 			verifyPINCmdCli,
 			updatePINCmdCli,
+			registerSafeBareUserCmdCli,
 			// batchTransferCmdCli,
 			botMigrateTIPCmdCli,
 			registerSafeCMDCli,

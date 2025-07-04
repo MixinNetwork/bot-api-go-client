@@ -63,3 +63,48 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 	}
 	return resp.Data, nil
 }
+
+func RegisterSafeBareUser(ctx context.Context, su *SafeUser) (*User, error) {
+	s, err := hex.DecodeString(su.SpendPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	private := ed25519.NewKeyFromSeed(s)
+	h := crypto.Sha256Hash([]byte(su.UserId))
+	signBytes := ed25519.Sign(private, h[:])
+	signature := base64.RawURLEncoding.EncodeToString(signBytes[:])
+	publicKey := hex.EncodeToString(private[32:])
+	tipBody := TIPBodyForSequencerRegister(su.UserId, publicKey)
+	sigBuf := ed25519.Sign(private, tipBody)
+
+	encryptedPIN, err := EncryptEd25519PIN(hex.EncodeToString(sigBuf), uint64(time.Now().UnixNano()), su)
+	if err != nil {
+		return nil, err
+	}
+	data, _ := json.Marshal(map[string]string{
+		"public_key": publicKey,
+		"signature":  signature,
+		"pin_base64": encryptedPIN,
+	})
+
+	token, err := SignAuthenticationToken("POST", "/safe/users", string(data), su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", "/safe/users", data, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *User  `json:"data"`
+		Error *Error `json:"error,omitempty"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, err
+	}
+	if resp.Error != nil {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
