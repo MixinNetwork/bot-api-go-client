@@ -13,7 +13,7 @@ func main() {
 	app := &cli.App{
 		Name:    "mixin-bot",
 		Usage:   "Mixin bot API cli",
-		Version: "2.0.1",
+		Version: "3.0.1",
 		Commands: []*cli.Command{
 			appMeCmdCli,
 			userCmdCli,
@@ -21,6 +21,8 @@ func main() {
 			getUsersCmdCli,
 			transferCmdCli,
 			verifyPINCmdCli,
+			updatePINCmdCli,
+			registerSafeBareUserCmdCli,
 			// batchTransferCmdCli,
 			botMigrateTIPCmdCli,
 			registerSafeCMDCli,
@@ -39,6 +41,7 @@ func main() {
 			assetBalanceCmdCli,
 			assetsBalanceCmdCli,
 			notifySnapshotCmdCli,
+			bareUserCmdCli,
 			upgradeLegacyUserCmdCli,
 		},
 	}
