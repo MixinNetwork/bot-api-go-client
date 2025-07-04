@@ -23,7 +23,7 @@ import (
 )
 
 type UserUpgrade struct {
-	UserId             string `json:"user_id"`
+	UserId             string `json:"app_id"`
 	SessionId          string `json:"session_id"`
 	ServerPublicKeyHEX string `json:"server_public_key"`
 
