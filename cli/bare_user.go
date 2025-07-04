@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -54,6 +55,14 @@ func createBareUserCmd(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("user %#v", user)
+
+	ks := &bot.BareUserKeyStore{
+		AppId:             user.UserId,
+		SessionId:         user.SessionId,
+		ServerPublicKey:   user.ServerPublicKey,
+		SessionPrivateKey: str,
+	}
+	data, _ := json.Marshal(ks)
+	log.Printf("bare user keystore: %s", string(data))
 	return nil
 }

@@ -64,6 +64,14 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 	return resp.Data, nil
 }
 
+type BareUserKeyStore struct {
+	AppId             string `json:"app_id"`
+	SessionId         string `json:"session_id"`
+	ServerPublicKey   string `json:"server_public_key"`
+	SessionPrivateKey string `json:"session_private_key"`
+	SpentPrivateKey   string `json:"spent_private_key"`
+}
+
 func RegisterSafeBareUser(ctx context.Context, su *SafeUser) (*User, error) {
 	s, err := hex.DecodeString(su.SpendPrivateKey)
 	if err != nil {
