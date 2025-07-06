@@ -16,19 +16,13 @@ var safeSnapshotsCmdCli = &cli.Command{
 			Name:  "keystore,k",
 			Usage: "keystore download from https://developers.mixin.one/dashboard",
 		},
-		&cli.StringFlag{
-			Name:  "spend,s",
-			Usage: "spend",
-		},
 	},
 }
 
 func safeSnapshotsCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
-	spend := c.String("spend")
 
 	su := loadKeystore(keystore)
-	su.SpendPrivateKey = spend
 
 	snapshots, err := bot.SafeSnapshots(context.Background(), 100, "", "", "", "", su)
 	if err != nil {
@@ -49,10 +43,6 @@ var safeSnapshotCmdCli = &cli.Command{
 			Usage: "keystore download from https://developers.mixin.one/dashboard",
 		},
 		&cli.StringFlag{
-			Name:  "spend,s",
-			Usage: "spend",
-		},
-		&cli.StringFlag{
 			Name:  "id",
 			Usage: "id",
 		},
@@ -61,11 +51,9 @@ var safeSnapshotCmdCli = &cli.Command{
 
 func safeSnapshotCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
-	spend := c.String("spend")
 	id := c.String("id")
 
 	su := loadKeystore(keystore)
-	su.SpendPrivateKey = spend
 
 	snapshot, err := bot.SafeSnapshotById(context.Background(), id, su)
 	if err != nil {
