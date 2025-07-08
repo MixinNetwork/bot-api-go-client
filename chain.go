@@ -137,7 +137,7 @@ func GetChainName(chainId string) string {
 	case BaseChainId:
 		return "Base"
 	case OptimismChainId:
-		return "Optimism"
+		return "OP Mainnet"
 	case ArbitrumChainId:
 		return "Arbitrum One"
 	case MVMChainId:
