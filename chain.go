@@ -17,8 +17,8 @@ const (
 	BSCChainId             = "1949e683-6a08-49e2-b087-d6b72398588f"
 	PolygonChainId         = "b7938396-3f94-4e0a-9179-d3440718156f"
 	BaseChainId            = "3fb612c5-6844-3979-ae4a-5a84e79da870"
-	OptimismChainId        = "60360611-370c-3b69-9826-b13db93f6aba" // TODO
-	ArbitrumChainId        = "8c590110-1abc-3697-84f2-05214e6516aa" // TODO
+	OptimismChainId        = "60360611-370c-3b69-9826-b13db93f6aba"
+	ArbitrumChainId        = "8c590110-1abc-3697-84f2-05214e6516aa"
 	MVMChainId             = "a0ffd769-5850-4b48-9651-d2ae44a3e64d"
 	DecredChainId          = "8f5caf2a-283d-4c85-832a-91e83bbf290b"
 	RippleChainId          = "23dfb5a5-5d7b-48b6-905f-3970e3176e27"
