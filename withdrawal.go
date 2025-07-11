@@ -37,9 +37,10 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 	var assetFee *AssetFee
 	var chainFee *AssetFee
 	for _, fee := range fees {
-		if fee.AssetID == assetId {
+		switch fee.AssetID {
+		case assetId:
 			assetFee = fee
-		} else if fee.AssetID == chain.AssetID {
+		case chain.AssetID:
 			chainFee = fee
 		}
 	}
@@ -165,9 +166,10 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 		var str *SequencerTransactionRequest
 		var feeStr *SequencerTransactionRequest
 		for _, r := range requests {
-			if r.RequestID == traceId {
+			switch r.RequestID {
+			case traceId:
 				str = r
-			} else if r.RequestID == feeTraceId {
+			case feeTraceId:
 				feeStr = r
 			}
 		}
