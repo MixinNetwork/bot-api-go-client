@@ -20,8 +20,7 @@ const (
 	OperationTypeSystemCall  = 2
 	OperationTypeUserDeposit = 3
 
-	SolanaChainID = "64692c23-8971-4cf4-84a7-4dd1271dd887"
-	computerUri   = "https://computer.mixin.one"
+	computerUri = "https://computer.mixin.one"
 )
 
 var computerClient = &http.Client{Timeout: 10 * time.Second}
@@ -151,7 +150,7 @@ func GetComputerUser(ctx context.Context, addr string) (*ComputerUserResponse, e
 }
 
 func (c ComputerDeployedAsset) GetSolanaAssetId() string {
-	return UniqueObjectId(SolanaChainID, c.Address)
+	return UniqueObjectId(SolanaChainId, c.Address)
 }
 
 func GetComputerDeployedAssets(ctx context.Context) ([]*ComputerDeployedAsset, error) {
@@ -188,7 +187,7 @@ func GetComputerSystemCall(ctx context.Context, id string) (*ComputerSystemCallR
 
 func ComputerDeployExternalAsset(ctx context.Context, assets []string) error {
 	for _, asset := range assets {
-		if asset != SolanaChainID {
+		if asset != SolanaChainId {
 			continue
 		}
 		return fmt.Errorf("cannot deploy asset from Solana: %s", asset)
