@@ -55,8 +55,12 @@ type ComputerUserResponse struct {
 
 type ComputerDeployedAsset struct {
 	AssetID  string `json:"asset_id"`
+	ChainID  string `json:"chain_id"`
 	Address  string `json:"address"`
+	Name     string `json:name"`
+	Symbol   string `json:symbol`
 	Decimals int64  `json:"decimals"`
+	PriceUsd string `json:"price_usd"`
 	IconURL  string `json:"uri"`
 }
 
