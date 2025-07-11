@@ -31,6 +31,7 @@ func TestComptuer(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(XINAssetId, as[0].AssetID)
 	assert.Equal("4s4H5v4TXpmS4Ss66nxcCLgxrU5nunuwtkQceinZfGuw", as[0].Address)
+	assert.Equal("51590fcb-388f-32b0-bb01-bae77a52dfc0", as[0].GetSolanaAssetId())
 
 	user, err := GetComputerUser(ctx, "MIX3QEetjLB1hKcPGEbBKF8PvMaxSuttJg")
 	assert.Nil(err)

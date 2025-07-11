@@ -57,8 +57,8 @@ type ComputerDeployedAsset struct {
 	AssetID  string `json:"asset_id"`
 	ChainID  string `json:"chain_id"`
 	Address  string `json:"address"`
-	Name     string `json:name"`
-	Symbol   string `json:symbol`
+	Name     string `json:"name"`
+	Symbol   string `json:"symbol`
 	Decimals int64  `json:"decimals"`
 	PriceUsd string `json:"price_usd"`
 	IconURL  string `json:"uri"`
@@ -148,6 +148,10 @@ func GetComputerUser(ctx context.Context, addr string) (*ComputerUserResponse, e
 		return nil, resp.Error
 	}
 	return resp, nil
+}
+
+func (c ComputerDeployedAsset) GetSolanaAssetId() string {
+	return UniqueObjectId(SolanaChainID, c.Address)
 }
 
 func GetComputerDeployedAssets(ctx context.Context) ([]*ComputerDeployedAsset, error) {
