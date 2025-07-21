@@ -167,15 +167,15 @@ func (ma *MixAddress) RequestOrGenerateGhostKeys(ctx context.Context, outputInde
 		seed := make([]byte, 64)
 		crypto.ReadRand(seed)
 		r := crypto.NewKeyFromSeed(seed)
-		gkr := &GhostKeys{
+		gk := &GhostKeys{
 			Mask: r.Public().String(),
 			Keys: make([]string, len(ma.xinMembers)),
 		}
 		for i, a := range ma.xinMembers {
 			k := crypto.DeriveGhostPublicKey(&r, &a.PublicViewKey, &a.PublicSpendKey, uint64(outputIndex))
-			gkr.Keys[i] = k.String()
+			gk.Keys[i] = k.String()
 		}
-		return gkr, nil
+		return gk, nil
 	}
 
 	hint := uuid.Must(uuid.NewV4()).String()
