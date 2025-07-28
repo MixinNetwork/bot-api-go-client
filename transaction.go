@@ -563,3 +563,37 @@ func RequestGhostRecipientsWithTraceId(ctx context.Context, recipients []*Transa
 	}
 	return gkm, nil
 }
+
+func ConsolidationUnspentOutputs(ctx context.Context, assetId string, count int, su *SafeUser) (*SequencerTransactionRequest, error) {
+	if count <= 0 || count > 256 {
+		return nil, fmt.Errorf("invalid count %d", count)
+	}
+	membersHash := HashMembers([]string{su.UserId})
+	utxos, err := ListOutputs(ctx, membersHash, 1, assetId, "unspent", 0, count, su)
+	if err != nil {
+		return nil, err
+	}
+	if len(utxos) <= 1 {
+		return nil, fmt.Errorf("insufficient unspent outputs %d", len(utxos))
+	}
+	if len(utxos) >= 256 {
+		return nil, fmt.Errorf("too many unspent outputs %d", len(utxos))
+	}
+	amount := common.Zero
+	for _, o := range utxos {
+		if o.AssetId != assetId {
+			return nil, fmt.Errorf("unspent outputs with different asset id %s != %s", o.AssetId, assetId)
+		}
+		if o.State != "unspent" {
+			return nil, fmt.Errorf("unspent outputs with different state %s != unspent", o.State)
+		}
+		amount = amount.Add(common.NewIntegerFromString(o.Amount))
+	}
+	trace := UuidNewV4().String()
+	return SendTransactionWithOutputs(ctx, assetId, []*TransactionRecipient{
+		{
+			MixAddress: NewUUIDMixAddress([]string{su.UserId}, 1),
+			Amount:     amount.String(),
+		},
+	}, utxos, trace, nil, nil, su)
+}

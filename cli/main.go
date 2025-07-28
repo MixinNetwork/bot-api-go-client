@@ -43,6 +43,7 @@ func main() {
 			notifySnapshotCmdCli,
 			bareUserCmdCli,
 			upgradeLegacyUserCmdCli,
+			consolidationUtxosCmdCli,
 		},
 	}
 	err := app.Run(os.Args)
