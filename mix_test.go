@@ -19,6 +19,12 @@ func TestUUIDMixAddress(t *testing.T) {
 	require.Equal(byte(1), ma.Threshold)
 	require.Equal(byte(2), ma.Version)
 
+	ma, err = NewMixAddressFromString("MIXSK624cFT3CXbbjYxU17CeYWCwj6CZgkp2VsfiRsDMXw4MzpfYKPKKYwLmfDby2z85MLAbSWZbAB1dfPetCxUf7vwwJnToaG8")
+	require.Nil(err)
+	require.Equal(1, len(ma.Members()))
+	require.Equal(byte(64), ma.Threshold)
+	require.Equal(byte(2), ma.Version)
+
 	members = []string{
 		"67a87828-18f5-46a1-b6cc-c72a97a77c43",
 		"c94ac88f-4671-3976-b60a-09064f1811e8",
