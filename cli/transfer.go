@@ -295,18 +295,12 @@ var consolidationUtxosCmdCli = &cli.Command{
 			Usage:    "asset id",
 			Required: true,
 		},
-		&cli.IntFlag{
-			Name:     "count,c",
-			Usage:    "consolidation count",
-			Required: true,
-		},
 	},
 }
 
 func consolidationUtxosCmd(c *cli.Context) error {
 	keystore := c.String("keystore")
 	asset := c.String("asset")
-	count := c.Int("count")
 
 	dat, err := os.ReadFile(keystore)
 	if err != nil {
@@ -319,12 +313,12 @@ func consolidationUtxosCmd(c *cli.Context) error {
 	}
 
 	log.Println("asset:", asset)
-	log.Println("count:", count)
 
-	str, err := bot.ConsolidationUnspentOutputs(context.Background(), asset, count, &su)
+	str, count, err := bot.ConsolidationUnspentOutputs(context.Background(), asset, &su)
 	if err != nil {
+		log.Println("Consolidation UTXOs failed: ", err, " count:", count)
 		return err
 	}
-	log.Println("Consolidation UTXOs successfully: ", str.TransactionHash)
+	log.Println("Consolidation UTXOs successfully: ", str.TransactionHash, " count:", count)
 	return nil
 }

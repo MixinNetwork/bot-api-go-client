@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"slices"
 	"time"
 
 	"filippo.io/edwards25519"
@@ -564,36 +565,107 @@ func RequestGhostRecipientsWithTraceId(ctx context.Context, recipients []*Transa
 	return gkm, nil
 }
 
-func ConsolidationUnspentOutputs(ctx context.Context, assetId string, count int, su *SafeUser) (*SequencerTransactionRequest, error) {
-	if count <= 0 || count > 256 {
-		return nil, fmt.Errorf("invalid count %d", count)
-	}
+func ConsolidationUnspentOutputs(ctx context.Context, assetId string, su *SafeUser) (*SequencerTransactionRequest, int, error) {
 	membersHash := HashMembers([]string{su.UserId})
-	utxos, err := ListOutputs(ctx, membersHash, 1, assetId, "unspent", 0, count, su)
-	if err != nil {
-		return nil, err
-	}
-	if len(utxos) <= 1 {
-		return nil, fmt.Errorf("insufficient unspent outputs %d", len(utxos))
-	}
-	if len(utxos) >= 256 {
-		return nil, fmt.Errorf("too many unspent outputs %d", len(utxos))
-	}
-	amount := common.Zero
-	for _, o := range utxos {
-		if o.AssetId != assetId {
-			return nil, fmt.Errorf("unspent outputs with different asset id %s != %s", o.AssetId, assetId)
+
+	var lastStr *SequencerTransactionRequest
+	var pendingTxHashes []string
+	var consolidatedCount int
+
+	for {
+		utxos, err := ListOutputs(ctx, membersHash, 1, assetId, "unspent", 0, 255, su)
+		if err != nil {
+			return nil, consolidatedCount, err
 		}
-		if o.State != "unspent" {
-			return nil, fmt.Errorf("unspent outputs with different state %s != unspent", o.State)
+		if len(utxos) <= 0 {
+			break
 		}
-		amount = amount.Add(common.NewIntegerFromString(o.Amount))
+		if len(utxos) == 1 && len(pendingTxHashes) == 0 {
+			// no pending transactions, no need to consolidate
+			break
+		}
+		amount := common.Zero
+		for _, o := range utxos {
+			if o.AssetId != assetId {
+				return nil, consolidatedCount, fmt.Errorf("unspent outputs with different asset id %s != %s", o.AssetId, assetId)
+			}
+			if o.State != "unspent" {
+				return nil, consolidatedCount, fmt.Errorf("unspent outputs with different state %s != unspent", o.State)
+			}
+			if slices.Contains(pendingTxHashes, o.TransactionHash) {
+				pendingTxHashes = slices.DeleteFunc(pendingTxHashes, func(s string) bool {
+					return s == o.TransactionHash
+				})
+			} else {
+				consolidatedCount++
+			}
+			amount = amount.Add(common.NewIntegerFromString(o.Amount))
+		}
+		trace := UuidNewV4().String()
+		str, err := SendTransactionWithOutputs(ctx, assetId, []*TransactionRecipient{
+			{
+				MixAddress: NewUUIDMixAddress([]string{su.UserId}, 1),
+				Amount:     amount.String(),
+			},
+		}, utxos, trace, nil, nil, su)
+		if err != nil {
+			return nil, consolidatedCount, fmt.Errorf("error consolidating outputs: %w", err)
+		}
+		lastStr = str
+		pendingTxHashes = append(pendingTxHashes, str.TransactionHash)
 	}
-	trace := UuidNewV4().String()
-	return SendTransactionWithOutputs(ctx, assetId, []*TransactionRecipient{
-		{
-			MixAddress: NewUUIDMixAddress([]string{su.UserId}, 1),
-			Amount:     amount.String(),
-		},
-	}, utxos, trace, nil, nil, su)
+
+	// still have pending transactions, wait for them to be confirmed
+	if len(pendingTxHashes) > 1 {
+		pendingOutputs := make([]*Output, len(pendingTxHashes))
+		var completedOutputs int
+		for {
+			for i, txHash := range pendingTxHashes {
+				if pendingOutputs[i] != nil {
+					continue
+				}
+				output, err := GetOutput(ctx, UniqueObjectId(fmt.Sprintf("%s:%d", txHash, 0)), su)
+				var apiErr Error
+				if errors.As(err, &apiErr) && apiErr.Code == 404 {
+					continue
+				} else if err != nil {
+					return nil, consolidatedCount, fmt.Errorf("error getting pending output %s: %w", txHash, err)
+				}
+				pendingOutputs[i] = output
+				completedOutputs++
+			}
+			if completedOutputs == len(pendingOutputs) {
+				break
+			}
+			time.Sleep(8 * time.Second)
+		}
+		var amount common.Integer
+		for _, o := range pendingOutputs {
+			if o == nil {
+				return nil, consolidatedCount, fmt.Errorf("pending output is nil")
+			}
+			if o.AssetId != assetId {
+				return nil, consolidatedCount, fmt.Errorf("pending output with different asset id %s != %s", o.AssetId, assetId)
+			}
+			if o.State != "unspent" {
+				return nil, consolidatedCount, fmt.Errorf("pending output with different state %s != unspent", o.State)
+			}
+			amount = amount.Add(common.NewIntegerFromString(o.Amount))
+		}
+		requestId := UuidNewV4().String()
+		str, err := SendTransactionWithOutputs(ctx, assetId, []*TransactionRecipient{
+			{
+				MixAddress: NewUUIDMixAddress([]string{su.UserId}, 1),
+				Amount:     amount.String(),
+			},
+		}, pendingOutputs, requestId, nil, nil, su)
+		if err != nil {
+			return nil, consolidatedCount, fmt.Errorf("error consolidating pending outputs: %w", err)
+		}
+		lastStr = str
+	}
+	if lastStr == nil {
+		return nil, consolidatedCount, fmt.Errorf("no transaction created during consolidation")
+	}
+	return lastStr, consolidatedCount, nil
 }
