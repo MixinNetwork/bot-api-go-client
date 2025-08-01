@@ -12,7 +12,7 @@ import (
 )
 
 // If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
-func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *SafeUser) (*User, error) {
+func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *SafeUser) (*UserMeView, error) {
 	s, err := hex.DecodeString(spendPrivateKeySeed)
 	if err != nil {
 		return nil, err
@@ -51,8 +51,8 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 		return nil, err
 	}
 	var resp struct {
-		Data  *User  `json:"data"`
-		Error *Error `json:"error,omitempty"`
+		Data  *UserMeView `json:"data"`
+		Error *Error      `json:"error,omitempty"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
