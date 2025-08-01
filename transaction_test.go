@@ -45,9 +45,9 @@ func TestTIPTransaction(t *testing.T) {
 	assert.NotNil(me)
 	log.Printf("%#v", me)
 
-	me, err = VerifyPINTip(ctx, su)
+	um, err := VerifyPINTip(ctx, su)
 	assert.Nil(err)
-	assert.NotNil(me)
+	assert.NotNil(um)
 
 	members := HashMembers([]string{bot.ClientID})
 	asset := "f3bed3e0f6738938c8988eb8853c5647baa263901deb217ee53586d5de831f3b" // candy
