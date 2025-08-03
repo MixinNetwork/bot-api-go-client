@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 )
 
-func ReadAsset(ctx context.Context, name string) (*AssetNetwork, error) {
-	body, err := Request(ctx, "GET", "/network/assets/"+name, nil, "")
+func ReadAsset(ctx context.Context, id string) (*AssetNetwork, error) {
+	body, err := Request(ctx, "GET", "/network/assets/"+id, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -24,8 +24,8 @@ func ReadAsset(ctx context.Context, name string) (*AssetNetwork, error) {
 	return resp.Data, nil
 }
 
-func ReadAssetTickerWithOffset(ctx context.Context, assetId string, offset string) (*AssetTicker, error) {
-	body, err := Request(ctx, "GET", "/network/ticker?asset="+assetId+"&offset="+offset, nil, "")
+func ReadAssetTickerWithOffset(ctx context.Context, id string, offset string) (*AssetTicker, error) {
+	body, err := Request(ctx, "GET", "/network/ticker?asset="+id+"&offset="+offset, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +43,8 @@ func ReadAssetTickerWithOffset(ctx context.Context, assetId string, offset strin
 	return resp.Data, nil
 }
 
-func ReadAssetTicker(ctx context.Context, assetId string) (*AssetTicker, error) {
-	body, err := Request(ctx, "GET", "/network/ticker?asset="+assetId, nil, "")
+func ReadAssetTicker(ctx context.Context, id string) (*AssetTicker, error) {
+	body, err := Request(ctx, "GET", "/network/ticker?asset="+id, nil, "")
 	if err != nil {
 		return nil, err
 	}
