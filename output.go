@@ -38,9 +38,8 @@ type Output struct {
 	Signers            []string  `json:"signers"`
 	SignedBy           string    `json:"signed_by"`
 
-	InscriptionHash string             `json:"inscription_hash,omitempty"`
-	Deposit         *KernelDepositView `json:"deposit,omitempty"`
-	RequestId       string             `json:"request_id,omitempty"`
+	InscriptionHash string `json:"inscription_hash,omitempty"`
+	RequestId       string `json:"request_id,omitempty"`
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
@@ -61,7 +60,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
 	token, err := SignAuthenticationToken(method, path, "", u)
 	if err != nil {
 		return nil, err
@@ -102,7 +101,7 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
 	body, err := Request(ctx, method, path, []byte{}, accessToken)
 	if err != nil {
 		return nil, err
