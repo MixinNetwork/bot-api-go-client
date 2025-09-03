@@ -33,8 +33,14 @@ type User struct {
 
 type UserMeView struct {
 	User
-	SessionId string `json:"session_id"`
-	HasPIN    bool   `json:"has_pin"`
+	SessionId                     string  `json:"session_id"`
+	HasPIN                        bool    `json:"has_pin"`
+	ReceiveMessageSource          string  `json:"receive_message_source"`
+	AcceptConversationSource      string  `json:"accept_conversation_source"`
+	AcceptSearchSource            string  `json:"accept_search_source"`
+	FiatCurrency                  string  `json:"fiat_currency"`
+	TransferNotificationThreshold float64 `json:"transfer_notification_threshold"`
+	TransferConfirmationThreshold float64 `json:"transfer_confirmation_threshold"`
 }
 
 type Membership struct {
