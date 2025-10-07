@@ -176,11 +176,11 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 
 func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
-	offset := uint64(0)
+	offset := int64(0)
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
 	for {
-		outputs, err := ListOutputs(ctx, membersHash, 1, "", "unspent", offset, 500, su)
+		outputs, err := ListOutputs(ctx, membersHash, 1, "", OutputStateUnspent, offset, 500, su)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -196,7 +196,7 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 				m[output.AssetId] = number.FromString(output.Amount)
 			}
 			if i == len(outputs)-1 {
-				offset = uint64(outputs[len(outputs)-1].Sequence)
+				offset = outputs[len(outputs)-1].Sequence
 			}
 		}
 		if len(outputs) < 500 {
