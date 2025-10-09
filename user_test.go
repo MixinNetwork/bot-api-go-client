@@ -5,6 +5,7 @@ import (
 	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"testing"
@@ -18,8 +19,10 @@ func TestCreateUserSimple(t *testing.T) {
 	}
 	assert := assert.New(t)
 	WithAPIKey("", "", "")
-	pub, _, err := ed25519.GenerateKey(rand.Reader)
+	pub, private, err := ed25519.GenerateKey(rand.Reader)
 	assert.Nil(err)
+	sessionPrivateKey := hex.EncodeToString(private)
+	fmt.Println(sessionPrivateKey)
 	sessionSecret := base64.RawURLEncoding.EncodeToString(pub[:])
 	u, err := CreateUserSimple(context.Background(), sessionSecret, "abccc")
 	assert.Nil(err)
