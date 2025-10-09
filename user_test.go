@@ -21,7 +21,7 @@ func TestCreateUserSimple(t *testing.T) {
 	WithAPIKey("", "", "")
 	pub, private, err := ed25519.GenerateKey(rand.Reader)
 	assert.Nil(err)
-	sessionPrivateKey := hex.EncodeToString(private)
+	sessionPrivateKey := hex.EncodeToString(private.Seed())
 	fmt.Println(sessionPrivateKey)
 	sessionSecret := base64.RawURLEncoding.EncodeToString(pub[:])
 	u, err := CreateUserSimple(context.Background(), sessionSecret, "abccc")

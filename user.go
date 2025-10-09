@@ -60,9 +60,9 @@ const (
 	PreferenceSourceNobody   = "NOBODY"
 )
 
-func CreateUserSimple(ctx context.Context, sessionSecret, fullName string) (*User, error) {
+func CreateUserSimple(ctx context.Context, sessionPublicKey, fullName string) (*User, error) {
 	data, _ := json.Marshal(map[string]string{
-		"session_secret": sessionSecret,
+		"session_secret": sessionPublicKey,
 		"full_name":      fullName,
 	})
 	body, err := SimpleRequest(ctx, "POST", "/users", data)
