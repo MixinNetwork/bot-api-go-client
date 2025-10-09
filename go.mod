@@ -1,6 +1,6 @@
 module github.com/MixinNetwork/bot-api-go-client/v3
 
-go 1.25.1
+go 1.25.2
 
 require (
 	filippo.io/edwards25519 v1.1.0
