@@ -28,7 +28,7 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 		return nil, err
 	}
 	if su.SpendPrivateKey != hex.EncodeToString(private) {
-		panic("please use the same spend private key with tip private key")
+		panic("please use the same spend private key with tip private key, spend private key must not be empty")
 	}
 	sigBuf := ed25519.Sign(ed25519.PrivateKey(pinBuf), tipBody)
 
