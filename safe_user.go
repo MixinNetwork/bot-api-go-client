@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ed25519"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"time"
@@ -62,6 +63,28 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 		return nil, resp.Error
 	}
 	return resp.Data, nil
+}
+
+func RegisterSafeAndPin(ctx context.Context, su *SafeUser) (*UserMeView, error) {
+	seed, err := hex.DecodeString(su.SpendPrivateKey)
+	if err != nil {
+		return nil, err
+	}
+	private := ed25519.NewKeyFromSeed(seed)
+	spendPublicKey := private.Public().(ed25519.PublicKey)
+
+	counter := make([]byte, 8)
+	binary.BigEndian.PutUint64(counter, 1)
+	pubTipBuf := append(spendPublicKey, counter...)
+	encryptedPin, err := EncryptEd25519PIN(hex.EncodeToString(pubTipBuf), uint64(time.Now().UnixNano()), su)
+	if err != nil {
+		return nil, err
+	}
+	err = UpdatePin(ctx, "", encryptedPin, su)
+	if err != nil {
+		return nil, err
+	}
+	return RegisterSafe(ctx, su.UserId, su.SpendPrivateKey, su)
 }
 
 type BareUserKeyStore struct {
