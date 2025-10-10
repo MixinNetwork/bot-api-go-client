@@ -56,8 +56,8 @@ func createBareUserCmd(c *cli.Context) error {
 		return err
 	}
 
-	ks := &bot.BareUserKeyStore{
-		AppId:             user.UserId,
+	ks := &bot.SafeUser{
+		UserId:            user.UserId,
 		SessionId:         user.SessionId,
 		ServerPublicKey:   user.ServerPublicKey,
 		SessionPrivateKey: str,
