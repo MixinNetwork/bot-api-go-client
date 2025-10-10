@@ -7,18 +7,27 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/MixinNetwork/mixin/crypto"
 )
 
 // If you want to register safe user, you need to call UpdateTipPin upgrade TIP PIN first.
-func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *SafeUser) (*UserMeView, error) {
-	s, err := hex.DecodeString(spendPrivateKeySeed)
+func RegisterSafe(ctx context.Context, userId, spendPrivateKeyOrSeed string, su *SafeUser) (*UserMeView, error) {
+	spend, err := hex.DecodeString(spendPrivateKeyOrSeed)
 	if err != nil {
 		return nil, err
 	}
-	private := ed25519.NewKeyFromSeed(s)
+	var private ed25519.PrivateKey
+	switch len(spend) {
+	case ed25519.SeedSize:
+		private = ed25519.NewKeyFromSeed(spend)
+	case ed25519.PrivateKeySize:
+		private = ed25519.PrivateKey(spend)
+	default:
+		return nil, fmt.Errorf("invalid seed length")
+	}
 	h := crypto.Sha256Hash([]byte(userId))
 	signBytes := ed25519.Sign(private, h[:])
 	signature := base64.RawURLEncoding.EncodeToString(signBytes[:])
@@ -65,12 +74,12 @@ func RegisterSafe(ctx context.Context, userId, spendPrivateKeySeed string, su *S
 	return resp.Data, nil
 }
 
-func RegisterSafeAndPin(ctx context.Context, su *SafeUser) (*UserMeView, error) {
+func RegisterSafeWithSetupPin(ctx context.Context, su *SafeUser) (*UserMeView, error) {
 	seed, err := hex.DecodeString(su.SpendPrivateKey)
 	if err != nil {
 		return nil, err
 	}
-	private := ed25519.NewKeyFromSeed(seed)
+	private := ed25519.PrivateKey(seed)
 	spendPublicKey := private.Public().(ed25519.PublicKey)
 
 	counter := make([]byte, 8)
@@ -82,7 +91,7 @@ func RegisterSafeAndPin(ctx context.Context, su *SafeUser) (*UserMeView, error) 
 	}
 	err = UpdatePin(ctx, "", encryptedPin, su)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("update pin error: %w", err)
 	}
 	return RegisterSafe(ctx, su.UserId, su.SpendPrivateKey, su)
 }
