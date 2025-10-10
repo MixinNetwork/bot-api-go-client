@@ -79,7 +79,7 @@ func RegisterSafeWithSetupPin(ctx context.Context, su *SafeUser) (*UserMeView, e
 	if err != nil {
 		return nil, err
 	}
-	private := ed25519.PrivateKey(seed)
+	private := ed25519.NewKeyFromSeed(seed)
 	spendPublicKey := private.Public().(ed25519.PublicKey)
 
 	counter := make([]byte, 8)
