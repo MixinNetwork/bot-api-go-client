@@ -31,6 +31,9 @@ func EncryptEd25519PIN(pin string, iterator uint64, current *SafeUser) (string, 
 	}
 
 	private := ed25519.NewKeyFromSeed(privateBytes)
+	if len(current.ServerPublicKey) == 0 {
+		return "", errors.New("missing setup server public key")
+	}
 	public, err := hex.DecodeString(current.ServerPublicKey)
 	if err != nil {
 		return "", err
