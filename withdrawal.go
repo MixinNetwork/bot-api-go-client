@@ -40,6 +40,9 @@ func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, trac
 		switch fee.AssetID {
 		case assetId:
 			assetFee = fee
+			if chain.AssetID == assetId {
+				chainFee = fee
+			}
 		case chain.AssetID:
 			chainFee = fee
 		}
