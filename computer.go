@@ -297,3 +297,12 @@ func EncodeMtgExtra(appID string, extra []byte) string {
 	data = append(data, extra...)
 	return base64.RawURLEncoding.EncodeToString(data)
 }
+
+func DecodeComputerExtraBase64(extra string) (string, []byte) {
+	data, err := base64.RawURLEncoding.DecodeString(extra)
+	if err != nil || len(data) < 16 {
+		return "", nil
+	}
+	aid := uuid.FromBytesOrNil(data[0:16])
+	return aid.String(), data[16:]
+}
