@@ -55,7 +55,7 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			Tag:         tag,
 		}, {
 			Amount:     feeAmount,
-			MixAddress: NewUUIDMixAddress([]string{MixinFeeUserId}, 1),
+			MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
 		}}
 		tx, err := SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
 		if err != nil {
