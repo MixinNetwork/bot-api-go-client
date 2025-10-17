@@ -77,7 +77,7 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 	totalOutput := common.NewIntegerFromString(amount)
 	var err error
 	if len(utxos) < 1 {
-		utxos, err = ListOutputs(ctx, membersHash, 1, assetId, "unspent", 0, 250, u)
+		utxos, err = ListOutputs(ctx, membersHash, 1, assetId, OutputStateUnspent, 0, 250, u)
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 
 	var feeChange common.Integer
 	if len(feeUtxos) < 1 {
-		feeUtxos, err = ListOutputs(ctx, membersHash, 1, feeAssetId, "unspent", 0, 250, u)
+		feeUtxos, err = ListOutputs(ctx, membersHash, 1, feeAssetId, OutputStateUnspent, 0, 250, u)
 		if err != nil {
 			return nil, err
 		}
