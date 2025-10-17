@@ -64,6 +64,7 @@ func withdrawalCmd(c *cli.Context) error {
 	traceId := bot.UuidNewV4().String()
 	if trace != "" {
 		traceId = trace
+		log.Println("trace:", traceId)
 	}
 
 	log.Printf("withdrawal %s %s %s %s %s", asset, amount, destination, tag, traceId)
@@ -73,5 +74,6 @@ func withdrawalCmd(c *cli.Context) error {
 	if err != nil {
 		panic(err)
 	}
+	log.Println("Withdrawal success")
 	return nil
 }
