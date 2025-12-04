@@ -55,7 +55,7 @@ const (
 	PolkadotChainId        = "54c61a72-b982-4034-a556-0d99e3c21e39"
 	KusamaChainId          = "9d29e4f6-d67c-4c4b-9525-604b04afbe9f"
 	AlgorandChainId        = "706b6f84-3333-4e55-8e89-275e71ce9803"
-	AvalancheChainId       = "cbc77539-0a20-4666-8c8a-4ded62b36f0a"
+	AvalancheXChainId      = "cbc77539-0a20-4666-8c8a-4ded62b36f0a"
 	AvalancheCChainId      = "1f67ac58-87ba-3571-9781-e9413c046f34"
 	XDCChainId             = "b12bb04a-1cea-401c-a086-0be61f544889"
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
@@ -161,8 +161,8 @@ func GetChainName(chainId string) string {
 		return "Dash"
 	case ZcashChainId:
 		return "Zcash"
-	case AvalancheChainId:
-		return "Avalanche"
+	case AvalancheXChainId:
+		return "Avalanche X-Chain"
 	case AvalancheCChainId:
 		return "Avalanche C-Chain"
 	case MoneroChainId:
@@ -278,7 +278,7 @@ var validChainMap = map[string]bool{
 	KusamaChainId:          true,
 	AlgorandChainId:        true,
 	NearChainId:            true,
-	AvalancheChainId:       true,
+	AvalancheXChainId:      true,
 	AvalancheCChainId:      true,
 	XDCChainId:             true,
 	AptosChainId:           true,
@@ -339,7 +339,7 @@ func GetFullChains() map[string]bool {
 		PolkadotChainId:        true,
 		KusamaChainId:          true,
 		AlgorandChainId:        true,
-		AvalancheChainId:       true,
+		AvalancheXChainId:      true,
 		AvalancheCChainId:      true,
 		XDCChainId:             true,
 		AptosChainId:           true,
