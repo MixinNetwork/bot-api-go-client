@@ -42,6 +42,7 @@ type MessageRequest struct {
 	DataBase64       string `json:"data_base64"`
 	RepresentativeId string `json:"representative_id"`
 	QuoteMessageId   string `json:"quote_message_id"`
+	Silent           bool   `json:"silent"`
 }
 
 type ReceiptAcknowledgementRequest struct {
