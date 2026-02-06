@@ -75,8 +75,9 @@ type ComputerSystemCall struct {
 
 type ComputerSystemCallResponse struct {
 	ComputerSystemCall
-	Reason   string               `json:"reason"`
-	SubCalls []ComputerSystemCall `json:"subs"`
+	Reason       string               `json:"reason"`
+	SubCalls     []ComputerSystemCall `json:"subs"`
+	RefundTraces []string             `json:"refund_traces"`
 
 	Error `json:"error"`
 }
