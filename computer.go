@@ -75,8 +75,9 @@ type ComputerSystemCall struct {
 
 type ComputerSystemCallResponse struct {
 	ComputerSystemCall
-	Reason   string               `json:"reason"`
-	SubCalls []ComputerSystemCall `json:"subs"`
+	Reason       string               `json:"reason"`
+	SubCalls     []ComputerSystemCall `json:"subs"`
+	RefundTraces []string             `json:"refund_traces"`
 
 	Error `json:"error"`
 }
@@ -296,4 +297,13 @@ func EncodeMtgExtra(appID string, extra []byte) string {
 	data := uuid.Must(uuid.FromString(appID)).Bytes()
 	data = append(data, extra...)
 	return base64.RawURLEncoding.EncodeToString(data)
+}
+
+func DecodeComputerExtraBase64(extra string) (string, []byte) {
+	data, err := base64.RawURLEncoding.DecodeString(extra)
+	if err != nil || len(data) < 16 {
+		return "", nil
+	}
+	aid := uuid.FromBytesOrNil(data[0:16])
+	return aid.String(), data[16:]
 }

@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	OutputStateUnspent = "unspent"
+	OutputStateSpent   = "spent"
+)
+
 type KernelDepositView struct {
 	Chain        string `json:"chain"`
 	DepositHash  string `json:"deposit_hash"`
@@ -38,22 +43,21 @@ type Output struct {
 	Signers            []string  `json:"signers"`
 	SignedBy           string    `json:"signed_by"`
 
-	InscriptionHash string             `json:"inscription_hash,omitempty"`
-	Deposit         *KernelDepositView `json:"deposit,omitempty"`
-	RequestId       string             `json:"request_id,omitempty"`
+	InscriptionHash string `json:"inscription_hash,omitempty"`
+	RequestId       string `json:"request_id,omitempty"`
 }
 
 func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
-	return ListOutputs(ctx, membersHash, threshold, kernelAssetId, "unspent", 0, 500, u)
+	return ListOutputs(ctx, membersHash, threshold, kernelAssetId, OutputStateUnspent, 0, 500, u)
 }
 
-func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset uint64, limit int, u *SafeUser) ([]*Output, error) {
+func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state string, offsetSequence int64, limit int, u *SafeUser) ([]*Output, error) {
 	v := url.Values{}
 	v.Set("members", membersHash)
 	v.Set("threshold", fmt.Sprint(threshold))
 	v.Set("limit", strconv.Itoa(limit))
-	if offset > 0 {
-		v.Set("offset", fmt.Sprint(offset))
+	if offsetSequence > 0 {
+		v.Set("offset", fmt.Sprint(offsetSequence))
 	}
 	if assetId != "" {
 		v.Set("asset", assetId)
@@ -61,7 +65,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
 	token, err := SignAuthenticationToken(method, path, "", u)
 	if err != nil {
 		return nil, err
@@ -85,10 +89,10 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 }
 
 func ListUnspentOutputsByToken(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, accessToken string) ([]*Output, error) {
-	return ListOutputsByToken(ctx, membersHash, threshold, kernelAssetId, "unspent", 0, 500, accessToken)
+	return ListOutputsByToken(ctx, membersHash, threshold, kernelAssetId, OutputStateUnspent, 0, 500, accessToken)
 }
 
-func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset uint64, limit int, accessToken string) ([]*Output, error) {
+func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset int64, limit int, accessToken string) ([]*Output, error) {
 	v := url.Values{}
 	v.Set("members", membersHash)
 	v.Set("threshold", fmt.Sprint(threshold))
@@ -102,7 +106,7 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 	if state != "" {
 		v.Set("state", state)
 	}
-	method, path := "GET", fmt.Sprintf("%s", "/safe/outputs?"+v.Encode())
+	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
 	body, err := Request(ctx, method, path, []byte{}, accessToken)
 	if err != nil {
 		return nil, err

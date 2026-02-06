@@ -16,20 +16,22 @@ import (
 )
 
 const (
-	BTC           = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
-	ETH           = "43d61dcd-e413-450d-80b8-101d5e903357"
-	USDT_ERC20    = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
-	USDT_TRC20    = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
-	USDT_POLYGON  = "218bc6f4-7927-3f8e-8568-3a3725b74361"
-	USDT_BSC      = "94213408-4ee7-3150-a9c4-9c5cce421c78"
-	USDT_SOLANA   = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
-	USDT_OPTIMISM = "65f137d4-50ba-3090-920b-b360f7da8eee"
-	USDT_ARBITRUM = "66e12fe3-50fe-3308-9426-7b2f47f6a66f"
+	BTC              = "c6d0c728-2624-429b-8e0d-d9d19b6592fa"
+	ETH              = "43d61dcd-e413-450d-80b8-101d5e903357"
+	USDT_ERC20       = "4d8c508b-91c5-375b-92b0-ee702ed2dac5"
+	USDT_TRC20       = "b91e18ff-a9ae-3dc7-8679-e935d9a4b34b"
+	USDT_POLYGON     = "218bc6f4-7927-3f8e-8568-3a3725b74361"
+	USDT_BSC         = "94213408-4ee7-3150-a9c4-9c5cce421c78"
+	USDT_SOLANA      = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
+	USDT_OPTIMISM    = "65f137d4-50ba-3090-920b-b360f7da8eee"
+	USDT_ARBITRUM    = "66e12fe3-50fe-3308-9426-7b2f47f6a66f"
+	USDT_AVALANCHE_C = "38ff9f68-d62a-3070-9766-69b6a84218b3"
 
 	USDC_ERC20    = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
 	USDC_SOLANA   = "de6fa523-c596-398e-b12f-6d6980544b59"
 	USDC_BSC      = "3d3d69f1-6742-34cf-95fe-3f8964e6d307"
 	USDC_BASE     = "2f845564-3898-3d17-8c24-3275e96235b5"
+	USDC_POLYGON  = "5fec1691-561d-339f-8819-63d54bf50b52"
 	USDC_OPTIMISM = "2adae45c-5077-3b96-b810-0da15bcc3097"
 	USDC_ARBITRUM = "d2d80f2c-0ac5-3d8c-82c2-e0a1aa25f928"
 )
@@ -176,11 +178,11 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 
 func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
-	offset := uint64(0)
+	offset := int64(0)
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
 	for {
-		outputs, err := ListOutputs(ctx, membersHash, 1, "", "unspent", offset, 500, su)
+		outputs, err := ListOutputs(ctx, membersHash, 1, "", OutputStateUnspent, offset, 500, su)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -196,7 +198,7 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 				m[output.AssetId] = number.FromString(output.Amount)
 			}
 			if i == len(outputs)-1 {
-				offset = uint64(outputs[len(outputs)-1].Sequence)
+				offset = outputs[len(outputs)-1].Sequence
 			}
 		}
 		if len(outputs) < 500 {

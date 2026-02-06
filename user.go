@@ -31,6 +31,18 @@ type User struct {
 	ServerPublicKey string     `json:"server_public_key"`
 }
 
+type UserMeView struct {
+	User
+	SessionId                     string  `json:"session_id"`
+	HasPIN                        bool    `json:"has_pin"`
+	ReceiveMessageSource          string  `json:"receive_message_source"`
+	AcceptConversationSource      string  `json:"accept_conversation_source"`
+	AcceptSearchSource            string  `json:"accept_search_source"`
+	FiatCurrency                  string  `json:"fiat_currency"`
+	TransferNotificationThreshold float64 `json:"transfer_notification_threshold"`
+	TransferConfirmationThreshold float64 `json:"transfer_confirmation_threshold"`
+}
+
 type Membership struct {
 	Plan      string    `json:"plan"`
 	ExpiredAt time.Time `json:"expired_at"`
@@ -48,9 +60,9 @@ const (
 	PreferenceSourceNobody   = "NOBODY"
 )
 
-func CreateUserSimple(ctx context.Context, sessionSecret, fullName string) (*User, error) {
+func CreateUserSimple(ctx context.Context, sessionPublicKey, fullName string) (*User, error) {
 	data, _ := json.Marshal(map[string]string{
-		"session_secret": sessionSecret,
+		"session_secret": sessionPublicKey,
 		"full_name":      fullName,
 	})
 	body, err := SimpleRequest(ctx, "POST", "/users", data)
@@ -223,14 +235,14 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin string, su *Sa
 	return nil
 }
 
-func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*User, error) {
+func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*UserMeView, error) {
 	body, err := RequestWithId(ctx, "GET", "/safe/me", nil, accessToken, requestID)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  *User `json:"data"`
-		Error Error `json:"error"`
+		Data  *UserMeView `json:"data"`
+		Error Error       `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
@@ -242,11 +254,11 @@ func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*U
 	return resp.Data, nil
 }
 
-func UserMe(ctx context.Context, accessToken string) (*User, error) {
+func UserMe(ctx context.Context, accessToken string) (*UserMeView, error) {
 	return UserMeWithRequestID(ctx, accessToken, UuidNewV4().String())
 }
 
-func RequestUserMe(ctx context.Context, su *SafeUser) (*User, error) {
+func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
 	path := "/safe/me"
 	token, err := SignAuthenticationToken("GET", path, "", su)
 	if err != nil {

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/gofrs/uuid/v5"
 )
 
 type ParticipantSessionView struct {
@@ -40,16 +42,27 @@ func CreateContactConversation(ctx context.Context, participantID string, user *
 			UserId: participantID,
 		},
 	}
-	return CreateConversation(ctx, "CONTACT", UniqueConversationId(participantID, user.UserId), "", "", participants, user)
+	return createConversation(ctx, "CONTACT", UniqueConversationId(participantID, user.UserId), "", "", participants, "", user)
 }
 
-func CreateConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, user *SafeUser) (*Conversation, error) {
+func CreateGroupConversation(ctx context.Context, name, announcement string, participants []Participant, user *SafeUser) (*Conversation, error) {
+	pids := make([]string, len(participants))
+	for i, p := range participants {
+		pids[i] = p.UserId
+	}
+	randomId := uuid.Must(uuid.NewV4()).String()
+	conversationId := GroupConversationId(user.UserId, name, pids, randomId)
+	return createConversation(ctx, "GROUP", conversationId, name, announcement, participants, randomId, user)
+}
+
+func createConversation(ctx context.Context, category, conversationId string, name, announcement string, participants []Participant, randomId string, user *SafeUser) (*Conversation, error) {
 	params, err := json.Marshal(map[string]any{
 		"category":        category,
 		"conversation_id": conversationId,
 		"name":            name,
 		"announcement":    announcement,
 		"participants":    participants,
+		"random_id":       randomId,
 	})
 	if err != nil {
 		return nil, err

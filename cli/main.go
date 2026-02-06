@@ -42,6 +42,7 @@ func main() {
 			assetsBalanceCmdCli,
 			notifySnapshotCmdCli,
 			bareUserCmdCli,
+			createRegisterSafeBareUserCmdCli,
 			upgradeLegacyUserCmdCli,
 			consolidationUtxosCmdCli,
 		},

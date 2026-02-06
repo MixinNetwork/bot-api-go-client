@@ -103,7 +103,7 @@ func registerSafeCMD(c *cli.Context) error {
 	privateKey := ed25519.NewKeyFromSeed(s)
 	sd := hex.EncodeToString(privateKey.Seed())
 
-	me, err = bot.RegisterSafe(ctx, su.UserId, sd, &su)
+	me, err = bot.RegisterSafe(ctx, sd, &su)
 	if err != nil {
 		return err
 	}

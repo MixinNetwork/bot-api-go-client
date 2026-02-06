@@ -3,6 +3,7 @@ package bot
 import (
 	"crypto/md5"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/gofrs/uuid/v5"
@@ -36,6 +37,18 @@ func UniqueConversationId(userId, recipientId string) string {
 	sum[8] = (sum[8] & 0x3f) | 0x80
 	id, _ := UuidFromBytes(sum)
 	return id.String()
+}
+
+func GroupConversationId(ownerId, groupName string, participants []string, randomId string) string {
+	randomId = uuid.Must(uuid.FromString(randomId)).String()
+	gid := UniqueConversationId(ownerId, groupName)
+	gid = UniqueConversationId(gid, randomId)
+
+	slices.Sort(participants)
+	for _, p := range participants {
+		gid = UniqueConversationId(gid, p)
+	}
+	return gid
 }
 
 func Chunked(source []any, size int) [][]any {

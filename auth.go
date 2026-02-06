@@ -38,7 +38,7 @@ func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, s
 		return "", err
 	}
 	// more validate the private key
-	if len(priv) != 32 {
+	if len(priv) != ed25519.SeedSize {
 		return "", fmt.Errorf("bad ed25519 private key %s", priv)
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
