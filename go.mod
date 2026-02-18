@@ -3,7 +3,7 @@ module github.com/MixinNetwork/bot-api-go-client/v3
 go 1.26.0
 
 require (
-	filippo.io/edwards25519 v1.1.0
+	filippo.io/edwards25519 v1.2.0
 	github.com/MixinNetwork/go-number v0.2.0
 	github.com/MixinNetwork/mixin v0.18.31
 	github.com/coder/websocket v1.8.14
