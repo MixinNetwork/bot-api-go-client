@@ -1,5 +1,5 @@
-filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
-filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
+filippo.io/edwards25519 v1.2.0 h1:crnVqOiS4jqYleHd9vaKZ+HKtHfllngJIiOpNpoJsjo=
+filippo.io/edwards25519 v1.2.0/go.mod h1:xzAOLCNug/yB62zG1bQ8uziwrIqIuxhctzJT18Q77mc=
 github.com/MixinNetwork/go-number v0.2.0 h1:1TJtC3LuKeBqrlVQ5KymNy1gc6O9i1UgY0/8wH20p/M=
 github.com/MixinNetwork/go-number v0.2.0/go.mod h1:xn7WHrhI1Ra8irldx2YQVmL8SerzJZNHX92AWyI3Ars=
 github.com/MixinNetwork/mixin v0.18.31 h1:0QvnV71L87icTvCa0Z5El8ce7ONnhoVQ5SKYjNuhzXI=
