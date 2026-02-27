@@ -9,6 +9,7 @@ import (
 )
 
 type AddressInput struct {
+	ChainId     string
 	AssetId     string
 	Label       string
 	Destination string
@@ -18,6 +19,7 @@ type AddressInput struct {
 type Address struct {
 	AddressId   string    `json:"address_id"`
 	AssetId     string    `json:"asset_id"`
+	ChainId     string    `json:"chain_id"`
 	Label       string    `json:"label"`
 	Destination string    `json:"destination"`
 	Tag         string    `json:"tag"`
@@ -43,6 +45,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Addr
 		return nil, err
 	}
 	data, err := json.Marshal(map[string]any{
+		"chain_id":    in.ChainId,
 		"asset_id":    in.AssetId,
 		"label":       in.Label,
 		"destination": in.Destination,
