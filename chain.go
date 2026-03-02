@@ -57,7 +57,7 @@ const (
 	AlgorandChainId        = "706b6f84-3333-4e55-8e89-275e71ce9803"
 	AvalancheXChainId      = "cbc77539-0a20-4666-8c8a-4ded62b36f0a"
 	AvalancheCChainId      = "1f67ac58-87ba-3571-9781-e9413c046f34"
-	MarschainChainId       = "a5399543-aefc-38da-ae2c-0ba36f00ee5c"
+	MarsChainChainId       = "163a2142-398d-3483-aee3-d47db8da4d10"
 	XDCChainId             = "b12bb04a-1cea-401c-a086-0be61f544889"
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
@@ -166,8 +166,8 @@ func GetChainName(chainId string) string {
 		return "Avalanche X-Chain"
 	case AvalancheCChainId:
 		return "Avalanche C-Chain"
-	case MarschainChainId:
-		return "Marschain"
+	case MarsChainChainId:
+		return "MarsChain"
 	case MoneroChainId:
 		return "Monero"
 	case NEMChainId:
@@ -283,7 +283,7 @@ var validChainMap = map[string]bool{
 	NearChainId:            true,
 	AvalancheXChainId:      true,
 	AvalancheCChainId:      true,
-	MarschainChainId:       true,
+	MarsChainChainId:       true,
 	XDCChainId:             true,
 	AptosChainId:           true,
 
@@ -345,7 +345,7 @@ func GetFullChains() map[string]bool {
 		AlgorandChainId:        true,
 		AvalancheXChainId:      true,
 		AvalancheCChainId:      true,
-		MarschainChainId:       true,
+		MarsChainChainId:       true,
 		XDCChainId:             true,
 		AptosChainId:           true,
 		TONChainId:             true,
