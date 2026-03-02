@@ -55,10 +55,7 @@ func Chunked(source []any, size int) [][]any {
 	var result [][]any
 	index := 0
 	for index < len(source) {
-		end := index + size
-		if end >= len(source) {
-			end = len(source)
-		}
+		end := min(index+size, len(source))
 		result = append(result, source[index:end])
 		index += size
 	}

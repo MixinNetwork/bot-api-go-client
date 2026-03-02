@@ -71,7 +71,7 @@ func TIPMigrateBody(pub ed25519.PublicKey) string {
 }
 
 func TIPBodyForVerify(timestamp int64) []byte {
-	return []byte(fmt.Sprintf("%s%032d", TIPVerify, timestamp))
+	return fmt.Appendf(nil, "%s%032d", TIPVerify, timestamp)
 }
 
 func TipBodyForRawTransactionCreate(assetId string, opponentKey string, opponentReceivers []string, opponentThreshold int64, amount number.Decimal, traceId, memo string) []byte {

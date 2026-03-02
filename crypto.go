@@ -2,13 +2,13 @@ package bot
 
 import (
 	"crypto/ed25519"
+	"crypto/sha3"
 	"crypto/sha512"
 	"encoding/hex"
-	"sort"
+	"slices"
 
 	"filippo.io/edwards25519"
 	"golang.org/x/crypto/curve25519"
-	"golang.org/x/crypto/sha3"
 )
 
 func PrivateKeyToCurve25519(curve25519Private *[32]byte, privateKey ed25519.PrivateKey) {
@@ -49,7 +49,7 @@ func SharedKey(public ed25519.PublicKey, private ed25519.PrivateKey) ([32]byte, 
 }
 
 func HashMembers(ids []string) string {
-	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	slices.Sort(ids)
 	var in string
 	for _, id := range ids {
 		in = in + id

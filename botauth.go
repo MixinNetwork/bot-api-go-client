@@ -81,7 +81,7 @@ func (c *BotAuthClient) SignRequest(ctx context.Context, ts int64, botUserId str
 	var p [32]byte
 	PrivateKeyToCurve25519(&p, priv)
 
-	data := []byte(fmt.Sprintf("%d%s%s", ts, r.Method, r.URL.RequestURI()))
+	data := fmt.Appendf(nil, "%d%s%s", ts, r.Method, r.URL.RequestURI())
 	if r.Body != nil {
 		var buf bytes.Buffer
 		_, err = io.Copy(&buf, r.Body)
@@ -96,7 +96,7 @@ func (c *BotAuthClient) SignRequest(ctx context.Context, ts int64, botUserId str
 	if err != nil {
 		return "", errors.Errorf("failed to hash: %v", err)
 	}
-	return base64.RawURLEncoding.EncodeToString([]byte(fmt.Sprintf("%s%s", c.SafeUser.UserId, hash))), nil
+	return base64.RawURLEncoding.EncodeToString(fmt.Appendf(nil, "%s%s", c.SafeUser.UserId, hash)), nil
 }
 
 func (c *BotAuthClient) getSharedKey(ctx context.Context, userId string) ([]byte, error) {

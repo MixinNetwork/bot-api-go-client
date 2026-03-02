@@ -17,7 +17,7 @@ type LegacySnapshot struct {
 	ClosingBalance  string    `json:"closing_balance"`
 	TransactionHash string    `json:"transaction_hash,omitempty"`
 	SnapshotHash    string    `json:"snapshot_hash,omitempty"`
-	SnapshotAt      time.Time `json:"snapshot_at,omitempty"`
+	SnapshotAt      time.Time `json:"snapshot_at"`
 	CreatedAt       time.Time `json:"created_at"`
 
 	// deposit &  withdrawal
@@ -37,7 +37,7 @@ type LegacySnapshot struct {
 	Fee           struct {
 		Amount  string `json:"amount"`
 		AssetId string `json:"asset_id"`
-	} `json:"fee,omitempty"`
+	} `json:"fee"`
 }
 
 type LegacySnapshotShort struct {

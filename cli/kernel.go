@@ -124,7 +124,7 @@ func SpendKernelUTXOs(c *cli.Context) error {
 
 	tx := common.NewTransactionV5(asset)
 	tx.Extra = extra
-	for _, in := range strings.Split(c.String("inputs"), ",") {
+	for in := range strings.SplitSeq(c.String("inputs"), ",") {
 		parts := strings.Split(in, ":")
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid input %s", in)
@@ -141,7 +141,7 @@ func SpendKernelUTXOs(c *cli.Context) error {
 	}
 
 	var recipients []*bot.TransactionRecipient
-	for _, out := range strings.Split(c.String("outputs"), ",") {
+	for out := range strings.SplitSeq(c.String("outputs"), ",") {
 		parts := strings.Split(out, ":")
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid output %s", out)
@@ -231,7 +231,7 @@ func ClaimMintDistribution(c *cli.Context) error {
 
 	var total common.Integer
 	tx := common.NewTransactionV5(common.XINAssetId)
-	tx.Extra = []byte(fmt.Sprintf("MINT %d", c.Uint64("batch")))
+	tx.Extra = fmt.Appendf(nil, "MINT %d", c.Uint64("batch"))
 	for i, out := range mints[0].Outputs {
 		if !checkMyOutput(out, uint64(i), account) {
 			continue
@@ -252,7 +252,7 @@ func ClaimMintDistribution(c *cli.Context) error {
 
 	var outputTotal common.Integer
 	var recipients []*bot.TransactionRecipient
-	for _, out := range strings.Split(c.String("outputs"), ",") {
+	for out := range strings.SplitSeq(c.String("outputs"), ",") {
 		parts := strings.Split(out, ":")
 		if len(parts) != 2 {
 			return fmt.Errorf("invalid output %s", out)
