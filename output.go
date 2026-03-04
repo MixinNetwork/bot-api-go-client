@@ -47,8 +47,8 @@ type Output struct {
 	RequestId       string `json:"request_id,omitempty"`
 }
 
-func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, u *SafeUser) ([]*Output, error) {
-	return ListOutputs(ctx, membersHash, threshold, kernelAssetId, OutputStateUnspent, 0, 500, u)
+func ListUnspentOutputs(ctx context.Context, membersHash string, threshold byte, assetId string, u *SafeUser) ([]*Output, error) {
+	return ListOutputs(ctx, membersHash, threshold, assetId, OutputStateUnspent, 0, 500, u)
 }
 
 func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetId, state string, offsetSequence int64, limit int, u *SafeUser) ([]*Output, error) {
@@ -88,8 +88,8 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 	return resp.Data, nil
 }
 
-func ListUnspentOutputsByToken(ctx context.Context, membersHash string, threshold byte, kernelAssetId string, accessToken string) ([]*Output, error) {
-	return ListOutputsByToken(ctx, membersHash, threshold, kernelAssetId, OutputStateUnspent, 0, 500, accessToken)
+func ListUnspentOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId string, accessToken string) ([]*Output, error) {
+	return ListOutputsByToken(ctx, membersHash, threshold, assetId, OutputStateUnspent, 0, 500, accessToken)
 }
 
 func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset int64, limit int, accessToken string) ([]*Output, error) {

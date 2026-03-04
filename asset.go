@@ -11,8 +11,6 @@ import (
 
 	"github.com/MixinNetwork/go-number"
 	"github.com/MixinNetwork/mixin/common"
-	"github.com/MixinNetwork/mixin/crypto"
-	"github.com/gofrs/uuid/v5"
 )
 
 const (
@@ -83,33 +81,39 @@ func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (co
 		SessionPrivateKey: sessionKey,
 	}
 
-	if id, _ := uuid.FromString(assetId); assetId == id.String() {
-		assetId = crypto.Sha256Hash([]byte(assetId)).String()
-	}
 	return AssetBalanceWithSafeUser(ctx, assetId, su)
 }
 
-func AssetBalanceWithSafeUser(ctx context.Context, kernelAssetId string, su *SafeUser) (common.Integer, error) {
-	membersHash := HashMembers([]string{su.UserId})
-	outputs, err := ListUnspentOutputs(ctx, membersHash, 1, kernelAssetId, su)
-	if err != nil {
-		return common.Zero, err
-	}
+func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser) (common.Integer, error) {
+	offset := int64(0)
+	filter := make(map[string]bool)
 	var total common.Integer
-	for _, o := range outputs {
-		amt := common.NewIntegerFromString(o.Amount)
-		total = total.Add(amt)
+	for {
+		outputs, err := ListOutputs(ctx, HashMembers([]string{su.UserId}), 1, assetId, OutputStateUnspent, offset, 500, su)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		for i, o := range outputs {
+			if filter[o.OutputID] {
+				continue
+			}
+			filter[o.OutputID] = true
+			total = total.Add(common.NewIntegerFromString(o.Amount))
+			if i == len(outputs)-1 {
+				offset = o.Sequence
+			}
+		}
+		if len(outputs) < 500 {
+			break
+		}
 	}
 	return total, nil
 }
 
-func UserAssetBalance(ctx context.Context, userID, assetID, accessToken string) (common.Integer, error) {
-	if id, _ := uuid.FromString(assetID); assetID == id.String() {
-		assetID = crypto.Sha256Hash([]byte(assetID)).String()
-	}
-
+func UserAssetBalance(ctx context.Context, userID, assetId, accessToken string) (common.Integer, error) {
 	membersHash := HashMembers([]string{userID})
-	outputs, err := ListUnspentOutputsByToken(ctx, membersHash, 1, assetID, accessToken)
+	outputs, err := ListUnspentOutputsByToken(ctx, membersHash, 1, assetId, accessToken)
 	if err != nil {
 		return common.Zero, err
 	}
