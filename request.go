@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -19,6 +20,7 @@ var (
 	httpUri    string
 	blazeUri   string
 	userAgent  = "Bot-API-Go-Client"
+	debug      = false
 
 	uid        string
 	sid        string
@@ -33,6 +35,9 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	req, err := http.NewRequest(method, httpUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
+	}
+	if debug {
+		log.Printf("Request: %s , path: %s, requestId: %s", method, path, requestID)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+accessToken)
@@ -103,4 +108,8 @@ func SetBlazeUri(blaze string) {
 
 func SetUserAgent(ua string) {
 	userAgent = ua
+}
+
+func SetDebug(d bool) {
+	debug = d
 }
