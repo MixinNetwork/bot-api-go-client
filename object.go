@@ -42,7 +42,6 @@ func EstimateStorageCost(extra []byte) common.Integer {
 
 func StorageRecipient() *MixAddress {
 	addr := common.NewAddressFromSeed(make([]byte, 64))
-	mix := NewMainnetMixAddress([]string{addr.String()}, 1)
-	mix.Threshold = 64
+	mix := NewMainnetMixAddress([]string{addr.String()}, 64)
 	return mix
 }
