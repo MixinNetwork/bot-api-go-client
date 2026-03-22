@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
@@ -41,7 +42,7 @@ func EstimateStorageCost(extra []byte) common.Integer {
 }
 
 func StorageRecipient() *MixAddress {
-	addr := common.NewAddressFromSeed(make([]byte, 64))
+	addr := common.NewAddressFromSeed(bytes.Repeat([]byte{1}, 64))
 	mix := NewMainnetMixAddress([]string{addr.String()}, 64)
 	return mix
 }
