@@ -59,7 +59,7 @@ const (
 	AvalancheCChainId      = "1f67ac58-87ba-3571-9781-e9413c046f34"
 	MarsChainChainId       = "163a2142-398d-3483-aee3-d47db8da4d10"
 	XDCChainId             = "b12bb04a-1cea-401c-a086-0be61f544889"
-	HypeChainId            = "36d23d9e-bf4e-3ede-a12d-26f1f1f9fd2f"
+	HyperEVMChainId        = "36d23d9e-bf4e-3ede-a12d-26f1f1f9fd2f"
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	SuiChainId             = "2bd97283-2582-33a8-bcba-f4b8ed189572"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
