@@ -144,8 +144,8 @@ func GetChainName(chainId string) string {
 		return "OP Mainnet"
 	case ArbitrumChainId:
 		return "Arbitrum One"
-	case MVMChainId:
-		return "Mixin Virtual Machine"
+	case HyperEVMChainId:
+		return "HyperEVM"
 	case BitcoinChainId:
 		return "Bitcoin"
 	case HandshakeChainId:
@@ -251,7 +251,7 @@ var validChainMap = map[string]bool{
 	BaseChainId:            true,
 	OptimismChainId:        true,
 	ArbitrumChainId:        true,
-	MVMChainId:             true,
+	HyperEVMChainId:        true,
 	DecredChainId:          true,
 	RippleChainId:          true,
 	SiacoinChainId:         true,
@@ -309,7 +309,7 @@ func GetFullChains() map[string]bool {
 		BaseChainId:            true,
 		OptimismChainId:        true,
 		ArbitrumChainId:        true,
-		MVMChainId:             true,
+		HyperEVMChainId:        true,
 		DecredChainId:          true,
 		RippleChainId:          true,
 		SiacoinChainId:         true,
