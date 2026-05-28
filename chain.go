@@ -230,6 +230,8 @@ func GetChainName(chainId string) string {
 		return "XDC Network"
 	case AptosChainId:
 		return "Aptos"
+	case SuiChainId:
+		return "Sui"
 	default:
 		return "Not Supported Chain"
 	}
@@ -288,6 +290,7 @@ var validChainMap = map[string]bool{
 	MarsChainChainId:       true,
 	XDCChainId:             true,
 	AptosChainId:           true,
+	SuiChainId:             true,
 
 	MassGridChainId: true,
 	BytomChainId:    true,
@@ -350,6 +353,7 @@ func GetFullChains() map[string]bool {
 		MarsChainChainId:       true,
 		XDCChainId:             true,
 		AptosChainId:           true,
+		SuiChainId:             true,
 		TONChainId:             true,
 	}
 }
