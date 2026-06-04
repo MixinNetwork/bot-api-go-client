@@ -63,6 +63,7 @@ const (
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	SuiChainId             = "2bd97283-2582-33a8-bcba-f4b8ed189572"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
+	PearlChainId           = "e1bf305c-0d49-397d-85bd-55b9eaadafba"
 
 	XINAssetId    = "c94ac88f-4671-3976-b60a-09064f1811e8"
 	VaultaAssetId = "ac2b79f3-ec9c-3d87-b4ca-3e825228dda5"
@@ -232,6 +233,8 @@ func GetChainName(chainId string) string {
 		return "Aptos"
 	case SuiChainId:
 		return "Sui"
+	case PearlChainId:
+		return "Pearl"
 	default:
 		return "Not Supported Chain"
 	}
@@ -291,6 +294,7 @@ var validChainMap = map[string]bool{
 	XDCChainId:             true,
 	AptosChainId:           true,
 	SuiChainId:             true,
+	PearlChainId:           true,
 
 	MassGridChainId: true,
 	BytomChainId:    true,
@@ -355,5 +359,6 @@ func GetFullChains() map[string]bool {
 		AptosChainId:           true,
 		SuiChainId:             true,
 		TONChainId:             true,
+		PearlChainId:           true,
 	}
 }
