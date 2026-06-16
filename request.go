@@ -98,6 +98,10 @@ func WithAPIKey(userId, sessionId, p string) {
 	privateKey = p
 }
 
+func SetHttpTimeout(timeout time.Duration) {
+	httpClient.Timeout = timeout
+}
+
 func SetBaseUri(base string) {
 	httpUri = base
 }
