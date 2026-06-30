@@ -76,6 +76,15 @@ type AssetFee struct {
 	Amount  string `json:"amount"`
 }
 
+type SafeFee struct {
+	Type       string `json:"type"`
+	AssetID    string `json:"asset_id"`
+	ChainID    string `json:"chain_id"`
+	FeeAssetID string `json:"fee_asset_id"`
+	FeeAmount  string `json:"fee_amount"`
+	Priority   int    `json:"priority"`
+}
+
 func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (common.Integer, error) {
 	su := &SafeUser{
 		UserId:            uid,
@@ -153,7 +162,7 @@ func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser
 	return resp.Data, nil
 }
 
-func ReadSafeFees(ctx context.Context, su *SafeUser) ([]*AssetFee, error) {
+func ReadSafeFees(ctx context.Context, su *SafeUser) ([]*SafeFee, error) {
 	method, path := "GET", "/safe/fees"
 	token, err := SignAuthenticationToken(method, path, "", su)
 	if err != nil {
@@ -164,8 +173,8 @@ func ReadSafeFees(ctx context.Context, su *SafeUser) ([]*AssetFee, error) {
 		return nil, ServerError(ctx, err)
 	}
 	var resp struct {
-		Data  []*AssetFee `json:"data"`
-		Error Error       `json:"error"`
+		Data  []*SafeFee `json:"data"`
+		Error Error      `json:"error"`
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
