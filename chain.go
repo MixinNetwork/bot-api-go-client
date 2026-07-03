@@ -134,7 +134,7 @@ func GetChainName(chainId string) string {
 	case EthereumChainId:
 		return "Ethereum"
 	case EthereumClassicChainId:
-		return "Ethereum Classic"
+		return "Ether Classic"
 	case BSCChainId:
 		return "BNB Smart Chain"
 	case PolygonChainId:
