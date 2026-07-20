@@ -5,7 +5,7 @@ go 1.26.5
 require (
 	filippo.io/edwards25519 v1.2.0
 	github.com/MixinNetwork/go-number v0.2.0
-	github.com/MixinNetwork/mixin v0.19.0
+	github.com/MixinNetwork/mixin v0.19.1
 	github.com/coder/websocket v1.8.15
 	github.com/gofrs/uuid/v5 v5.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
