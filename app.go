@@ -24,6 +24,46 @@ type App struct {
 	IsVerified       bool      `json:"is_verified"`
 }
 
+type UpdateAppInput struct {
+	RedirectURI      string   `json:"redirect_uri"`
+	HomeURI          string   `json:"home_uri"`
+	Name             string   `json:"name"`
+	Description      string   `json:"description"`
+	IconBase64       string   `json:"icon_base64"`
+	Category         string   `json:"category"`
+	Capabilities     []string `json:"capabilities"`
+	ResourcePatterns []string `json:"resource_patterns"`
+}
+
+func UpdateApp(ctx context.Context, in *UpdateAppInput, user *SafeUser) (*App, error) {
+	data, err := json.Marshal(in)
+	if err != nil {
+		return nil, err
+	}
+
+	path := fmt.Sprintf("/apps/%s", user.UserId)
+	token, err := SignAuthenticationToken("POST", path, string(data), user)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", path, data, token)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  *App  `json:"data"`
+		Error Error `json:"error"`
+	}
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
 func Migrate(ctx context.Context, receiver string, user *SafeUser) (*App, error) {
 	tipBody := TipBodyForOwnershipTransfer(receiver)
 	pin, err := signTipBody(tipBody, user.SpendPrivateKey, user.IsSpendPrivateSum)
