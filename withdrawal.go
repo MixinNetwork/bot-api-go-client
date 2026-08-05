@@ -57,7 +57,13 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			Amount:     feeAmount,
 			MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
 		}}
-		tx, err := SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
+		var tx *SequencerTransactionRequest
+		var err error
+		if len(utxos) > 0 {
+			tx, err = SendTransactionWithOutputs(ctx, assetId, recipients, utxos, traceId, []byte(memo), nil, u)
+		} else {
+			tx, err = SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
+		}
 		if err != nil {
 			return nil, err
 		}
