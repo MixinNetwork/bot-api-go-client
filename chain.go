@@ -60,6 +60,7 @@ const (
 	MarsChainChainId       = "163a2142-398d-3483-aee3-d47db8da4d10"
 	XDCChainId             = "b12bb04a-1cea-401c-a086-0be61f544889"
 	HyperEVMChainId        = "36d23d9e-bf4e-3ede-a12d-26f1f1f9fd2f"
+	XLayerChainId          = "37f5a4d1-905f-3b34-8291-c37438c7dcfc"
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	SuiChainId             = "3acb25e4-6216-35c3-b1ca-87184269ee08"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
@@ -147,6 +148,8 @@ func GetChainName(chainId string) string {
 		return "Arbitrum One"
 	case HyperEVMChainId:
 		return "HyperEVM"
+	case XLayerChainId:
+		return "X Layer"
 	case BitcoinChainId:
 		return "Bitcoin"
 	case HandshakeChainId:
@@ -257,6 +260,7 @@ var validChainMap = map[string]bool{
 	OptimismChainId:        true,
 	ArbitrumChainId:        true,
 	HyperEVMChainId:        true,
+	XLayerChainId:          true,
 	DecredChainId:          true,
 	RippleChainId:          true,
 	SiacoinChainId:         true,
@@ -317,6 +321,7 @@ func GetFullChains() map[string]bool {
 		OptimismChainId:        true,
 		ArbitrumChainId:        true,
 		HyperEVMChainId:        true,
+		XLayerChainId:          true,
 		DecredChainId:          true,
 		RippleChainId:          true,
 		SiacoinChainId:         true,
