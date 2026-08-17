@@ -35,6 +35,8 @@ const (
 	USDC_OPTIMISM = "2adae45c-5077-3b96-b810-0da15bcc3097"
 	USDC_ARBITRUM = "d2d80f2c-0ac5-3d8c-82c2-e0a1aa25f928"
 	USDC_HYPEREVM = "1e01fede-51fa-3791-9b06-5c18801b272c"
+	USDC_XLAYER   = "8d706a25-514c-3c73-9446-c25fd07d0ae2"
+	USDC_SUI      = "a0f7ad61-3b9f-30f3-a1de-cd831aec33ff"
 )
 
 type Asset struct {
