@@ -365,9 +365,9 @@ func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*Us
 }
 
 type Session struct {
-	UserID    string
-	SessionID string
-	PublicKey string
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
+	PublicKey string `json:"public_key"`
 }
 
 func GenerateUserChecksum(sessions []*Session) string {

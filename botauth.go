@@ -104,7 +104,7 @@ func (c *BotAuthClient) getSharedKey(ctx context.Context, userId string) ([]byte
 	var sharedKey []byte
 	if err != nil || value == nil || len(value) < 32 {
 		c.Logger.Debug(fmt.Sprintf("cache miss for %s", userId))
-		userSessions, err := FetchUserSession(ctx, []string{userId}, c.SafeUser)
+		userSessions, err := FetchUserSessions(ctx, []string{userId}, c.SafeUser)
 		if err != nil {
 			return nil, err
 		}

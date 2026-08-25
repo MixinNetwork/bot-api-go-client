@@ -9,7 +9,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/curve25519"
 )
@@ -43,6 +46,40 @@ type MessageRequest struct {
 	RepresentativeId string `json:"representative_id"`
 	QuoteMessageId   string `json:"quote_message_id"`
 	Silent           bool   `json:"silent"`
+}
+
+const (
+	EncryptedMessageStateSuccess = "SUCCESS"
+	EncryptedMessageStateFailed  = "FAILED"
+)
+
+type EncryptedMessageResponse struct {
+	Type        string     `json:"type"`
+	MessageId   string     `json:"message_id"`
+	RecipientId string     `json:"recipient_id"`
+	State       string     `json:"state"`
+	Sessions    []*Session `json:"sessions"`
+}
+
+// EncryptedMessageError reports messages that still failed after their
+// recipients' sessions were refreshed and the messages were retried.
+type EncryptedMessageError struct {
+	Responses []*EncryptedMessageResponse
+}
+
+func (e *EncryptedMessageError) Error() string {
+	ids := make([]string, 0, len(e.Responses))
+	for _, response := range e.Responses {
+		if response != nil {
+			ids = append(ids, response.MessageId)
+		}
+	}
+	return fmt.Sprintf("encrypted messages failed after refreshing sessions: %s", strings.Join(ids, ", "))
+}
+
+type encryptedMessageRequest struct {
+	*MessageRequest
+	Checksum string `json:"checksum"`
 }
 
 type ReceiptAcknowledgementRequest struct {
@@ -100,6 +137,240 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUse
 		return resp.Error
 	}
 	return nil
+}
+
+// PostEncryptedMessages encrypts and sends messages using each recipient's
+// current sessions. Sessions are read from store when available and fetched
+// from the API on a cache miss. If the API rejects a message because its
+// sessions changed, only the failed messages are refreshed and retried once.
+func PostEncryptedMessages(ctx context.Context, messages []*MessageRequest, store SessionStore, user *SafeUser) error {
+	if len(messages) == 0 {
+		return nil
+	}
+	if user == nil {
+		return fmt.Errorf("safe user is nil")
+	}
+	privateKey, err := encryptedMessagePrivateKey(user)
+	if err != nil {
+		return err
+	}
+
+	sessionsByUser := make(map[string][]*Session)
+	pending := messages
+	for attempt := 0; attempt < 2; attempt++ {
+		requests, err := buildEncryptedMessageRequests(ctx, pending, sessionsByUser, store, privateKey, user)
+		if err != nil {
+			return err
+		}
+		responses, err := postEncryptedMessageRequests(ctx, requests, user)
+		if err != nil {
+			return err
+		}
+
+		failedMessages, failedResponses, err := encryptedMessageFailures(pending, responses)
+		if err != nil {
+			return err
+		}
+		if len(failedMessages) == 0 {
+			return nil
+		}
+
+		expired := make(map[string]struct{})
+		expiredIDs := make([]string, 0, len(failedMessages))
+		for _, message := range failedMessages {
+			if _, ok := expired[message.RecipientId]; !ok {
+				expiredIDs = append(expiredIDs, message.RecipientId)
+			}
+			expired[message.RecipientId] = struct{}{}
+		}
+		for _, recipientID := range expiredIDs {
+			delete(sessionsByUser, recipientID)
+			if store != nil {
+				_ = store.Delete(recipientID)
+			}
+		}
+
+		if attempt == 1 {
+			return &EncryptedMessageError{Responses: failedResponses}
+		}
+		refreshed, err := fetchRecipientSessions(ctx, expiredIDs, store, user)
+		if err != nil {
+			return err
+		}
+		for recipientID, sessions := range refreshed {
+			sessionsByUser[recipientID] = sessions
+		}
+		pending = failedMessages
+	}
+	return nil
+}
+
+func encryptedMessagePrivateKey(user *SafeUser) (string, error) {
+	seed, err := hex.DecodeString(user.SessionPrivateKey)
+	if err != nil {
+		return "", err
+	}
+	if len(seed) != ed25519.SeedSize {
+		return "", fmt.Errorf("bad ed25519 private key length %d", len(seed))
+	}
+	privateKey := ed25519.NewKeyFromSeed(seed)
+	return base64.RawURLEncoding.EncodeToString(privateKey), nil
+}
+
+func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageRequest, sessionsByUser map[string][]*Session, store SessionStore, privateKey string, user *SafeUser) ([]*encryptedMessageRequest, error) {
+	missing := make([]string, 0, len(messages))
+	checked := make(map[string]struct{}, len(messages))
+	for _, message := range messages {
+		if message == nil {
+			return nil, fmt.Errorf("message is nil")
+		}
+		if message.RecipientId == "" {
+			return nil, fmt.Errorf("message %s has no recipient_id", message.MessageId)
+		}
+		if _, ok := sessionsByUser[message.RecipientId]; ok {
+			continue
+		}
+		if _, ok := checked[message.RecipientId]; ok {
+			continue
+		}
+		checked[message.RecipientId] = struct{}{}
+		if store != nil {
+			if sessions, err := store.Get(message.RecipientId); err == nil {
+				sessions = cloneSessions(sessions)
+				if len(sessions) > 0 {
+					sessionsByUser[message.RecipientId] = sessions
+					continue
+				}
+			}
+		}
+		missing = append(missing, message.RecipientId)
+	}
+	if len(missing) > 0 {
+		fetched, err := fetchRecipientSessions(ctx, missing, store, user)
+		if err != nil {
+			return nil, err
+		}
+		for recipientID, sessions := range fetched {
+			sessionsByUser[recipientID] = sessions
+		}
+	}
+
+	requests := make([]*encryptedMessageRequest, 0, len(messages))
+	for _, message := range messages {
+		sessions := sessionsByUser[message.RecipientId]
+		messageSessions := cloneSessions(sessions)
+		if len(messageSessions) == 0 {
+			return nil, fmt.Errorf("no sessions found for recipient %s", message.RecipientId)
+		}
+		checksum := GenerateUserChecksum(messageSessions)
+		data, err := EncryptMessageData(message.DataBase64, messageSessions, privateKey)
+		if err != nil {
+			return nil, err
+		}
+		copy := *message
+		copy.DataBase64 = data
+		requests = append(requests, &encryptedMessageRequest{
+			MessageRequest: &copy,
+			Checksum:       checksum,
+		})
+	}
+	return requests, nil
+}
+
+func fetchRecipientSessions(ctx context.Context, recipientIDs []string, store SessionStore, user *SafeUser) (map[string][]*Session, error) {
+	if len(recipientIDs) == 0 {
+		return map[string][]*Session{}, nil
+	}
+	userSessions, err := FetchUserSessions(ctx, recipientIDs, user)
+	if err != nil {
+		return nil, err
+	}
+	requested := make(map[string]struct{}, len(recipientIDs))
+	for _, recipientID := range recipientIDs {
+		requested[recipientID] = struct{}{}
+	}
+	sessionsByUser := make(map[string][]*Session, len(recipientIDs))
+	for _, session := range userSessions {
+		if session == nil {
+			continue
+		}
+		recipientID := session.UserId
+		if recipientID == "" && len(recipientIDs) == 1 {
+			recipientID = recipientIDs[0]
+		}
+		if _, ok := requested[recipientID]; !ok {
+			continue
+		}
+		sessionsByUser[recipientID] = append(sessionsByUser[recipientID], &Session{
+			UserID:    recipientID,
+			SessionID: session.SessionId,
+			PublicKey: session.PublicKey,
+		})
+	}
+	for _, recipientID := range recipientIDs {
+		sessions := sessionsByUser[recipientID]
+		if len(sessions) == 0 {
+			return nil, fmt.Errorf("no sessions found for recipient %s", recipientID)
+		}
+		if store != nil {
+			_ = store.Put(recipientID, sessions)
+		}
+	}
+	return sessionsByUser, nil
+}
+
+func postEncryptedMessageRequests(ctx context.Context, requests []*encryptedMessageRequest, user *SafeUser) ([]*EncryptedMessageResponse, error) {
+	data, err := json.Marshal(requests)
+	if err != nil {
+		return nil, err
+	}
+	const path = "/encrypted_messages"
+	accessToken, err := SignAuthenticationToken("POST", path, string(data), user)
+	if err != nil {
+		return nil, err
+	}
+	body, err := Request(ctx, "POST", path, data, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	var resp struct {
+		Data  []*EncryptedMessageResponse `json:"data"`
+		Error Error                       `json:"error"`
+	}
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, err
+	}
+	if resp.Error.Code > 0 {
+		return nil, resp.Error
+	}
+	return resp.Data, nil
+}
+
+func encryptedMessageFailures(messages []*MessageRequest, responses []*EncryptedMessageResponse) ([]*MessageRequest, []*EncryptedMessageResponse, error) {
+	responsesByID := make(map[string]*EncryptedMessageResponse, len(responses))
+	for _, response := range responses {
+		if response != nil {
+			responsesByID[response.MessageId] = response
+		}
+	}
+
+	var failedMessages []*MessageRequest
+	var failedResponses []*EncryptedMessageResponse
+	for _, message := range messages {
+		response, ok := responsesByID[message.MessageId]
+		if !ok {
+			return nil, nil, fmt.Errorf("encrypted message response missing for %s", message.MessageId)
+		}
+		switch response.State {
+		case EncryptedMessageStateSuccess:
+		case EncryptedMessageStateFailed:
+			failedMessages = append(failedMessages, message)
+			failedResponses = append(failedResponses, response)
+		default:
+			return nil, nil, fmt.Errorf("encrypted message %s returned unknown state %q", message.MessageId, response.State)
+		}
+	}
+	return failedMessages, failedResponses, nil
 }
 
 func PostMessage(ctx context.Context, conversationId, recipientId, messageId, category, dataBase64 string, user *SafeUser) error {
