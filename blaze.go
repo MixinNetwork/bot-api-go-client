@@ -27,15 +27,29 @@ const (
 )
 
 const (
-	MessageCategoryPlainText             = "PLAIN_TEXT"
-	MessageCategoryPlainImage            = "PLAIN_IMAGE"
-	MessageCategoryPlainData             = "PLAIN_DATA"
-	MessageCategoryPlainSticker          = "PLAIN_STICKER"
-	MessageCategoryPlainLive             = "PLAIN_LIVE"
-	MessageCategoryPlainContact          = "PLAIN_CONTACT"
-	MessageCategoryPlainPost             = "PLAIN_POST"
-	MessageCategoryPlainLocation         = "PLAIN_LOCATION"
-	MessageCategoryPlainTranscript       = "PLAIN_TRANSCRIPT"
+	// TODO deprecate plain messages
+	MessageCategoryPlainText       = "PLAIN_TEXT"
+	MessageCategoryPlainImage      = "PLAIN_IMAGE"
+	MessageCategoryPlainData       = "PLAIN_DATA"
+	MessageCategoryPlainSticker    = "PLAIN_STICKER"
+	MessageCategoryPlainLive       = "PLAIN_LIVE"
+	MessageCategoryPlainContact    = "PLAIN_CONTACT"
+	MessageCategoryPlainPost       = "PLAIN_POST"
+	MessageCategoryPlainLocation   = "PLAIN_LOCATION"
+	MessageCategoryPlainTranscript = "PLAIN_TRANSCRIPT"
+
+	MessageCategoryEncryptedPost       = "ENCRYPTED_POST"
+	MessageCategoryEncryptedText       = "ENCRYPTED_TEXT"
+	MessageCategoryEncryptedImage      = "ENCRYPTED_IMAGE"
+	MessageCategoryEncryptedVideo      = "ENCRYPTED_VIDEO"
+	MessageCategoryEncryptedLive       = "ENCRYPTED_LIVE"
+	MessageCategoryEncryptedAudio      = "ENCRYPTED_AUDIO"
+	MessageCategoryEncryptedData       = "ENCRYPTED_DATA"
+	MessageCategoryEncryptedSticker    = "ENCRYPTED_STICKER"
+	MessageCategoryEncryptedContact    = "ENCRYPTED_CONTACT"
+	MessageCategoryEncryptedLocation   = "ENCRYPTED_LOCATION"
+	MessageCategoryEncryptedTranscript = "ENCRYPTED_TRANSCRIPT"
+
 	MessageCategorySystemConversation    = "SYSTEM_CONVERSATION"
 	MessageCategorySystemAccountSnapshot = "SYSTEM_ACCOUNT_SNAPSHOT"
 	MessageCategoryMessageRecall         = "MESSAGE_RECALL"
