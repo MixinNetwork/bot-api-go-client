@@ -79,6 +79,9 @@ func (e *EncryptedMessageError) Error() string {
 
 type encryptedMessageRequest struct {
 	*MessageRequest
+	RecipientSessions []struct {
+		SessionId string `json:"session_id"`
+	} `json:"recipient_sessions"`
 	Checksum string `json:"checksum"`
 }
 
@@ -257,8 +260,7 @@ func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageReque
 
 	requests := make([]*encryptedMessageRequest, 0, len(messages))
 	for _, message := range messages {
-		sessions := sessionsByUser[message.RecipientId]
-		messageSessions := cloneSessions(sessions)
+		messageSessions := cloneSessions(sessionsByUser[message.RecipientId])
 		if len(messageSessions) == 0 {
 			return nil, fmt.Errorf("no sessions found for recipient %s", message.RecipientId)
 		}
@@ -267,12 +269,18 @@ func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageReque
 		if err != nil {
 			return nil, err
 		}
-		copy := *message
-		copy.DataBase64 = data
-		requests = append(requests, &encryptedMessageRequest{
-			MessageRequest: &copy,
+		plain := *message
+		plain.DataBase64 = data
+		cipher := &encryptedMessageRequest{
+			MessageRequest: &plain,
 			Checksum:       checksum,
-		})
+		}
+		for _, s := range messageSessions {
+			cipher.RecipientSessions = append(cipher.RecipientSessions, struct {
+				SessionId string `json:"session_id"`
+			}{SessionId: s.SessionID})
+		}
+		requests = append(requests, cipher)
 	}
 	return requests, nil
 }
