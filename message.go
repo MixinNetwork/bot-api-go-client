@@ -9,7 +9,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -153,15 +152,11 @@ func PostEncryptedMessages(ctx context.Context, messages []*MessageRequest, stor
 	if user == nil {
 		return fmt.Errorf("safe user is nil")
 	}
-	privateKey, err := encryptedMessagePrivateKey(user)
-	if err != nil {
-		return err
-	}
 
 	sessionsByUser := make(map[string][]*Session)
 	pending := messages
 	for attempt := 0; attempt < 2; attempt++ {
-		requests, err := buildEncryptedMessageRequests(ctx, pending, sessionsByUser, store, privateKey, user)
+		requests, err := buildEncryptedMessageRequests(ctx, pending, sessionsByUser, store, user)
 		if err != nil {
 			return err
 		}
@@ -208,19 +203,7 @@ func PostEncryptedMessages(ctx context.Context, messages []*MessageRequest, stor
 	return nil
 }
 
-func encryptedMessagePrivateKey(user *SafeUser) (string, error) {
-	seed, err := hex.DecodeString(user.SessionPrivateKey)
-	if err != nil {
-		return "", err
-	}
-	if len(seed) != ed25519.SeedSize {
-		return "", fmt.Errorf("bad ed25519 private key length %d", len(seed))
-	}
-	privateKey := ed25519.NewKeyFromSeed(seed)
-	return base64.RawURLEncoding.EncodeToString(privateKey), nil
-}
-
-func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageRequest, sessionsByUser map[string][]*Session, store SessionStore, privateKey string, user *SafeUser) ([]*encryptedMessageRequest, error) {
+func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageRequest, sessionsByUser map[string][]*Session, store SessionStore, user *SafeUser) ([]*encryptedMessageRequest, error) {
 	missing := make([]string, 0, len(messages))
 	checked := make(map[string]struct{}, len(messages))
 	for _, message := range messages {
@@ -265,7 +248,7 @@ func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageReque
 			return nil, fmt.Errorf("no sessions found for recipient %s", message.RecipientId)
 		}
 		checksum := GenerateUserChecksum(messageSessions)
-		data, err := EncryptMessageData(message.DataBase64, messageSessions, privateKey)
+		data, err := EncryptMessageData(message.DataBase64, messageSessions, user.SessionPrivateKey)
 		if err != nil {
 			return nil, err
 		}
@@ -419,7 +402,7 @@ func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgemen
 	return nil
 }
 
-func EncryptMessageData(data string, sessions []*Session, privateKey string) (string, error) {
+func EncryptMessageData(data string, sessions []*Session, sessionPrivateKey string) (string, error) {
 	dataBytes, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
@@ -448,12 +431,7 @@ func EncryptMessageData(data string, sessions []*Session, privateKey string) (st
 	var sessionLen [2]byte
 	binary.LittleEndian.PutUint16(sessionLen[:], uint16(len(sessions)))
 
-	privateBytes, err := base64.RawURLEncoding.DecodeString(privateKey)
-	if err != nil {
-		return "", err
-	}
-
-	private := ed25519.PrivateKey(privateBytes)
+	private := ParseEd25519PrivateKey(sessionPrivateKey)
 	pub, _ := PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
 
 	var sessionsBytes []byte
@@ -502,7 +480,8 @@ func EncryptMessageData(data string, sessions []*Session, privateKey string) (st
 	return base64.RawURLEncoding.EncodeToString(result), nil
 }
 
-func DecryptMessageData(data string, sessionId, private string) (string, error) {
+func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (string, error) {
+	privateKey := ParseEd25519PrivateKey(sessionPrivateKey)
 	bytes, err := base64.RawURLEncoding.DecodeString(data)
 	if err != nil {
 		return "", err
@@ -517,14 +496,10 @@ func DecryptMessageData(data string, sessionId, private string) (string, error) 
 	var key []byte
 	for i := 35; i < prefixSize; i += size {
 		if uid, _ := UuidFromBytes(bytes[i : i+16]); uid.String() == sessionId {
-			private, err := base64.RawURLEncoding.DecodeString(private)
-			if err != nil {
-				return "", err
-			}
 			var priv [32]byte
 			var pub [32]byte
 			copy(pub[:], bytes[3:35])
-			PrivateKeyToCurve25519(&priv, ed25519.PrivateKey(private))
+			PrivateKeyToCurve25519(&priv, privateKey)
 			dst, err := curve25519.X25519(priv[:], pub[:])
 			if err != nil {
 				return "", err
