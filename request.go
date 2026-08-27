@@ -22,9 +22,7 @@ var (
 	userAgent  = "Bot-API-Go-Client"
 	debug      = false
 
-	uid        string
-	sid        string
-	privateKey string
+	globalUser *SafeUser
 )
 
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
@@ -58,9 +56,9 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byte, error) {
 	transport, err := NewTransport(
 		httpClient.Transport,
-		uid,
-		sid,
-		privateKey,
+		globalUser.UserId,
+		globalUser.SessionId,
+		globalUser.SessionPrivateKey,
 	)
 	if err != nil {
 		return nil, err
@@ -93,9 +91,11 @@ func init() {
 }
 
 func WithAPIKey(userId, sessionId, p string) {
-	uid = userId
-	sid = sessionId
-	privateKey = p
+	globalUser = &SafeUser{
+		UserId:            userId,
+		SessionId:         sessionId,
+		SessionPrivateKey: p,
+	}
 }
 
 func SetHttpTimeout(timeout time.Duration) {

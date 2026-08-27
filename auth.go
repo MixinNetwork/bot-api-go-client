@@ -56,7 +56,7 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 }
 
 func ParseEd25519PrivateKey(s string) ed25519.PrivateKey {
-	priv, err := hex.DecodeString(privateKey)
+	priv, err := hex.DecodeString(s)
 	if err != nil {
 		panic(err)
 	}
