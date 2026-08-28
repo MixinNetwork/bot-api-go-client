@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"strings"
 
 	"golang.org/x/crypto/curve25519"
@@ -155,7 +156,7 @@ func PostEncryptedMessages(ctx context.Context, messages []*MessageRequest, stor
 
 	sessionsByUser := make(map[string][]*Session)
 	pending := messages
-	for attempt := 0; attempt < 2; attempt++ {
+	for attempt := range 2 {
 		requests, err := buildEncryptedMessageRequests(ctx, pending, sessionsByUser, store, user)
 		if err != nil {
 			return err
@@ -195,9 +196,7 @@ func PostEncryptedMessages(ctx context.Context, messages []*MessageRequest, stor
 		if err != nil {
 			return err
 		}
-		for recipientID, sessions := range refreshed {
-			sessionsByUser[recipientID] = sessions
-		}
+		maps.Copy(sessionsByUser, refreshed)
 		pending = failedMessages
 	}
 	return nil
@@ -236,9 +235,7 @@ func buildEncryptedMessageRequests(ctx context.Context, messages []*MessageReque
 		if err != nil {
 			return nil, err
 		}
-		for recipientID, sessions := range fetched {
-			sessionsByUser[recipientID] = sessions
-		}
+		maps.Copy(sessionsByUser, fetched)
 	}
 
 	requests := make([]*encryptedMessageRequest, 0, len(messages))
