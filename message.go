@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -518,6 +519,7 @@ func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (strin
 		return "", fmt.Errorf("invalid encrypted message session count %d", sessionLen)
 	}
 	var key []byte
+	keyPaddingValid := 0
 	for i := headerSize; i < prefixSize; i += size {
 		uid, err := UuidFromBytes(raw[i : i+16])
 		if err != nil {
@@ -541,16 +543,14 @@ func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (strin
 			encryptedKey := append([]byte(nil), raw[i+16+aes.BlockSize:i+size]...)
 			mode := cipher.NewCBCDecrypter(block, iv)
 			mode.CryptBlocks(encryptedKey, encryptedKey)
-			padding := int(encryptedKey[len(encryptedKey)-1])
-			if padding == 0 || padding > aes.BlockSize || padding > len(encryptedKey) {
-				return "", fmt.Errorf("invalid encrypted message key padding")
+			// The wrapped key is always 16 bytes followed by a full padding
+			// block. Authenticate the payload even when padding is invalid,
+			// so neither errors nor an early return expose a padding oracle.
+			key = encryptedKey[:aes.BlockSize]
+			keyPaddingValid = 1
+			for _, b := range encryptedKey[aes.BlockSize:] {
+				keyPaddingValid &= subtle.ConstantTimeByteEq(b, aes.BlockSize)
 			}
-			for _, b := range encryptedKey[len(encryptedKey)-padding:] {
-				if int(b) != padding {
-					return "", fmt.Errorf("invalid encrypted message key padding")
-				}
-			}
-			key = encryptedKey[:len(encryptedKey)-padding]
 			break
 		}
 	}
@@ -567,8 +567,8 @@ func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (strin
 		return "", err
 	}
 	plaintext, err := aesgcm.Open(nil, nonce, raw[prefixSize+12:], nil)
-	if err != nil {
-		return "", fmt.Errorf("decrypt message data: %w", err)
+	if err != nil || keyPaddingValid != 1 {
+		return "", fmt.Errorf("decrypt message data: invalid ciphertext")
 	}
 	return base64.RawURLEncoding.EncodeToString(plaintext), nil
 }

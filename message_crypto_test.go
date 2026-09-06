@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/base64"
@@ -109,6 +111,61 @@ func TestDecryptMessageDataValidation(t *testing.T) {
 		_, err := DecryptMessageData(base64.RawURLEncoding.EncodeToString(raw), sessionID, validKey)
 		assert.Error(t, err)
 	})
+}
+
+func TestDecryptMessageDataDoesNotExposeKeyPadding(t *testing.T) {
+	senderSeed := sha256.Sum256([]byte("padding test sender"))
+	recipientSeed := sha256.Sum256([]byte("padding test recipient"))
+	recipientPrivate := ed25519.NewKeyFromSeed(recipientSeed[:])
+	recipientPublic, err := PublicKeyToCurve25519(recipientPrivate.Public().(ed25519.PublicKey))
+	require.NoError(t, err)
+	const sessionID = "489cfe0b-08d8-47f4-a330-fff193cc8086"
+	session := &Session{SessionID: sessionID, PublicKey: base64.RawURLEncoding.EncodeToString(recipientPublic)}
+	encrypted, err := EncryptMessageData("cGF5bG9hZA", []*Session{session}, hex.EncodeToString(senderSeed[:]))
+	require.NoError(t, err)
+	privateKey := hex.EncodeToString(recipientSeed[:])
+
+	// Both messages fail authentication. Altering the first wrapped-key block
+	// also changes the last padding byte from 16 to 17 in the second block.
+	badTag := decodeRawBase64(t, encrypted)
+	badTag[len(badTag)-1] ^= 1
+	_, tagErr := DecryptMessageData(base64.RawURLEncoding.EncodeToString(badTag), sessionID, privateKey)
+	require.Error(t, tagErr)
+	badPadding := decodeRawBase64(t, encrypted)
+	const firstKeyBlockEnd = 35 + 16 + 16 + 16
+	badPadding[firstKeyBlockEnd-1] ^= 1
+	_, paddingErr := DecryptMessageData(base64.RawURLEncoding.EncodeToString(badPadding), sessionID, privateKey)
+	require.Error(t, paddingErr)
+	assert.Equal(t, tagErr.Error(), paddingErr.Error(), "decryption errors must not reveal CBC padding validity")
+
+	// Padding lengths 1 through 15 are not valid for the fixed 16-byte key.
+	// They must not produce a separate missing-session error either.
+	for padding := byte(1); padding < 16; padding++ {
+		malformed := decodeRawBase64(t, encrypted)
+		for i := byte(0); i < padding; i++ {
+			malformed[firstKeyBlockEnd-1-int(i)] ^= 16 ^ padding
+		}
+		_, err := DecryptMessageData(base64.RawURLEncoding.EncodeToString(malformed), sessionID, privateKey)
+		require.Error(t, err)
+		assert.Equal(t, tagErr.Error(), err.Error(), "padding length %d must not be observable", padding)
+	}
+
+	// Corrupt only the padding block, keeping the message key and GCM tag
+	// intact. Successful payload authentication must not bypass padding checks.
+	senderPrivate := ed25519.NewKeyFromSeed(senderSeed[:])
+	shared, err := SharedKey(senderPrivate.Public().(ed25519.PublicKey), recipientPrivate)
+	require.NoError(t, err)
+	block, err := aes.NewCipher(shared[:])
+	require.NoError(t, err)
+	paddingOnly := decodeRawBase64(t, encrypted)
+	invalidPadding := make([]byte, aes.BlockSize)
+	cipher.NewCBCEncrypter(block, paddingOnly[firstKeyBlockEnd-aes.BlockSize:firstKeyBlockEnd]).CryptBlocks(
+		paddingOnly[firstKeyBlockEnd:firstKeyBlockEnd+aes.BlockSize], invalidPadding,
+	)
+	plaintext, err := DecryptMessageData(base64.RawURLEncoding.EncodeToString(paddingOnly), sessionID, privateKey)
+	require.Error(t, err)
+	assert.Empty(t, plaintext)
+	assert.Equal(t, tagErr.Error(), err.Error())
 }
 
 func decodeRawBase64(t *testing.T, value string) []byte {
