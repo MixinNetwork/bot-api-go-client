@@ -131,6 +131,9 @@ type messageContext struct {
 	transactions *tmap
 	readBuffer   chan MessageView
 	writeBuffer  chan []byte
+
+	deadMu sync.Mutex
+	dead   map[string]time.Time
 }
 
 type SystemConversationPayload struct {
@@ -472,6 +475,9 @@ func blazeRequestError(ctx context.Context, err error) error {
 	if _, ok := err.(Error); ok {
 		return err
 	}
+	if e, ok := err.(*Error); ok && e != nil {
+		return *e
+	}
 	// Preserve the existing error format for local failures, while
 	// allowing callers to act on API errors and context cancellation.
 	return BlazeServerError(ctx, err)
@@ -503,9 +509,11 @@ func writeMessageAndWait(ctx context.Context, mc *messageContext, action string,
 		case <-ctx.Done():
 			writeTimer.Stop()
 			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
 			return ctx.Err()
 		case <-writeTimer.C:
 			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
 			return fmt.Errorf("timeout to write %s %v", action, params)
 		case mc.writeBuffer <- blazeMessage:
 			writeTimer.Stop()
@@ -516,9 +524,11 @@ func writeMessageAndWait(ctx context.Context, mc *messageContext, action string,
 		case <-ctx.Done():
 			responseTimer.Stop()
 			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
 			return ctx.Err()
 		case <-responseTimer.C:
 			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
 			return fmt.Errorf("timeout to wait %s %v", action, params)
 		case response := <-resp:
 			responseTimer.Stop()
@@ -580,7 +590,11 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 		return transaction(message)
 	}
 	// Responses can arrive after their waiter has timed out or been canceled.
-	// Error and empty responses are not incoming messages.
+	// Drop them instead of delivering them as incoming messages. Error and
+	// empty responses are not incoming messages either.
+	if mc.deadForget(message.Id) {
+		return nil
+	}
 	if message.Error != nil || len(message.Data) == 0 {
 		return nil
 	}
@@ -634,4 +648,33 @@ func (m *tmap) set(key string, t mixinTransaction) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.m[key] = t
+}
+
+// deadRemember marks a request id whose waiter has abandoned it. Responses to
+// abandoned requests must be dropped instead of delivered as incoming messages.
+func (mc *messageContext) deadRemember(id string) {
+	mc.deadMu.Lock()
+	defer mc.deadMu.Unlock()
+	if mc.dead == nil {
+		mc.dead = make(map[string]time.Time)
+	}
+	now := time.Now()
+	for k, t := range mc.dead {
+		if now.Sub(t) > time.Minute {
+			delete(mc.dead, k)
+		}
+	}
+	mc.dead[id] = now
+}
+
+// deadForget reports and removes a request id from the dead set.
+func (mc *messageContext) deadForget(id string) bool {
+	mc.deadMu.Lock()
+	defer mc.deadMu.Unlock()
+	if mc.dead == nil {
+		return false
+	}
+	_, ok := mc.dead[id]
+	delete(mc.dead, id)
+	return ok
 }

@@ -145,9 +145,6 @@ func NewMixAddressFromBytesUnchecked(payload []byte) (*MixAddress, error) {
 
 	mp := payload[3:]
 	if len(mp) == 16*int(total) {
-		if ma.Threshold > total {
-			return nil, fmt.Errorf("invalid address threshold %d/%d", ma.Threshold, total)
-		}
 		for i := 0; i < int(total); i++ {
 			id, err := uuid.FromBytes(mp[i*16 : i*16+16])
 			if err != nil {

@@ -132,7 +132,11 @@ func TestURLSchemes(t *testing.T) {
 	payload := []byte{0xfb, 0xff, 0x00}
 	send, err := url.Parse(SchemeSend(SendSchemeCategoryImage, payload, "conversation"))
 	require.NoError(t, err)
-	decoded, err := base64.StdEncoding.DecodeString(send.Query().Get("data"))
+	// The data parameter keeps master's double-escaped wire format:
+	// parsing the URL removes one layer, recipients unescape the second.
+	unescaped, err := url.QueryUnescape(send.Query().Get("data"))
+	require.NoError(t, err)
+	decoded, err := base64.StdEncoding.DecodeString(unescaped)
 	require.NoError(t, err)
 	assert.Equal(t, payload, decoded)
 	assert.Equal(t, SendSchemeCategoryImage, send.Query().Get("category"))
@@ -143,7 +147,11 @@ func TestMixAddressRejectsMalformedPayloads(t *testing.T) {
 	_, err := NewMixAddressFromBytesUnchecked(nil)
 	require.Error(t, err)
 
-	payload := append([]byte{MixAddressVersion, 2, 1}, make([]byte, 16)...)
+	// Decoder stays lenient like master: threshold may exceed total
+	// (e.g. the 64-of-1 address in TestUUIDMixAddress), construction
+	// already rejects those via NewUUIDMixAddress. Only truly malformed
+	// payloads (zero threshold, member length mismatch) are rejected.
+	payload := append([]byte{MixAddressVersion, 0, 1}, make([]byte, 16)...)
 	_, err = NewMixAddressFromBytesUnchecked(payload)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "threshold")

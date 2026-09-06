@@ -213,11 +213,21 @@ func TestBlazeIgnoresLateResponses(t *testing.T) {
 					var pending BlazeMessage
 					require.NoError(t, json.Unmarshal(<-mc.writeBuffer, &pending))
 					for _, reply := range []BlazeMessage{
-						{Id: request.Id, Action: action, Error: &Error{Code: 403}},
-						{Id: request.Id, Action: action},
-						{Id: request.Id, Action: action, Data: json.RawMessage("null")},
-						{Id: request.Id, Action: action, Data: json.RawMessage("{}")},
+						{Error: &Error{Code: 403}},
+						{},
+						{Data: json.RawMessage("null")},
+						{Data: json.RawMessage("{}")},
+						{Data: mustJSON(t, MessageView{MessageId: "late", Category: MessageCategoryPlainText})},
 					} {
+						abandoned, abort := context.WithCancel(context.Background())
+						done := make(chan error, 1)
+						go func() { done <- writeMessageAndWait(abandoned, mc, action, nil) }()
+						var sent BlazeMessage
+						require.NoError(t, json.Unmarshal(<-mc.writeBuffer, &sent))
+						abort()
+						require.ErrorIs(t, <-done, context.Canceled)
+						reply.Id = sent.Id
+						reply.Action = action
 						err := parseMessage(context.Background(), mc, gzipBlazeMessage(t, reply))
 						assert.NoError(t, err, "late response must not stop the reader")
 						select {
@@ -226,6 +236,8 @@ func TestBlazeIgnoresLateResponses(t *testing.T) {
 						default:
 						}
 					}
+					require.NoError(t, parseMessage(context.Background(), mc, gzipBlazeMessage(t, BlazeMessage{Id: request.Id, Action: action})))
+					assert.Empty(t, mc.dead, "late responses must release their abandoned request ids")
 
 					require.NoError(t, parseMessage(context.Background(), mc, gzipBlazeMessage(t, BlazeMessage{Id: pending.Id, Action: action})))
 					require.NoError(t, <-done, "unrelated requests must still complete")

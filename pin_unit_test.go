@@ -31,9 +31,13 @@ func TestTIPSigningWithSeedAndCanonicalSpendKeys(t *testing.T) {
 	var canonical crypto.Key
 	copy(canonical[:], scalar.Bytes())
 
+	hashBody := sha256.Sum256([]byte(t.Name() + ":hash"))
 	for name, body := range map[string][]byte{
 		"verify":  TIPBodyForVerify(123),
 		"address": TipBodyForAddressAdd("asset", "destination", "tag", "label"),
+		// mixin/crypto's Key.Sign only accepts Hash-sized messages, so only
+		// this body can be cross-checked against it byte for byte.
+		"hash": hashBody[:],
 	} {
 		t.Run(name, func(t *testing.T) {
 			seedSignature, err := signTipBody(body, hex.EncodeToString(seed[:]), false)

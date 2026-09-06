@@ -186,7 +186,9 @@ func SchemeSend(category SendSchemeCategory, data []byte, conversationID string)
 	query := url.Values{}
 	query.Set("category", category)
 	if len(data) > 0 {
-		query.Set("data", base64.StdEncoding.EncodeToString(data))
+		// Preserve the historical wire format: the base64 payload is
+		// percent-escaped before query encoding.
+		query.Set("data", url.QueryEscape(base64.StdEncoding.EncodeToString(data)))
 	}
 	if conversationID != "" {
 		query.Set("conversation", conversationID)
