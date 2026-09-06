@@ -7,18 +7,15 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateUserSimple(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping testing in CI environment")
-	}
+	requireLiveAPI(t)
+	configureLiveAPIKey(t)
 	assert := assert.New(t)
-	WithAPIKey("", "", "")
 	pub, private, err := ed25519.GenerateKey(rand.Reader)
 	assert.Nil(err)
 	sessionPrivateKey := hex.EncodeToString(private.Seed())

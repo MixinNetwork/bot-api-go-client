@@ -8,6 +8,7 @@ import (
 )
 
 func TestNetwork(t *testing.T) {
+	requireLiveAPI(t)
 	assert := assert.New(t)
 
 	_, err := ReadNetworkAssetsTop(context.Background())

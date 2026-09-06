@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"maps"
 	"net/url"
 	"slices"
@@ -105,23 +104,26 @@ func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser)
 	filter := make(map[string]bool)
 	var total common.Integer
 	for {
+		previousOffset := offset
 		outputs, err := ListOutputs(ctx, HashMembers([]string{su.UserId}), 1, assetId, OutputStateUnspent, offset, 500, su)
 		if err != nil {
-			log.Println(err)
-			continue
+			return common.Zero, err
 		}
-		for i, o := range outputs {
+		if len(outputs) > 0 {
+			offset = outputs[len(outputs)-1].Sequence
+		}
+		for _, o := range outputs {
 			if filter[o.OutputID] {
 				continue
 			}
 			filter[o.OutputID] = true
 			total = total.Add(common.NewIntegerFromString(o.Amount))
-			if i == len(outputs)-1 {
-				offset = o.Sequence
-			}
 		}
 		if len(outputs) < 500 {
 			break
+		}
+		if offset <= previousOffset {
+			return common.Zero, fmt.Errorf("output pagination did not advance beyond sequence %d", previousOffset)
 		}
 	}
 	return total, nil
@@ -226,12 +228,15 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
 	for {
+		previousOffset := offset
 		outputs, err := ListOutputs(ctx, membersHash, 1, "", OutputStateUnspent, offset, 500, su)
 		if err != nil {
-			log.Println(err)
-			continue
+			return nil, err
 		}
-		for i, output := range outputs {
+		if len(outputs) > 0 {
+			offset = outputs[len(outputs)-1].Sequence
+		}
+		for _, output := range outputs {
 			if _, ok := filter[output.OutputID]; ok {
 				continue
 			}
@@ -241,12 +246,12 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 			} else {
 				m[output.AssetId] = number.FromString(output.Amount)
 			}
-			if i == len(outputs)-1 {
-				offset = outputs[len(outputs)-1].Sequence
-			}
 		}
 		if len(outputs) < 500 {
 			break
+		}
+		if offset <= previousOffset {
+			return nil, fmt.Errorf("output pagination did not advance beyond sequence %d", previousOffset)
 		}
 	}
 	assets := []*Asset{}

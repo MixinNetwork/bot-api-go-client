@@ -15,6 +15,7 @@ import (
 )
 
 func TestOauthWS(t *testing.T) {
+	requireLiveAPI(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,6 +21,9 @@ func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, er
 }
 
 func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, su *SafeUser) (string, error) {
+	if su == nil {
+		return "", fmt.Errorf("safe user is nil")
+	}
 	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
@@ -32,7 +36,10 @@ func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, s
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
 	}
-	priv := ParseEd25519PrivateKey(su.SessionPrivateKey)
+	priv, err := parseEd25519PrivateKey(su.SessionPrivateKey)
+	if err != nil {
+		return "", err
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	return token.SignedString(priv)
 }
@@ -50,17 +57,31 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 		"jti": requestID,
 	}
 
-	priv := ParseEd25519PrivateKey(privateKey)
+	priv, err := parseEd25519PrivateKey(privateKey)
+	if err != nil {
+		return "", err
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
 	return token.SignedString(priv)
 }
 
 func ParseEd25519PrivateKey(s string) ed25519.PrivateKey {
-	priv, err := hex.DecodeString(s)
+	priv, err := parseEd25519PrivateKey(s)
 	if err != nil {
 		panic(err)
 	}
-	return ed25519.NewKeyFromSeed(priv)
+	return priv
+}
+
+func parseEd25519PrivateKey(s string) (ed25519.PrivateKey, error) {
+	seed, err := hex.DecodeString(s)
+	if err != nil {
+		return nil, fmt.Errorf("invalid ed25519 private key encoding: %w", err)
+	}
+	if len(seed) != ed25519.SeedSize {
+		return nil, fmt.Errorf("invalid ed25519 private key length %d", len(seed))
+	}
+	return ed25519.NewKeyFromSeed(seed), nil
 }
 
 // OAuthGetAccessToken get the access token of a user
