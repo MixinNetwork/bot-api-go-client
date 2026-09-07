@@ -90,6 +90,11 @@ type ComputerNonceAccountResponse struct {
 	Error `json:"error"`
 }
 
+type ComputerNonceAccount struct {
+	Address string `json:"address"`
+	CallID  string `json:"call_id"`
+}
+
 type ComputerFeeResponse struct {
 	FeeID     string `json:"fee_id"`
 	XINAmount string `json:"xin_amount"`
@@ -216,6 +221,19 @@ func LockComputerNonceAccount(ctx context.Context, mix string) (*ComputerNonceAc
 		return nil, ServerError(ctx, err)
 	}
 	var resp *ComputerNonceAccountResponse
+	err = json.Unmarshal(body, &resp)
+	if err != nil {
+		return nil, BadDataError(ctx)
+	}
+	return resp, nil
+}
+
+func GetComputerNonceAccounts(ctx context.Context, mixAddress string) ([]*ComputerNonceAccount, error) {
+	body, err := computerRequest(ctx, "GET", "/nonce_accounts/"+mixAddress, nil)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	var resp []*ComputerNonceAccount
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
 		return nil, BadDataError(ctx)
