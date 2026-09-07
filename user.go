@@ -374,6 +374,7 @@ func GenerateUserChecksum(sessions []*Session) string {
 	if len(sessions) < 1 {
 		return ""
 	}
+	sessions = append([]*Session(nil), sessions...)
 	sort.Slice(sessions, func(i, j int) bool {
 		return sessions[i].SessionID < sessions[j].SessionID
 	})

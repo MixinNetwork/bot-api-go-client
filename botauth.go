@@ -3,13 +3,13 @@ package bot
 import (
 	"bytes"
 	"context"
-	"crypto/ed25519"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/curve25519"
@@ -32,7 +32,8 @@ type BotAuthCache interface {
 }
 
 type MapCache struct {
-	m map[string][]byte
+	mu sync.RWMutex
+	m  map[string][]byte
 }
 
 func NewMapCache() *MapCache {
@@ -42,20 +43,35 @@ func NewMapCache() *MapCache {
 }
 
 func (c *MapCache) Get(key string) ([]byte, error) {
-	return c.m[key], nil
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return bytes.Clone(c.m[key]), nil
 }
 
 func (c *MapCache) Put(key string, value []byte) error {
-	c.m[key] = value
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.m == nil {
+		c.m = make(map[string][]byte)
+	}
+	c.m[key] = bytes.Clone(value)
 	return nil
 }
 
 func (c *MapCache) Delete(key string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	delete(c.m, key)
 	return nil
 }
 
 func NewBotAuthClient(cache BotAuthCache, su *SafeUser, logger *slog.Logger) *BotAuthClient {
+	if cache == nil {
+		cache = NewMapCache()
+	}
+	if logger == nil {
+		logger = slog.Default()
+	}
 	return &BotAuthClient{
 		Cache:    cache,
 		SafeUser: su,
@@ -69,17 +85,19 @@ func NewDefaultClient(su *SafeUser, logger *slog.Logger) *BotAuthClient {
 }
 
 func (c *BotAuthClient) SignRequest(ctx context.Context, ts int64, botUserId string, r *http.Request) (string, error) {
+	if c.SafeUser == nil {
+		return "", fmt.Errorf("safe user is nil")
+	}
+	if r == nil {
+		return "", fmt.Errorf("request is nil")
+	}
 	sharedKey, err := c.getSharedKey(ctx, botUserId)
 	if err != nil {
 		return "", errors.Errorf("failed to decode public key: %v", err)
 	}
-	seed, err := hex.DecodeString(c.SafeUser.SessionPrivateKey)
-	if err != nil {
+	if _, err := parseEd25519PrivateKey(c.SafeUser.SessionPrivateKey); err != nil {
 		return "", err
 	}
-	priv := ed25519.NewKeyFromSeed(seed)
-	var p [32]byte
-	PrivateKeyToCurve25519(&p, priv)
 
 	data := fmt.Appendf(nil, "%d%s%s", ts, r.Method, r.URL.RequestURI())
 	if r.Body != nil {
@@ -110,7 +128,10 @@ func (c *BotAuthClient) getSharedKey(ctx context.Context, userId string) ([]byte
 		}
 		var userSession *UserSession
 		for _, us := range userSessions {
-			userSession = us
+			if us != nil && (us.UserId == userId || us.UserId == "" && len(userSessions) == 1) {
+				userSession = us
+				break
+			}
 		}
 		if userSession == nil {
 			return nil, fmt.Errorf("userSession for %s nil", userId)
@@ -120,11 +141,10 @@ func (c *BotAuthClient) getSharedKey(ctx context.Context, userId string) ([]byte
 			return nil, err
 		}
 		platform := userSession.Platform
-		seed, err := hex.DecodeString(c.SafeUser.SessionPrivateKey)
+		priv, err := parseEd25519PrivateKey(c.SafeUser.SessionPrivateKey)
 		if err != nil {
 			return nil, err
 		}
-		priv := ed25519.NewKeyFromSeed(seed)
 		var p [32]byte
 		PrivateKeyToCurve25519(&p, priv)
 		sharedKey, err = curve25519.X25519(p[:], uPk[:])

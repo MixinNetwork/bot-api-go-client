@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptrace"
 	"net/url"
 	"strings"
 	"sync"
@@ -127,10 +129,11 @@ type AppCardView struct {
 
 type messageContext struct {
 	transactions *tmap
-	readDone     chan bool
-	writeDone    chan bool
 	readBuffer   chan MessageView
 	writeBuffer  chan []byte
+
+	deadMu sync.Mutex
+	dead   map[string]time.Time
 }
 
 type SystemConversationPayload struct {
@@ -162,8 +165,6 @@ func NewBlazeClient(uid, sid, key string) *BlazeClient {
 	client := BlazeClient{
 		mc: &messageContext{
 			transactions: newTmap(),
-			readDone:     make(chan bool, 1),
-			writeDone:    make(chan bool, 1),
 			readBuffer:   make(chan MessageView, 102400),
 			writeBuffer:  make(chan []byte, 102400),
 		},
@@ -187,22 +188,41 @@ func (b *BlazeClient) SetupDailer(dailer *websocket.Dialer) {
 }
 
 func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
-	conn, err := b.connectMixinBlaze()
+	conn, err := b.connectMixinBlaze(ctx)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
-	go writePump(ctx, conn, b.mc)
-	go readPump(ctx, conn, b.mc)
+	pumpCtx, cancelPumps := context.WithCancel(ctx)
+	readDone := make(chan struct{})
+	var pumps sync.WaitGroup
+	defer func() {
+		cancelPumps()
+		conn.Close()
+		// Finish this connection's pumps before the client can reconnect.
+		pumps.Wait()
+	}()
+	pumps.Add(2)
+	go func() {
+		defer pumps.Done()
+		writePump(pumpCtx, conn, b.mc)
+	}()
+	go func() {
+		defer pumps.Done()
+		defer close(readDone)
+		defer cancelPumps()
+		readPump(pumpCtx, conn, b.mc)
+	}()
 
 	if err = writeMessageAndWait(ctx, b.mc, "LIST_PENDING_MESSAGES", nil); err != nil {
-		return BlazeServerError(ctx, err)
+		return blazeRequestError(ctx, err)
 	}
 
 	for {
 		select {
-		case <-b.mc.readDone:
-			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-readDone:
+			return ctx.Err()
 		case msg := <-b.mc.readBuffer:
 			if msg.Source == "ACKNOWLEDGE_MESSAGE_RECEIPT" {
 				err = listener.OnAckReceipt(ctx, msg, b.uid)
@@ -217,7 +237,7 @@ func (b *BlazeClient) Loop(ctx context.Context, listener BlazeListener) error {
 				if listener.SyncAck() {
 					params := map[string]any{"message_id": msg.MessageId, "status": "READ"}
 					if err = writeMessageAndWait(ctx, b.mc, "ACKNOWLEDGE_MESSAGE_RECEIPT", params); err != nil {
-						return BlazeServerError(ctx, err)
+						return blazeRequestError(ctx, err)
 					}
 				}
 			}
@@ -234,10 +254,7 @@ func (b *BlazeClient) SendMessage(ctx context.Context, conversationId, recipient
 		"data_base64":       base64.RawURLEncoding.EncodeToString([]byte(content)),
 		"representative_id": representativeId,
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, content string) error {
@@ -248,10 +265,7 @@ func (b *BlazeClient) SendPlainText(ctx context.Context, msg MessageView, conten
 		"category":        MessageCategoryPlainText,
 		"data_base64":     base64.RawURLEncoding.EncodeToString([]byte(content)),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, recipientId, recallMessageId string) error {
@@ -266,10 +280,7 @@ func (b *BlazeClient) SendRecallMessage(ctx context.Context, conversationId, rec
 		"category":        MessageCategoryMessageRecall,
 		"data_base64":     base64.RawURLEncoding.EncodeToString(a),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content string) error {
@@ -280,10 +291,7 @@ func (b *BlazeClient) SendPost(ctx context.Context, msg MessageView, content str
 		"category":        MessageCategoryPlainPost,
 		"data_base64":     base64.RawURLEncoding.EncodeToString([]byte(content)),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipientId, contactId string) error {
@@ -296,10 +304,7 @@ func (b *BlazeClient) SendContact(ctx context.Context, conversationId, recipient
 		"category":        MessageCategoryPlainContact,
 		"data_base64":     base64.RawURLEncoding.EncodeToString(contactData),
 	}
-	if err := writeMessageAndWait(ctx, b.mc, createMessageAction, params); err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipientId, title, description, action, iconUrl string) error {
@@ -319,11 +324,7 @@ func (b *BlazeClient) SendAppCard(ctx context.Context, conversationId, recipient
 		"category":        MessageCategoryAppCard,
 		"data_base64":     base64.RawURLEncoding.EncodeToString(data),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
-	if err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipientId, label, action, color string) error {
@@ -342,16 +343,12 @@ func (b *BlazeClient) SendAppButton(ctx context.Context, conversationId, recipie
 		"category":        MessageCategoryAppButtonGroup,
 		"data_base64":     base64.RawURLEncoding.EncodeToString(btns),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
-	if err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
 func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, recipientId string, buttons []*AppButtonView) error {
 	if len(buttons) > maximumButtons {
-		return fmt.Errorf("too many buttons, maximum is six")
+		return fmt.Errorf("too many buttons, maximum is %d", maximumButtons)
 	}
 	btns, err := json.Marshal(buttons)
 	if err != nil {
@@ -364,14 +361,13 @@ func (b *BlazeClient) SendGroupAppButton(ctx context.Context, conversationId, re
 		"category":        MessageCategoryAppButtonGroup,
 		"data_base64":     base64.RawURLEncoding.EncodeToString(btns),
 	}
-	err = writeMessageAndWait(ctx, b.mc, createMessageAction, params)
-	if err != nil {
-		return BlazeServerError(ctx, err)
-	}
-	return nil
+	return blazeRequestError(ctx, writeMessageAndWait(ctx, b.mc, createMessageAction, params))
 }
 
-func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
+func (b *BlazeClient) connectMixinBlaze(ctx context.Context) (*websocket.Conn, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	user := &SafeUser{
 		UserId:            b.uid,
 		SessionId:         b.sid,
@@ -384,7 +380,26 @@ func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
 	header := make(http.Header)
 	header.Add("Authorization", "Bearer "+token)
 	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
-	conn, _, err := b.dailer.Dial(u.String(), header)
+	// The WebSocket dialer uses socket deadlines while reading the HTTP
+	// upgrade response. Also close the socket on explicit cancellation.
+	var stopClose func() bool
+	ctx = httptrace.WithClientTrace(ctx, &httptrace.ClientTrace{
+		GotConn: func(info httptrace.GotConnInfo) {
+			stopClose = context.AfterFunc(ctx, func() { _ = info.Conn.Close() })
+		},
+	})
+	defer func() {
+		if stopClose != nil {
+			stopClose()
+		}
+	}()
+	conn, _, err := b.dailer.DialContext(ctx, u.String(), header)
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		if conn != nil {
+			conn.Close()
+		}
+		return nil, ctxErr
+	}
 	if err != nil {
 		if strings.Contains(err.Error(), "timeout") {
 			blazeUri = DefaultBlazeHost
@@ -395,11 +410,7 @@ func (b *BlazeClient) connectMixinBlaze() (*websocket.Conn, error) {
 }
 
 func readPump(ctx context.Context, conn *websocket.Conn, mc *messageContext) error {
-	defer func() {
-		conn.Close()
-		mc.writeDone <- true
-		mc.readDone <- true
-	}()
+	defer conn.Close()
 
 	conn.SetReadDeadline(time.Now().Add(pongWait))
 	conn.SetPongHandler(func(string) error {
@@ -436,13 +447,16 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *messageContext) er
 		conn.Close()
 	}()
 	for {
+		if ctx.Err() != nil {
+			return nil
+		}
 		select {
 		case data := <-mc.writeBuffer:
 			err := writeGzipToConn(conn, data)
 			if err != nil {
 				return BlazeServerError(ctx, err)
 			}
-		case <-mc.writeDone:
+		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
 			conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -454,35 +468,91 @@ func writePump(ctx context.Context, conn *websocket.Conn, mc *messageContext) er
 	}
 }
 
-func writeMessageAndWait(ctx context.Context, mc *messageContext, action string, params map[string]any) error {
-	var resp = make(chan BlazeMessage, 1)
-	var id = UuidNewV4().String()
-	mc.transactions.set(id, func(t BlazeMessage) error {
-		select {
-		case resp <- t:
-		case <-time.After(1 * time.Second):
-			return fmt.Errorf("timeout to hook %s %s", action, id)
-		}
-		return nil
-	})
-	blazeMessage, err := json.Marshal(BlazeMessage{Id: id, Action: action, Params: params})
-	if err != nil {
+func blazeRequestError(ctx context.Context, err error) error {
+	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
 		return err
 	}
-	select {
-	case <-time.After(keepAlivePeriod):
-		return fmt.Errorf("timeout to write %s %v", action, params)
-	case mc.writeBuffer <- blazeMessage:
+	if _, ok := err.(Error); ok {
+		return err
 	}
-	select {
-	case <-time.After(keepAlivePeriod):
-		return fmt.Errorf("timeout to wait %s %v", action, params)
-	case t := <-resp:
-		if t.Error != nil && t.Error.Code != 403 {
-			return writeMessageAndWait(ctx, mc, action, params)
+	if e, ok := err.(*Error); ok && e != nil {
+		return *e
+	}
+	// Preserve the existing error format for local failures, while
+	// allowing callers to act on API errors and context cancellation.
+	return BlazeServerError(ctx, err)
+}
+
+func writeMessageAndWait(ctx context.Context, mc *messageContext, action string, params map[string]any) error {
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		resp := make(chan BlazeMessage, 1)
+		id := UuidNewV4().String()
+		mc.transactions.set(id, func(t BlazeMessage) error {
+			// The waiter may have already returned. Never block or fail the
+			// shared reader when delivering an individual request's response.
+			select {
+			case resp <- t:
+			default:
+			}
+			return nil
+		})
+		blazeMessage, err := json.Marshal(BlazeMessage{Id: id, Action: action, Params: params})
+		if err != nil {
+			mc.transactions.retrieve(id)
+			return err
+		}
+		writeTimer := time.NewTimer(keepAlivePeriod)
+		select {
+		case <-ctx.Done():
+			writeTimer.Stop()
+			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
+			return ctx.Err()
+		case <-writeTimer.C:
+			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
+			return fmt.Errorf("timeout to write %s %v", action, params)
+		case mc.writeBuffer <- blazeMessage:
+			writeTimer.Stop()
+		}
+
+		responseTimer := time.NewTimer(keepAlivePeriod)
+		select {
+		case <-ctx.Done():
+			responseTimer.Stop()
+			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
+			return ctx.Err()
+		case <-responseTimer.C:
+			mc.transactions.retrieve(id)
+			mc.deadRemember(id)
+			return fmt.Errorf("timeout to wait %s %v", action, params)
+		case response := <-resp:
+			responseTimer.Stop()
+			if response.Error == nil {
+				return nil
+			}
+			// Retry rate limiting and server failures. Return rejected
+			// requests to the caller with their original error details.
+			e := response.Error
+			retryable := e.Code == http.StatusTooManyRequests ||
+				e.Code >= 500 && e.Code < 600 || e.Status >= 500 && e.Status < 600 ||
+				e.Code == 7000 || e.Code == 7001
+			if !retryable {
+				return *e
+			}
+		}
+		retryTimer := time.NewTimer(keepAlivePeriod)
+		select {
+		case <-ctx.Done():
+			retryTimer.Stop()
+			return ctx.Err()
+		case <-retryTimer.C:
 		}
 	}
-	return nil
 }
 
 func writeGzipToConn(conn *websocket.Conn, msg []byte) error {
@@ -519,6 +589,15 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if transaction != nil {
 		return transaction(message)
 	}
+	// Responses can arrive after their waiter has timed out or been canceled.
+	// Drop them instead of delivering them as incoming messages. Error and
+	// empty responses are not incoming messages either.
+	if mc.deadForget(message.Id) {
+		return nil
+	}
+	if message.Error != nil || len(message.Data) == 0 {
+		return nil
+	}
 
 	if message.Action != "CREATE_MESSAGE" && message.Action != "ACKNOWLEDGE_MESSAGE_RECEIPT" {
 		return nil
@@ -528,10 +607,15 @@ func parseMessage(ctx context.Context, mc *messageContext, wsReader io.Reader) e
 	if err = json.Unmarshal(message.Data, &msg); err != nil {
 		return err
 	}
+	if msg.MessageId == "" {
+		return nil
+	}
 	timer := time.NewTimer(keepAlivePeriod)
 	defer timer.Stop()
 
 	select {
+	case <-ctx.Done():
+		return ctx.Err()
 	case <-timer.C:
 		timer.Reset(keepAlivePeriod)
 		return fmt.Errorf("timeout to handle %s %s", msg.Category, msg.MessageId)
@@ -564,4 +648,33 @@ func (m *tmap) set(key string, t mixinTransaction) {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 	m.m[key] = t
+}
+
+// deadRemember marks a request id whose waiter has abandoned it. Responses to
+// abandoned requests must be dropped instead of delivered as incoming messages.
+func (mc *messageContext) deadRemember(id string) {
+	mc.deadMu.Lock()
+	defer mc.deadMu.Unlock()
+	if mc.dead == nil {
+		mc.dead = make(map[string]time.Time)
+	}
+	now := time.Now()
+	for k, t := range mc.dead {
+		if now.Sub(t) > time.Minute {
+			delete(mc.dead, k)
+		}
+	}
+	mc.dead[id] = now
+}
+
+// deadForget reports and removes a request id from the dead set.
+func (mc *messageContext) deadForget(id string) bool {
+	mc.deadMu.Lock()
+	defer mc.deadMu.Unlock()
+	if mc.dead == nil {
+		return false
+	}
+	_, ok := mc.dead[id]
+	delete(mc.dead, id)
+	return ok
 }

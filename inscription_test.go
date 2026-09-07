@@ -8,6 +8,7 @@ import (
 )
 
 func TestReadCollection(t *testing.T) {
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
 	// Test collection hash provided by user
@@ -28,6 +29,7 @@ func TestReadCollection(t *testing.T) {
 }
 
 func TestReadCollectionItems(t *testing.T) {
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
 	// Test collection hash provided by user
@@ -55,6 +57,7 @@ func TestReadCollectionItems(t *testing.T) {
 }
 
 func TestReadInscription(t *testing.T) {
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
 

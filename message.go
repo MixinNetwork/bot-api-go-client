@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
@@ -404,6 +405,12 @@ func EncryptMessageData(data string, sessions []*Session, sessionPrivateKey stri
 	if err != nil {
 		return "", err
 	}
+	if len(sessions) == 0 {
+		return "", fmt.Errorf("no recipient sessions")
+	}
+	if len(sessions) > 1<<16-1 {
+		return "", fmt.Errorf("too many recipient sessions: %d", len(sessions))
+	}
 
 	key := make([]byte, 16)
 	_, err = rand.Read(key)
@@ -428,11 +435,20 @@ func EncryptMessageData(data string, sessions []*Session, sessionPrivateKey stri
 	var sessionLen [2]byte
 	binary.LittleEndian.PutUint16(sessionLen[:], uint16(len(sessions)))
 
-	private := ParseEd25519PrivateKey(sessionPrivateKey)
-	pub, _ := PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
+	private, err := parseEd25519PrivateKey(sessionPrivateKey)
+	if err != nil {
+		return "", err
+	}
+	pub, err := PublicKeyToCurve25519(ed25519.PublicKey(private[32:]))
+	if err != nil {
+		return "", err
+	}
 
 	var sessionsBytes []byte
 	for _, s := range sessions {
+		if s == nil {
+			return "", fmt.Errorf("recipient session is nil")
+		}
 		clientPublic, err := base64.RawURLEncoding.DecodeString(s.PublicKey)
 		if err != nil {
 			return "", err
@@ -478,24 +494,41 @@ func EncryptMessageData(data string, sessions []*Session, sessionPrivateKey stri
 }
 
 func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (string, error) {
-	privateKey := ParseEd25519PrivateKey(sessionPrivateKey)
-	bytes, err := base64.RawURLEncoding.DecodeString(data)
+	raw, err := base64.RawURLEncoding.DecodeString(data)
+	if err != nil {
+		return "", err
+	}
+	privateKey, err := parseEd25519PrivateKey(sessionPrivateKey)
 	if err != nil {
 		return "", err
 	}
 	size := 16 + 48 // session id bytes + encrypted key bytes size
-	total := len(bytes)
-	if total < 1+2+32+size+12 {
-		return "", nil
+	const headerSize = 1 + 2 + 32
+	if len(raw) < headerSize+12 {
+		return "", fmt.Errorf("encrypted message is too short: %d", len(raw))
 	}
-	sessionLen := int(binary.LittleEndian.Uint16(bytes[1:3]))
-	prefixSize := 35 + sessionLen*size
+	if raw[0] != 1 {
+		return "", fmt.Errorf("unsupported encrypted message version %d", raw[0])
+	}
+	sessionLen := int(binary.LittleEndian.Uint16(raw[1:3]))
+	if sessionLen == 0 {
+		return "", fmt.Errorf("encrypted message has no recipient sessions")
+	}
+	prefixSize := headerSize + sessionLen*size
+	if prefixSize+12 > len(raw) {
+		return "", fmt.Errorf("invalid encrypted message session count %d", sessionLen)
+	}
 	var key []byte
-	for i := 35; i < prefixSize; i += size {
-		if uid, _ := UuidFromBytes(bytes[i : i+16]); uid.String() == sessionId {
+	keyPaddingValid := 0
+	for i := headerSize; i < prefixSize; i += size {
+		uid, err := UuidFromBytes(raw[i : i+16])
+		if err != nil {
+			return "", err
+		}
+		if uid.String() == sessionId {
 			var priv [32]byte
 			var pub [32]byte
-			copy(pub[:], bytes[3:35])
+			copy(pub[:], raw[3:headerSize])
 			PrivateKeyToCurve25519(&priv, privateKey)
 			dst, err := curve25519.X25519(priv[:], pub[:])
 			if err != nil {
@@ -506,29 +539,36 @@ func DecryptMessageData(data string, sessionId, sessionPrivateKey string) (strin
 			if err != nil {
 				return "", err
 			}
-			iv := bytes[i+16 : i+16+aes.BlockSize]
-			key = bytes[i+16+aes.BlockSize : i+size]
+			iv := raw[i+16 : i+16+aes.BlockSize]
+			encryptedKey := append([]byte(nil), raw[i+16+aes.BlockSize:i+size]...)
 			mode := cipher.NewCBCDecrypter(block, iv)
-			mode.CryptBlocks(key, key)
-			key = key[:16]
+			mode.CryptBlocks(encryptedKey, encryptedKey)
+			// The wrapped key is always 16 bytes followed by a full padding
+			// block. Authenticate the payload even when padding is invalid,
+			// so neither errors nor an early return expose a padding oracle.
+			key = encryptedKey[:aes.BlockSize]
+			keyPaddingValid = 1
+			for _, b := range encryptedKey[aes.BlockSize:] {
+				keyPaddingValid &= subtle.ConstantTimeByteEq(b, aes.BlockSize)
+			}
 			break
 		}
 	}
 	if len(key) != 16 {
-		return "", nil
+		return "", fmt.Errorf("recipient session %s not found", sessionId)
 	}
-	nonce := bytes[prefixSize : prefixSize+12]
+	nonce := raw[prefixSize : prefixSize+12]
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		return "", nil // TODO
+		return "", err
 	}
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return "", nil // TODO
+		return "", err
 	}
-	plaintext, err := aesgcm.Open(nil, nonce, bytes[prefixSize+12:], nil)
-	if err != nil {
-		return "", nil // TODO
+	plaintext, err := aesgcm.Open(nil, nonce, raw[prefixSize+12:], nil)
+	if err != nil || keyPaddingValid != 1 {
+		return "", fmt.Errorf("decrypt message data: invalid ciphertext")
 	}
 	return base64.RawURLEncoding.EncodeToString(plaintext), nil
 }

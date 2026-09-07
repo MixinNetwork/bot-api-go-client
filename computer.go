@@ -103,7 +103,7 @@ type ComputerFeeResponse struct {
 }
 
 func computerRequest(ctx context.Context, method, path string, body []byte) ([]byte, error) {
-	req, err := http.NewRequest(method, computerUri+path, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, method, computerUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +280,7 @@ func RegisterComputer(ctx context.Context, su *SafeUser) (*SequencerTransactionR
 
 func ComputerUserIDToBytes(id string) ([]byte, error) {
 	bid, ok := new(big.Int).SetString(id, 10)
-	if !ok {
+	if !ok || bid.Sign() < 0 || bid.BitLen() > 64 {
 		return nil, fmt.Errorf("invalid user id: %s", id)
 	}
 	data := make([]byte, 8)
@@ -293,14 +293,22 @@ func BuildSystemCallExtra(uid, cid string, skipProcess bool, fid string) ([]byte
 	if err != nil {
 		return nil, err
 	}
-	extra = append(extra, uuid.Must(uuid.FromString(cid)).Bytes()...)
+	contractID, err := uuid.FromString(cid)
+	if err != nil {
+		return nil, fmt.Errorf("invalid contract id %q: %w", cid, err)
+	}
+	extra = append(extra, contractID.Bytes()...)
 	flag := 0
 	if skipProcess {
 		flag = 1
 	}
 	extra = append(extra, byte(flag))
 	if fid != "" {
-		extra = append(extra, uuid.Must(uuid.FromString(fid)).Bytes()...)
+		functionID, err := uuid.FromString(fid)
+		if err != nil {
+			return nil, fmt.Errorf("invalid function id %q: %w", fid, err)
+		}
+		extra = append(extra, functionID.Bytes()...)
 	}
 	return extra, nil
 }

@@ -30,7 +30,7 @@ func Request(ctx context.Context, method, path string, body []byte, accessToken 
 }
 
 func RequestWithId(ctx context.Context, method, path string, body []byte, accessToken, requestID string) ([]byte, error) {
-	req, err := http.NewRequest(method, httpUri+path, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, method, httpUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +54,12 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 }
 
 func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byte, error) {
+	if globalUser == nil {
+		return nil, errors.New("API key is not configured; call WithAPIKey first")
+	}
+	client := *httpClient
 	transport, err := NewTransport(
-		httpClient.Transport,
+		client.Transport,
 		globalUser.UserId,
 		globalUser.SessionId,
 		globalUser.SessionPrivateKey,
@@ -63,13 +67,13 @@ func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byt
 	if err != nil {
 		return nil, err
 	}
-	httpClient.Transport = transport
-	req, err := http.NewRequest(method, httpUri+path, bytes.NewReader(body))
+	client.Transport = transport
+	req, err := http.NewRequestWithContext(ctx, method, httpUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := httpClient.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}

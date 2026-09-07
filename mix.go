@@ -129,6 +129,9 @@ func NewMixAddressFromString(s string) (*MixAddress, error) {
 }
 
 func NewMixAddressFromBytesUnchecked(payload []byte) (*MixAddress, error) {
+	if len(payload) < 3 {
+		return nil, fmt.Errorf("invalid address length %d", len(payload))
+	}
 	var ma MixAddress
 	total := payload[2]
 	ma.Version = payload[0]
@@ -187,6 +190,9 @@ func (ma *MixAddress) RequestOrGenerateGhostKeys(ctx context.Context, outputInde
 	gks, err := RequestSafeGhostKeys(ctx, []*GhostKeyRequest{gkr}, u)
 	if err != nil {
 		return nil, err
+	}
+	if len(gks) == 0 {
+		return nil, fmt.Errorf("no ghost keys returned")
 	}
 	return gks[0], nil
 }
