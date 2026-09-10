@@ -224,6 +224,15 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 
 func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, su)
+}
+
+func ListAssetWithBalanceByMembers(ctx context.Context, members []string, su *SafeUser) ([]*Asset, error) {
+	membersHash := HashMembers(members)
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, su)
+}
+
+func ListAssetWithBalanceByMembersHash(ctx context.Context, membersHash string, su *SafeUser) ([]*Asset, error) {
 	offset := int64(0)
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
