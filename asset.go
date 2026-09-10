@@ -224,21 +224,25 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 
 func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
-	return ListAssetWithBalanceByMembersHash(ctx, membersHash, su)
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, 1, su)
 }
 
-func ListAssetWithBalanceByMembers(ctx context.Context, members []string, su *SafeUser) ([]*Asset, error) {
-	membersHash := HashMembers(members)
-	return ListAssetWithBalanceByMembersHash(ctx, membersHash, su)
+func ListAssetWithBalanceByMembers(ctx context.Context, mixAddress string, su *SafeUser) ([]*Asset, error) {
+	mix, err := NewMixAddressFromString(mixAddress)
+	if err != nil {
+		return nil, err
+	}
+	membersHash := HashMembers(mix.Members())
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, mix.Threshold, su)
 }
 
-func ListAssetWithBalanceByMembersHash(ctx context.Context, membersHash string, su *SafeUser) ([]*Asset, error) {
+func ListAssetWithBalanceByMembersHash(ctx context.Context, membersHash string, threshold byte, su *SafeUser) ([]*Asset, error) {
 	offset := int64(0)
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
 	for {
 		previousOffset := offset
-		outputs, err := ListOutputs(ctx, membersHash, 1, "", OutputStateUnspent, offset, 500, su)
+		outputs, err := ListOutputs(ctx, membersHash, threshold, "", OutputStateUnspent, offset, 500, su)
 		if err != nil {
 			return nil, err
 		}
