@@ -314,9 +314,21 @@ func parseMixinAddress(str string) *bot.MixAddress {
 	}
 }
 
+type utxoKeysRPCReader struct {
+	endpoint string
+}
+
+func (r utxoKeysRPCReader) ReadUTXOKeys(hash crypto.Hash, index uint) (*common.UTXOKeys, error) {
+	utxo, err := rpc.GetUTXO(r.endpoint, hash.String(), uint64(index))
+	if err != nil || utxo == nil {
+		return nil, err
+	}
+	return &common.UTXOKeys{Mask: utxo.Mask, Keys: utxo.Keys}, nil
+}
+
 func signAndSendRawTransaction(tx *common.Transaction, account *common.Address) error {
 	signed := tx.AsVersioned()
-	ur := rpc.NewUTXOKeysRPCReader(KernelRPC)
+	ur := utxoKeysRPCReader{endpoint: KernelRPC}
 	for i := range tx.Inputs {
 		err := signed.SignInput(ur, i, []*common.Address{account})
 		if err != nil {
