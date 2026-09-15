@@ -62,7 +62,7 @@ const (
 	HyperEVMChainId        = "36d23d9e-bf4e-3ede-a12d-26f1f1f9fd2f"
 	XLayerChainId          = "37f5a4d1-905f-3b34-8291-c37438c7dcfc"
 	RobinhoodChainId       = "b304e03d-d004-3102-875b-8266f8407a1a"
-	ArcChainId             = "3f42cb95-274e-366b-9ab7-e1528d929a06"
+	ArcChainId             = "3f42cb95-274e-366b-9ab7-e1528d929a06" // fe62133c0a5b04736e8f2b7205a511943cea3ef9d83d685b3c36211c6d321516
 	AptosChainId           = "d2c1c7e1-a1a9-4f88-b282-d93b0a08b42b"
 	SuiChainId             = "3acb25e4-6216-35c3-b1ca-87184269ee08"
 	TONChainId             = "ef660437-d915-4e27-ad3f-632bfb6ba0ee"
