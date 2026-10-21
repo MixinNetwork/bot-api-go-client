@@ -44,6 +44,7 @@ func GroupConversationId(ownerId, groupName string, participants []string, rando
 	gid := UniqueConversationId(ownerId, groupName)
 	gid = UniqueConversationId(gid, randomId)
 
+	participants = slices.Clone(participants)
 	slices.Sort(participants)
 	for _, p := range participants {
 		gid = UniqueConversationId(gid, p)
@@ -52,6 +53,9 @@ func GroupConversationId(ownerId, groupName string, participants []string, rando
 }
 
 func Chunked(source []any, size int) [][]any {
+	if size <= 0 {
+		return nil
+	}
 	var result [][]any
 	index := 0
 	for index < len(source) {

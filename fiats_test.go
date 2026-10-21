@@ -8,6 +8,8 @@ import (
 )
 
 func TestGetFiats(t *testing.T) {
+	requireLiveAPI(t)
+	configureLiveAPIKey(t)
 	assert := assert.New(t)
 	a, err := Fiats(context.Background())
 	assert.Nil(err)

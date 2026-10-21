@@ -3,6 +3,7 @@ package bot
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 )
 
 func ReadAsset(ctx context.Context, id string) (*AssetNetwork, error) {
@@ -62,8 +63,13 @@ func ReadAssetTicker(ctx context.Context, id string) (*AssetTicker, error) {
 	return resp.Data, nil
 }
 
+// AssetSearch searches for a raw, unescaped asset name.
 func AssetSearch(ctx context.Context, name string) ([]*AssetNetwork, error) {
-	body, err := Request(ctx, "GET", "/network/assets/search/"+name, nil, "")
+	// PathEscape leaves dot segments unchanged; reject them before URL routing.
+	if name == "." || name == ".." {
+		return nil, BadDataError(ctx)
+	}
+	body, err := Request(ctx, "GET", "/network/assets/search/"+url.PathEscape(name), nil, "")
 	if err != nil {
 		return nil, err
 	}

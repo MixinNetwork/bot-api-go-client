@@ -8,6 +8,7 @@ import (
 )
 
 func TestAddress(t *testing.T) {
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
 

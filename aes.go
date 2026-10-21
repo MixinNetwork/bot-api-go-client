@@ -4,6 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"fmt"
 )
 
 func AesDecrypt(secret, b []byte) ([]byte, error) {
@@ -14,6 +15,9 @@ func AesDecrypt(secret, b []byte) ([]byte, error) {
 	aead, err := cipher.NewGCM(aes)
 	if err != nil {
 		return nil, err
+	}
+	if len(b) < aead.NonceSize() {
+		return nil, fmt.Errorf("ciphertext is too short: got %d bytes, need at least %d", len(b), aead.NonceSize())
 	}
 	nonce := b[:aead.NonceSize()]
 	cipher := b[aead.NonceSize():]

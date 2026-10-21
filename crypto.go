@@ -38,7 +38,7 @@ func SharedKey(public ed25519.PublicKey, private ed25519.PrivateKey) ([32]byte, 
 		return dst, err
 	}
 
-	PrivateKeyToCurve25519(&priv, private.Seed())
+	PrivateKeyToCurve25519(&priv, private)
 	copy(pub[:], curve25519Public[:])
 	d, err := curve25519.X25519(priv[:], pub[:])
 	if err != nil {
@@ -49,6 +49,7 @@ func SharedKey(public ed25519.PublicKey, private ed25519.PrivateKey) ([32]byte, 
 }
 
 func HashMembers(ids []string) string {
+	ids = slices.Clone(ids)
 	slices.Sort(ids)
 	var in string
 	for _, id := range ids {

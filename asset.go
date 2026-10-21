@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"maps"
 	"net/url"
 	"slices"
@@ -21,10 +20,11 @@ const (
 	USDT_POLYGON     = "218bc6f4-7927-3f8e-8568-3a3725b74361"
 	USDT_BSC         = "94213408-4ee7-3150-a9c4-9c5cce421c78"
 	USDT_SOLANA      = "cb54aed4-1893-3977-b739-ec7b2e04f0c5"
-	USDT_OPTIMISM    = "65f137d4-50ba-3090-920b-b360f7da8eee"
+	USDT_OPTIMISM    = "39ef12d2-7ba2-3d45-aaf3-33df0255a5f2"
 	USDT_ARBITRUM    = "66e12fe3-50fe-3308-9426-7b2f47f6a66f"
 	USDT_AVALANCHE_C = "38ff9f68-d62a-3070-9766-69b6a84218b3"
 	USDT_HYPEREVM    = "3782f986-a053-33ae-b6bf-460abb62ce49"
+	USDT_XLAYER      = "c4d9746a-20be-321c-baca-d378534dd4eb"
 
 	USDC_ERC20    = "9b180ab6-6abe-3dc0-a13f-04169eb34bfa"
 	USDC_SOLANA   = "de6fa523-c596-398e-b12f-6d6980544b59"
@@ -34,6 +34,10 @@ const (
 	USDC_OPTIMISM = "2adae45c-5077-3b96-b810-0da15bcc3097"
 	USDC_ARBITRUM = "d2d80f2c-0ac5-3d8c-82c2-e0a1aa25f928"
 	USDC_HYPEREVM = "1e01fede-51fa-3791-9b06-5c18801b272c"
+	USDC_XLAYER   = "8d706a25-514c-3c73-9446-c25fd07d0ae2"
+	USDC_SUI      = "a0f7ad61-3b9f-30f3-a1de-cd831aec33ff"
+
+	USDG_ROBINHOOD = "e2d1872a-abd5-3036-aacb-c90570cc7fb4"
 )
 
 type Asset struct {
@@ -100,23 +104,26 @@ func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser)
 	filter := make(map[string]bool)
 	var total common.Integer
 	for {
+		previousOffset := offset
 		outputs, err := ListOutputs(ctx, HashMembers([]string{su.UserId}), 1, assetId, OutputStateUnspent, offset, 500, su)
 		if err != nil {
-			log.Println(err)
-			continue
+			return common.Zero, err
 		}
-		for i, o := range outputs {
+		if len(outputs) > 0 {
+			offset = outputs[len(outputs)-1].Sequence
+		}
+		for _, o := range outputs {
 			if filter[o.OutputID] {
 				continue
 			}
 			filter[o.OutputID] = true
 			total = total.Add(common.NewIntegerFromString(o.Amount))
-			if i == len(outputs)-1 {
-				offset = o.Sequence
-			}
 		}
 		if len(outputs) < 500 {
 			break
+		}
+		if offset <= previousOffset {
+			return common.Zero, fmt.Errorf("output pagination did not advance beyond sequence %d", previousOffset)
 		}
 	}
 	return total, nil
@@ -217,16 +224,32 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 
 func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 	membersHash := HashMembers([]string{su.UserId})
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, 1, su)
+}
+
+func ListAssetWithBalanceByMembers(ctx context.Context, mixAddress string, su *SafeUser) ([]*Asset, error) {
+	mix, err := NewMixAddressFromString(mixAddress)
+	if err != nil {
+		return nil, err
+	}
+	membersHash := HashMembers(mix.Members())
+	return ListAssetWithBalanceByMembersHash(ctx, membersHash, mix.Threshold, su)
+}
+
+func ListAssetWithBalanceByMembersHash(ctx context.Context, membersHash string, threshold byte, su *SafeUser) ([]*Asset, error) {
 	offset := int64(0)
 	m := make(map[string]number.Decimal)
 	filter := make(map[string]bool)
 	for {
-		outputs, err := ListOutputs(ctx, membersHash, 1, "", OutputStateUnspent, offset, 500, su)
+		previousOffset := offset
+		outputs, err := ListOutputs(ctx, membersHash, threshold, "", OutputStateUnspent, offset, 500, su)
 		if err != nil {
-			log.Println(err)
-			continue
+			return nil, err
 		}
-		for i, output := range outputs {
+		if len(outputs) > 0 {
+			offset = outputs[len(outputs)-1].Sequence
+		}
+		for _, output := range outputs {
 			if _, ok := filter[output.OutputID]; ok {
 				continue
 			}
@@ -236,12 +259,12 @@ func ListAssetWithBalance(ctx context.Context, su *SafeUser) ([]*Asset, error) {
 			} else {
 				m[output.AssetId] = number.FromString(output.Amount)
 			}
-			if i == len(outputs)-1 {
-				offset = outputs[len(outputs)-1].Sequence
-			}
 		}
 		if len(outputs) < 500 {
 			break
+		}
+		if offset <= previousOffset {
+			return nil, fmt.Errorf("output pagination did not advance beyond sequence %d", previousOffset)
 		}
 	}
 	assets := []*Asset{}

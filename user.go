@@ -365,15 +365,16 @@ func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*Us
 }
 
 type Session struct {
-	UserID    string
-	SessionID string
-	PublicKey string
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
+	PublicKey string `json:"public_key"`
 }
 
 func GenerateUserChecksum(sessions []*Session) string {
 	if len(sessions) < 1 {
 		return ""
 	}
+	sessions = append([]*Session(nil), sessions...)
 	sort.Slice(sessions, func(i, j int) bool {
 		return sessions[i].SessionID < sessions[j].SessionID
 	})

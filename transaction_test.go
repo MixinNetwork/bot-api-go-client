@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -19,15 +18,16 @@ type BotTest struct {
 }
 
 func TestTIPTransaction(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping testing in CI environment")
-	}
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
 
 	var bot BotTest
 	err := json.Unmarshal([]byte(botData), &bot)
 	assert.Nil(err)
+	if bot.Pin == "" || bot.SessionID == "" || bot.PrivateKey == "" {
+		t.Skip("live TIP credentials are not configured")
+	}
 	su := &SafeUser{
 		UserId:            bot.ClientID,
 		SessionId:         bot.SessionID,

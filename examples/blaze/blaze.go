@@ -23,7 +23,7 @@ func (f mixinBlazeHandler) SyncAck() bool {
 }
 
 func main() {
-	var ctx context.Context
+	ctx := context.Background()
 	h := func(ctx context.Context, botMsg bot.MessageView, clientID string) error {
 		log.Println(botMsg)
 		return nil

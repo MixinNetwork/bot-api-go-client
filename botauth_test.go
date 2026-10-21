@@ -15,13 +15,15 @@ import (
 )
 
 func TestSignRequest(t *testing.T) {
-	if os.Getenv("CI") != "" {
-		t.Skip("Skipping testing in CI environment")
-	}
-
+	requireLiveAPI(t)
 	assert := assert.New(t)
 	keystore, err := read("./test_config.json")
-	assert.Nil(err)
+	if os.IsNotExist(err) {
+		t.Skip("test_config.json is required for this integration test")
+	}
+	if !assert.NoError(err) {
+		return
+	}
 	su := keystore.BuildSafeUser()
 	logger := slog.Default()
 	ctx := context.Background()
@@ -33,7 +35,7 @@ func TestSignRequest(t *testing.T) {
 	}
 	ts := 1718102244
 	s, err := client.SignRequest(ctx, int64(ts), "489cfe0b-08d8-47f4-a330-fff193cc8086", r)
-	if err != nil {
+	if !assert.NoError(err) {
 		return
 	}
 	assert.Equal("YTgyZTFhNmEtNzVjOS00MDEzLTgwYmMtMTAxODNlZWY0OWEyBM-CNnETfQGwHzNh4x0N5JsxofbCoCpbc7jikoR7C-Y", s)

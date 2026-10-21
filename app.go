@@ -64,7 +64,7 @@ func UpdateApp(ctx context.Context, in *UpdateAppInput, user *SafeUser) (*App, e
 	return resp.Data, nil
 }
 
-func Migrate(ctx context.Context, receiver string, user *SafeUser) (*App, error) {
+func TransferAppOwnership(ctx context.Context, appId, receiver string, user *SafeUser) (*App, error) {
 	tipBody := TipBodyForOwnershipTransfer(receiver)
 	pin, err := signTipBody(tipBody, user.SpendPrivateKey, user.IsSpendPrivateSum)
 	if err != nil {
@@ -82,7 +82,7 @@ func Migrate(ctx context.Context, receiver string, user *SafeUser) (*App, error)
 		return nil, err
 	}
 
-	path := fmt.Sprintf("/apps/%s/transfer", uid)
+	path := fmt.Sprintf("/apps/%s/transfer", appId)
 	token, err := SignAuthenticationToken("POST", path, string(data), user)
 	if err != nil {
 		return nil, err

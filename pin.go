@@ -7,6 +7,7 @@ import (
 	"crypto/cipher"
 	"crypto/ed25519"
 	"crypto/rand"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	"log"
 	"time"
 
+	"filippo.io/edwards25519"
 	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/curve25519"
 )
@@ -25,12 +27,13 @@ func EncryptEd25519PIN(pin string, iterator uint64, current *SafeUser) (string, 
 	if pin == "" {
 		return "", nil
 	}
-	privateBytes, err := hex.DecodeString(current.SessionPrivateKey)
+	if current == nil {
+		return "", errors.New("safe user is nil")
+	}
+	private, err := parseEd25519PrivateKey(current.SessionPrivateKey)
 	if err != nil {
 		return "", err
 	}
-
-	private := ed25519.NewKeyFromSeed(privateBytes)
 	if len(current.ServerPublicKey) == 0 {
 		return "", errors.New("missing setup server public key")
 	}
@@ -118,7 +121,7 @@ func VerifyPINTip(ctx context.Context, su *SafeUser) (*User, error) {
 	tb := fmt.Appendf(nil, "%s%032d", TIPVerify, timestamp)
 	pin, err := signTipBody(tb, su.SpendPrivateKey, su.IsSpendPrivateSum)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	source, err := EncryptEd25519PIN(pin, uint64(timestamp), su)
 	if err != nil {
@@ -164,10 +167,34 @@ func signTipBody(body []byte, pin string, isSum bool) (string, error) {
 	if len(pinBuf) != 32 {
 		return "", errors.New("invalid ed25519 private")
 	}
-	key := ed25519.NewKeyFromSeed(pinBuf)
-	if isSum {
-		copy(key[:], pinBuf)
+	if !isSum {
+		sigBuf := ed25519.Sign(ed25519.NewKeyFromSeed(pinBuf), body)
+		return hex.EncodeToString(sigBuf), nil
 	}
-	sigBuf := ed25519.Sign(ed25519.NewKeyFromSeed(pinBuf), body)
-	return hex.EncodeToString(sigBuf), nil
+	private, err := edwards25519.NewScalar().SetCanonicalBytes(pinBuf)
+	if err != nil {
+		return "", fmt.Errorf("invalid canonical spend private key: %w", err)
+	}
+	// Match mixin/crypto.Key.Sign's nonce derivation and Ed25519 signature,
+	// allowing the full TIP verification body rather than only a 32-byte hash.
+	prefix := sha512.Sum512(pinBuf)
+	h := sha512.New()
+	h.Write(prefix[32:])
+	h.Write(body)
+	nonce, err := edwards25519.NewScalar().SetUniformBytes(h.Sum(nil))
+	if err != nil {
+		return "", err
+	}
+	r := edwards25519.NewIdentityPoint().ScalarBaseMult(nonce)
+	public := edwards25519.NewIdentityPoint().ScalarBaseMult(private)
+	h.Reset()
+	h.Write(r.Bytes())
+	h.Write(public.Bytes())
+	h.Write(body)
+	challenge, err := edwards25519.NewScalar().SetUniformBytes(h.Sum(nil))
+	if err != nil {
+		return "", err
+	}
+	s := edwards25519.NewScalar().MultiplyAdd(challenge, private, nonce)
+	return hex.EncodeToString(append(r.Bytes(), s.Bytes()...)), nil
 }
