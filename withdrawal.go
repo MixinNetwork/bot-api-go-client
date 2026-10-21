@@ -57,10 +57,21 @@ func withdrawalTransaction(ctx context.Context, traceId, feeReceiverId string, f
 			Amount:     feeAmount,
 			MixAddress: NewUUIDMixAddress([]string{feeReceiverId}, 1),
 		}}
+		outputs := make([]*Output, 0, len(utxos)+len(feeUtxos))
+		seen := make(map[string]bool, cap(outputs))
+		for _, inputs := range [][]*Output{utxos, feeUtxos} {
+			for _, o := range inputs {
+				if seen[o.OutputID] {
+					continue
+				}
+				seen[o.OutputID] = true
+				outputs = append(outputs, o)
+			}
+		}
 		var tx *SequencerTransactionRequest
 		var err error
-		if len(utxos) > 0 {
-			tx, err = SendTransactionWithOutputs(ctx, assetId, recipients, utxos, traceId, []byte(memo), nil, u)
+		if len(outputs) > 0 {
+			tx, err = SendTransactionWithOutputs(ctx, assetId, recipients, outputs, traceId, []byte(memo), nil, u)
 		} else {
 			tx, err = SendTransaction(ctx, assetId, recipients, traceId, []byte(memo), nil, u)
 		}
