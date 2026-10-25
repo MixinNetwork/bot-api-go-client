@@ -133,10 +133,10 @@ func CreateMultisigRawTx(ctx context.Context, asset crypto.Hash, senders, receiv
 	if total.Cmp(amount) < 0 {
 		return "", errors.New("insufficient funds")
 	}
-	if !receiverMask.CheckKey() {
+	if !receiverMask.CheckPublicKey() {
 		return "", errors.New("invalid receiver mask")
 	}
-	if !changeMask.CheckKey() {
+	if !changeMask.CheckPublicKey() {
 		return "", errors.New("invalid change mask")
 	}
 	output := &common.Output{
