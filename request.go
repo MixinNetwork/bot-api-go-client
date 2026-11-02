@@ -19,7 +19,7 @@ var (
 	httpClient *http.Client
 	httpUri    string
 	blazeUri   string
-	userAgent  = "Bot-API-Go-Client"
+	userAgent  = "Bot-API-Go-Client/v3.25.10"
 	debug      = false
 
 	globalUser *SafeUser
