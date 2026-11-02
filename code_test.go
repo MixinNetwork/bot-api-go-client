@@ -12,7 +12,7 @@ func TestReadCode(t *testing.T) {
 	requireLiveAPI(t)
 	assert := assert.New(t)
 	ctx := context.Background()
-	c, err := ReadCode[*MultisigRequest](ctx, "c76310d8-c563-499e-9866-c61ae2cbee11")
+	c, err := ReadCode[*MultisigRequest](ctx, "c76310d8-c563-499e-9866-c61ae2cbee11", nil)
 	assert.Nil(err)
 	fmt.Println(c)
 }

@@ -28,9 +28,9 @@ type SafeDepositPending struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
-func FetchPendingSafeDeposits(ctx context.Context) ([]*SafeDepositPending, error) {
+func FetchPendingSafeDeposits(ctx context.Context, su *SafeUser) ([]*SafeDepositPending, error) {
 	endpoint := "/safe/deposits"
-	body, err := Request(ctx, "GET", endpoint, nil, "")
+	body, err := RequestWithUser(ctx, "GET", endpoint, nil, su)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

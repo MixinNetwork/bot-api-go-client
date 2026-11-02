@@ -7,7 +7,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func newTestSafeUser(label string) (*SafeUser, ed25519.PrivateKey) {
@@ -18,6 +21,23 @@ func newTestSafeUser(label string) (*SafeUser, ed25519.PrivateKey) {
 		SessionId:         "c76310d8-c563-499e-9866-c61ae2cbee11",
 		SessionPrivateKey: hex.EncodeToString(seed[:]),
 	}, privateKey
+}
+
+func assertTestRequestAuthentication(t *testing.T, request *http.Request, body []byte, user *SafeUser, publicKey ed25519.PublicKey) {
+	t.Helper()
+	authorization := request.Header.Get("Authorization")
+	if user == nil {
+		assert.Equal(t, "Bearer", strings.TrimSpace(authorization))
+		return
+	}
+
+	assert.True(t, strings.HasPrefix(authorization, "Bearer "))
+	claims := parseTestJWT(t, strings.TrimPrefix(authorization, "Bearer "), publicKey)
+	sum := sha256.Sum256([]byte(request.Method + request.URL.RequestURI() + string(body)))
+	assert.Equal(t, user.UserId, claims["uid"])
+	assert.Equal(t, user.SessionId, claims["sid"])
+	assert.Equal(t, "FULL", claims["scp"])
+	assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
 }
 
 func useTestServer(t *testing.T, handler http.Handler) *httptest.Server {

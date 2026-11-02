@@ -126,8 +126,8 @@ type Inscription struct {
 }
 
 // ReadCollection reads collection information from Mixin API
-func ReadCollection(ctx context.Context, collectionHash string) (*Collection, error) {
-	body, err := Request(ctx, "GET", "/safe/inscriptions/collections/"+collectionHash, nil, "")
+func ReadCollection(ctx context.Context, collectionHash string, su *SafeUser) (*Collection, error) {
+	body, err := RequestWithUser(ctx, "GET", "/safe/inscriptions/collections/"+collectionHash, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -150,8 +150,8 @@ func ReadCollection(ctx context.Context, collectionHash string) (*Collection, er
 }
 
 // ReadInscription reads inscription information from Mixin API
-func ReadInscription(ctx context.Context, inscriptionHash string) (*Inscription, error) {
-	body, err := Request(ctx, "GET", "/safe/inscriptions/items/"+inscriptionHash, nil, "")
+func ReadInscription(ctx context.Context, inscriptionHash string, su *SafeUser) (*Inscription, error) {
+	body, err := RequestWithUser(ctx, "GET", "/safe/inscriptions/items/"+inscriptionHash, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -174,9 +174,9 @@ func ReadInscription(ctx context.Context, inscriptionHash string) (*Inscription,
 }
 
 // ReadCollectionItems reads all items in a collection from Mixin API
-func ReadCollectionItems(ctx context.Context, collectionHash string) ([]*Inscription, error) {
+func ReadCollectionItems(ctx context.Context, collectionHash string, su *SafeUser) ([]*Inscription, error) {
 	path := fmt.Sprintf("/safe/inscriptions/collections/%s/items", collectionHash)
-	body, err := Request(ctx, "GET", path, nil, "")
+	body, err := RequestWithUser(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, err
 	}

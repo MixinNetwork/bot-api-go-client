@@ -6,8 +6,8 @@ import (
 	"net/url"
 )
 
-func ReadAsset(ctx context.Context, id string) (*AssetNetwork, error) {
-	body, err := Request(ctx, "GET", "/network/assets/"+id, nil, "")
+func ReadAsset(ctx context.Context, id string, su *SafeUser) (*AssetNetwork, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/assets/"+id, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -25,8 +25,8 @@ func ReadAsset(ctx context.Context, id string) (*AssetNetwork, error) {
 	return resp.Data, nil
 }
 
-func ReadAssetTickerWithOffset(ctx context.Context, id string, offset string) (*AssetTicker, error) {
-	body, err := Request(ctx, "GET", "/network/ticker?asset="+id+"&offset="+offset, nil, "")
+func ReadAssetTickerWithOffset(ctx context.Context, id string, offset string, su *SafeUser) (*AssetTicker, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/ticker?asset="+id+"&offset="+offset, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +44,8 @@ func ReadAssetTickerWithOffset(ctx context.Context, id string, offset string) (*
 	return resp.Data, nil
 }
 
-func ReadAssetTicker(ctx context.Context, id string) (*AssetTicker, error) {
-	body, err := Request(ctx, "GET", "/network/ticker?asset="+id, nil, "")
+func ReadAssetTicker(ctx context.Context, id string, su *SafeUser) (*AssetTicker, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/ticker?asset="+id, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -64,12 +64,12 @@ func ReadAssetTicker(ctx context.Context, id string) (*AssetTicker, error) {
 }
 
 // AssetSearch searches for a raw, unescaped asset name.
-func AssetSearch(ctx context.Context, name string) ([]*AssetNetwork, error) {
+func AssetSearch(ctx context.Context, name string, su *SafeUser) ([]*AssetNetwork, error) {
 	// PathEscape leaves dot segments unchanged; reject them before URL routing.
 	if name == "." || name == ".." {
 		return nil, BadDataError(ctx)
 	}
-	body, err := Request(ctx, "GET", "/network/assets/search/"+url.PathEscape(name), nil, "")
+	body, err := RequestWithUser(ctx, "GET", "/network/assets/search/"+url.PathEscape(name), nil, su)
 	if err != nil {
 		return nil, err
 	}

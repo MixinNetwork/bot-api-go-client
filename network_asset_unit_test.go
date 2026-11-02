@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
 	"net/http"
 	"testing"
 
@@ -19,13 +20,15 @@ func TestAssetSearchEscapesName(t *testing.T) {
 		{"%2e%2e%2ftop", "%252e%252e%252ftop"},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
+			user, privateKey := newTestSafeUser(t.Name())
 			requests := 0
 			useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				requests++
 				assert.Equal(t, "/network/assets/search/"+tt.path, r.RequestURI)
+				assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
 				_, _ = w.Write([]byte(`{"data":[{"asset_id":"asset"}]}`))
 			}))
-			assets, err := AssetSearch(context.Background(), tt.name)
+			assets, err := AssetSearch(context.Background(), tt.name, user)
 			require.NoError(t, err)
 			require.Len(t, assets, 1)
 			assert.Equal(t, "asset", assets[0].AssetID)
@@ -41,7 +44,7 @@ func TestAssetSearchRejectsDotSegments(t *testing.T) {
 		_, _ = w.Write([]byte(`{"data":[]}`))
 	}))
 	for _, name := range []string{".", ".."} {
-		assets, err := AssetSearch(context.Background(), name)
+		assets, err := AssetSearch(context.Background(), name, nil)
 		require.Error(t, err)
 		assert.Nil(t, assets)
 		var apiError Error

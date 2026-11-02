@@ -14,7 +14,7 @@ func TestReadCollection(t *testing.T) {
 	// Test collection hash provided by user
 	collectionHash := "d48af6bdd4ce12328583611debf2f75e0895a2c5522d23db70c912a6a34538a9"
 
-	collection, err := ReadCollection(ctx, collectionHash)
+	collection, err := ReadCollection(ctx, collectionHash, nil)
 	if err != nil {
 		t.Fatalf("ReadCollection failed: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestReadCollectionItems(t *testing.T) {
 	// Test collection hash provided by user
 	collectionHash := "d48af6bdd4ce12328583611debf2f75e0895a2c5522d23db70c912a6a34538a9"
 
-	items, err := ReadCollectionItems(ctx, collectionHash)
+	items, err := ReadCollectionItems(ctx, collectionHash, nil)
 	if err != nil {
 		t.Fatalf("ReadCollectionItems failed: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestReadInscription(t *testing.T) {
 
 	// First get items from the collection to get a valid inscription hash
 	collectionHash := "d48af6bdd4ce12328583611debf2f75e0895a2c5522d23db70c912a6a34538a9"
-	items, err := ReadCollectionItems(ctx, collectionHash)
+	items, err := ReadCollectionItems(ctx, collectionHash, nil)
 	if err != nil {
 		t.Fatalf("ReadCollectionItems failed: %v", err)
 	}
@@ -75,7 +75,7 @@ func TestReadInscription(t *testing.T) {
 	// Test with the first item's inscription hash
 	inscriptionHash := items[0].InscriptionHash
 
-	inscription, err := ReadInscription(ctx, inscriptionHash)
+	inscription, err := ReadInscription(ctx, inscriptionHash, nil)
 	if err != nil {
 		t.Fatalf("ReadInscription failed: %v", err)
 	}

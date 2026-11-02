@@ -9,8 +9,8 @@ type Code interface {
 	*MultisigRequest | *User | *Conversation
 }
 
-func ReadCode[C Code](ctx context.Context, codeId string) (C, error) {
-	body, err := Request(ctx, "GET", "/codes/"+codeId, nil, "")
+func ReadCode[C Code](ctx context.Context, codeId string, su *SafeUser) (C, error) {
+	body, err := RequestWithUser(ctx, "GET", "/codes/"+codeId, nil, su)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -28,6 +28,6 @@ func ReadCode[C Code](ctx context.Context, codeId string) (C, error) {
 	return resp.Data, nil
 }
 
-func ReadMultisigByCode(ctx context.Context, codeId string) (*MultisigRequest, error) {
-	return ReadCode[*MultisigRequest](ctx, codeId)
+func ReadMultisigByCode(ctx context.Context, codeId string, su *SafeUser) (*MultisigRequest, error) {
+	return ReadCode[*MultisigRequest](ctx, codeId, su)
 }

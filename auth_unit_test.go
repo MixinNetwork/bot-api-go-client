@@ -98,10 +98,12 @@ func TestAuthenticatorBuildJWT(t *testing.T) {
 }
 
 func TestOAuthGetAccessToken(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
 	tests := []struct {
 		name           string
 		response       string
 		ed25519        string
+		user           *SafeUser
 		wantToken      string
 		wantScope      string
 		wantAuthID     string
@@ -122,6 +124,13 @@ func TestOAuthGetAccessToken(t *testing.T) {
 			wantScope:  "ASSETS:READ",
 			wantAuthID: "auth-id",
 		},
+		{
+			name:      "authenticated token exchange",
+			response:  `{"data":{"access_token":"access","scope":"PROFILE:READ"}}`,
+			user:      user,
+			wantToken: "access",
+			wantScope: "PROFILE:READ",
+		},
 		{name: "unauthorized", response: `{"error":{"code":401}}`, wantErrorCode: 401},
 		{name: "forbidden", response: `{"error":{"code":403}}`, wantErrorCode: 403},
 		{name: "API error", response: `{"error":{"status":202,"code":1000,"description":"bad"}}`, wantErrorCode: 500},
@@ -136,6 +145,7 @@ func TestOAuthGetAccessToken(t *testing.T) {
 				assert.Equal(t, "/oauth/token", r.URL.Path)
 				body, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
+				assertTestRequestAuthentication(t, r, body, tt.user, privateKey.Public().(ed25519.PublicKey))
 				var payload map[string]string
 				require.NoError(t, json.Unmarshal(body, &payload))
 				assert.Equal(t, "client", payload["client_id"])
@@ -149,7 +159,7 @@ func TestOAuthGetAccessToken(t *testing.T) {
 			}))
 
 			token, scope, authorizationID, err := OAuthGetAccessToken(
-				context.Background(), "client", "secret", "code", "verifier", tt.ed25519,
+				context.Background(), "client", "secret", "code", "verifier", tt.ed25519, tt.user,
 			)
 			if tt.wantErrorCode != 0 {
 				require.Error(t, err)

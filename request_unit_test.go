@@ -53,6 +53,73 @@ func TestRequestGeneratesRequestID(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRequestWithUser(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
+	for _, tt := range []struct {
+		name string
+		user *SafeUser
+	}{
+		{name: "unsigned"},
+		{name: "signed", user: user},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			type receivedRequest struct {
+				request *http.Request
+				body    []byte
+				err     error
+			}
+			requests := make(chan receivedRequest, 1)
+			useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				body, err := io.ReadAll(r.Body)
+				requests <- receivedRequest{request: r, body: body, err: err}
+				_, _ = w.Write([]byte(`{"ok":true}`))
+			}))
+			globalUser, _ = newTestSafeUser(t.Name() + "/global")
+			requestBody := []byte(`{"hello":"world"}`)
+			const path = "/resource/a%2Fb?name=hello%20world&order=desc"
+			var previousRequestID string
+			for range 2 {
+				body, err := RequestWithUser(context.Background(), http.MethodPost, path, requestBody, tt.user)
+				require.NoError(t, err)
+				assert.JSONEq(t, `{"ok":true}`, string(body))
+
+				received := <-requests
+				require.NoError(t, received.err)
+				assert.Equal(t, http.MethodPost, received.request.Method)
+				assert.Equal(t, path, received.request.URL.RequestURI())
+				assert.Equal(t, requestBody, received.body)
+				assert.Equal(t, "application/json", received.request.Header.Get("Content-Type"))
+				assertTestRequestAuthentication(t, received.request, received.body, tt.user, privateKey.Public().(ed25519.PublicKey))
+				requestID := received.request.Header.Get("X-Request-Id")
+				id, err := uuid.FromString(requestID)
+				require.NoError(t, err)
+				assert.Equal(t, uuid.V4, id.Version())
+				assert.NotEqual(t, previousRequestID, requestID)
+				previousRequestID = requestID
+			}
+		})
+	}
+}
+
+func TestRequestWithUserRejectsInvalidPrivateKey(t *testing.T) {
+	for _, key := range []string{"", "not-hex", "00"} {
+		t.Run("key="+key, func(t *testing.T) {
+			oldClient := httpClient
+			t.Cleanup(func() { httpClient = oldClient })
+			calls := 0
+			httpClient = &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+				calls++
+				return &http.Response{StatusCode: http.StatusOK, Body: http.NoBody, Request: r}, nil
+			})}
+			user := &SafeUser{SessionPrivateKey: key}
+			body, err := RequestWithUser(context.Background(), http.MethodGet, "/resource", nil, user)
+			require.ErrorContains(t, err, "invalid ed25519 private key")
+			assert.Nil(t, body)
+			assert.Zero(t, calls, "signing failures must not send an unauthenticated request")
+		})
+	}
+}
+
 func TestRequestHonorsContextCancellation(t *testing.T) {
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		<-r.Context().Done()

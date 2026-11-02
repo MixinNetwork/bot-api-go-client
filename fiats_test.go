@@ -11,7 +11,7 @@ func TestGetFiats(t *testing.T) {
 	requireLiveAPI(t)
 	configureLiveAPIKey(t)
 	assert := assert.New(t)
-	a, err := Fiats(context.Background())
+	a, err := Fiats(context.Background(), globalUser)
 	assert.Nil(err)
 	println(len(a))
 }

@@ -8,7 +8,7 @@ import (
 
 func TestFetchSafeDeposit(t *testing.T) {
 	requireLiveAPI(t)
-	pending, err := FetchPendingSafeDeposits(context.Background())
+	pending, err := FetchPendingSafeDeposits(context.Background(), nil)
 	log.Println(err)
 	log.Println(len(pending))
 }

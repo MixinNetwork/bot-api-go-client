@@ -88,8 +88,8 @@ type NetworkChain struct {
 	IsSynchronized         bool      `json:"is_synchronized"`
 }
 
-func ReadNetworkChainById(ctx context.Context, chainId string) (*NetworkChain, error) {
-	body, err := Request(ctx, "GET", "/network/chains/"+chainId, nil, "")
+func ReadNetworkChainById(ctx context.Context, chainId string, su *SafeUser) (*NetworkChain, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/chains/"+chainId, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -107,8 +107,8 @@ func ReadNetworkChainById(ctx context.Context, chainId string) (*NetworkChain, e
 	return resp.Data, nil
 }
 
-func ReadNetworkChains(ctx context.Context) ([]*NetworkChain, error) {
-	body, err := Request(ctx, "GET", "/network/chains", nil, "")
+func ReadNetworkChains(ctx context.Context, su *SafeUser) ([]*NetworkChain, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/chains", nil, su)
 	if err != nil {
 		return nil, err
 	}

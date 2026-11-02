@@ -86,7 +86,7 @@ func parseEd25519PrivateKey(s string) (ed25519.PrivateKey, error) {
 
 // OAuthGetAccessToken get the access token of a user
 // ed25519 is optional, only use it when you want to sign OAuth access token locally
-func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, authorizationCode string, codeVerifier string, ed25519 string) (string, string, string, error) {
+func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, authorizationCode string, codeVerifier string, ed25519 string, su *SafeUser) (string, string, string, error) {
 	params, err := json.Marshal(map[string]string{
 		"client_id":     clientID,
 		"client_secret": clientSecret,
@@ -97,7 +97,7 @@ func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, aut
 	if err != nil {
 		return "", "", "", BadDataError(ctx)
 	}
-	body, err := Request(ctx, "POST", "/oauth/token", params, "")
+	body, err := RequestWithUser(ctx, "POST", "/oauth/token", params, su)
 	if err != nil {
 		return "", "", "", ServerError(ctx, err)
 	}

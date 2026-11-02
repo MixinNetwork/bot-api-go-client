@@ -16,13 +16,13 @@ const (
 // SendWithdrawal sends a withdrawal request to the Mixin Network.
 // preferAssetFeeOverChainFee is used to determine whether to use the asset fee or the chain fee.
 func SendWithdrawal(ctx context.Context, assetId, destination, tag, amount, traceId string, preferAssetFeeOverChainFee bool, memo string, u *SafeUser) ([]*SequencerTransactionRequest, error) {
-	asset, err := ReadAsset(ctx, assetId)
+	asset, err := ReadAsset(ctx, assetId, u)
 	if err != nil {
 		return nil, err
 	}
 	chain := asset
 	if asset.ChainID != asset.AssetID {
-		chain, err = ReadAsset(ctx, asset.ChainID)
+		chain, err = ReadAsset(ctx, asset.ChainID, u)
 		if err != nil {
 			return nil, err
 		}

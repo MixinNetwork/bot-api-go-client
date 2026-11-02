@@ -38,8 +38,8 @@ type AssetNetwork struct {
 	CollectionHash            string    `json:"collection_hash,omitempty"`
 }
 
-func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {
-	body, err := Request(ctx, "GET", "/network", nil, "")
+func ReadNetworkAssets(ctx context.Context, su *SafeUser) ([]*AssetNetwork, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network", nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +59,8 @@ func ReadNetworkAssets(ctx context.Context) ([]*AssetNetwork, error) {
 	return resp.Data.Assets, nil
 }
 
-func ReadNetworkAssetsTop(ctx context.Context) ([]*AssetNetwork, error) {
-	body, err := Request(ctx, "GET", "/network/assets/top", nil, "")
+func ReadNetworkAssetsTop(ctx context.Context, su *SafeUser) ([]*AssetNetwork, error) {
+	body, err := RequestWithUser(ctx, "GET", "/network/assets/top", nil, su)
 	if err != nil {
 		return nil, err
 	}

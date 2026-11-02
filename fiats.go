@@ -29,8 +29,8 @@ func GetFiats(ctx context.Context) ([]*Fiat, error) {
 	return resp.Data, nil
 }
 
-func Fiats(ctx context.Context) ([]*Fiat, error) {
-	body, err := Request(ctx, "GET", "/external/fiats", nil, "")
+func Fiats(ctx context.Context, su *SafeUser) ([]*Fiat, error) {
+	body, err := RequestWithUser(ctx, "GET", "/external/fiats", nil, su)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

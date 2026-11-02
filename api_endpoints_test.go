@@ -14,14 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPublicAPIEndpoints(t *testing.T) {
-	user, _ := newTestSafeUser(t.Name())
+func TestAPIEndpointsWithUser(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
 	oldUser := globalUser
 	t.Cleanup(func() { globalUser = oldUser })
 	globalUser = user
 	seen := make(map[string]int)
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		seen[r.URL.Path]++
+		if r.URL.Path != "/external/tip/nodes" {
+			assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
+		}
 		var response string
 		switch {
 		case r.URL.Path == "/external/fiats":
@@ -66,7 +69,7 @@ func TestPublicAPIEndpoints(t *testing.T) {
 	}))
 	ctx := context.Background()
 
-	fiats, err := Fiats(ctx)
+	fiats, err := Fiats(ctx, user)
 	require.NoError(t, err)
 	require.Len(t, fiats, 1)
 	assert.Equal(t, "USD", fiats[0].Code)
@@ -74,46 +77,46 @@ func TestPublicAPIEndpoints(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1.25, fiats[0].Rate)
 
-	networkAssets, err := ReadNetworkAssets(ctx)
+	networkAssets, err := ReadNetworkAssets(ctx, user)
 	require.NoError(t, err)
 	assert.Equal(t, "asset", networkAssets[0].AssetID)
-	top, err := ReadNetworkAssetsTop(ctx)
+	top, err := ReadNetworkAssetsTop(ctx, user)
 	require.NoError(t, err)
 	assert.Equal(t, "top", top[0].AssetID)
-	asset, err := ReadAsset(ctx, "asset")
+	asset, err := ReadAsset(ctx, "asset", user)
 	require.NoError(t, err)
 	assert.Equal(t, "asset", asset.AssetID)
-	ticker, err := ReadAssetTicker(ctx, "asset")
+	ticker, err := ReadAssetTicker(ctx, "asset", user)
 	require.NoError(t, err)
 	assert.Equal(t, "2.50", ticker.PriceUSD)
-	ticker, err = ReadAssetTickerWithOffset(ctx, "asset", "2026-01-01T00:00:00Z")
+	ticker, err = ReadAssetTickerWithOffset(ctx, "asset", "2026-01-01T00:00:00Z", user)
 	require.NoError(t, err)
 	assert.Equal(t, "2.50", ticker.PriceUSD)
-	assets, err := AssetSearch(ctx, "usdt")
+	assets, err := AssetSearch(ctx, "usdt", user)
 	require.NoError(t, err)
 	assert.Equal(t, "search", assets[0].AssetID)
 
-	chains, err := ReadNetworkChains(ctx)
+	chains, err := ReadNetworkChains(ctx, user)
 	require.NoError(t, err)
 	assert.Equal(t, "chain", chains[0].ChainId)
-	chain, err := ReadNetworkChainById(ctx, "chain")
+	chain, err := ReadNetworkChainById(ctx, "chain", user)
 	require.NoError(t, err)
 	assert.Equal(t, "Chain", chain.Name)
 
-	collection, err := ReadCollection(ctx, "collection")
+	collection, err := ReadCollection(ctx, "collection", user)
 	require.NoError(t, err)
 	assert.Equal(t, "Collection", collection.Name)
-	inscription, err := ReadInscription(ctx, "item")
+	inscription, err := ReadInscription(ctx, "item", user)
 	require.NoError(t, err)
 	assert.Equal(t, "item", inscription.InscriptionHash)
-	items, err := ReadCollectionItems(ctx, "collection")
+	items, err := ReadCollectionItems(ctx, "collection", user)
 	require.NoError(t, err)
 	assert.Equal(t, "collection", items[0].CollectionHash)
 
-	deposits, err := FetchPendingSafeDeposits(ctx)
+	deposits, err := FetchPendingSafeDeposits(ctx, user)
 	require.NoError(t, err)
 	assert.Equal(t, "deposit", deposits[0].DepositID)
-	code, err := ReadMultisigByCode(ctx, "code")
+	code, err := ReadMultisigByCode(ctx, "code", user)
 	require.NoError(t, err)
 	assert.Equal(t, "request", code.RequestId)
 	tipNode, err := GetTipNodeByPathWithRequestId(ctx, "nodes", "request-id")
@@ -122,7 +125,7 @@ func TestPublicAPIEndpoints(t *testing.T) {
 	tipNode, err = GetTipNodeByPath(ctx, "nodes")
 	require.NoError(t, err)
 	assert.Equal(t, []string{"commitment"}, tipNode.Commitments)
-	address, err := CheckAddress(ctx, "asset", "destination", "tag")
+	address, err := CheckAddress(ctx, "asset", "destination", "tag", user)
 	require.NoError(t, err)
 	assert.Equal(t, "normalized", address.Destination)
 
@@ -447,7 +450,7 @@ func TestAPIEndpointErrorResponses(t *testing.T) {
 				}
 				_, _ = fmt.Fprint(w, tt.response)
 			}))
-			_, err := Fiats(context.Background())
+			_, err := Fiats(context.Background(), nil)
 			require.Error(t, err)
 			var apiError Error
 			require.ErrorAs(t, err, &apiError)

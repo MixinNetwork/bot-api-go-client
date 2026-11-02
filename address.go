@@ -169,7 +169,7 @@ func GetAddressesByAssetId(ctx context.Context, assetId string, user *SafeUser) 
 	return resp.Data, nil
 }
 
-func CheckAddress(ctx context.Context, asset, destination, tag string) (*SimpleAddress, error) {
+func CheckAddress(ctx context.Context, asset, destination, tag string, su *SafeUser) (*SimpleAddress, error) {
 	v := url.Values{}
 	v.Set("asset", asset)
 	v.Set("destination", destination)
@@ -177,7 +177,7 @@ func CheckAddress(ctx context.Context, asset, destination, tag string) (*SimpleA
 		v.Set("tag", tag)
 	}
 	path := "/external/addresses/check?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, "")
+	body, err := RequestWithUser(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

@@ -25,6 +25,18 @@ var (
 	globalUser *SafeUser
 )
 
+func RequestWithUser(ctx context.Context, method, path string, body []byte, su *SafeUser) ([]byte, error) {
+	var accessToken string
+	if su != nil {
+		token, err := SignAuthenticationToken(method, path, string(body), su)
+		if err != nil {
+			return nil, err
+		}
+		accessToken = token
+	}
+	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
+}
+
 func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
 	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
 }
