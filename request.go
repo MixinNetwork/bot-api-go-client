@@ -7,20 +7,24 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
+const defaultUserAgent = "Bot-API-Go-Client/v3.25.10"
+
 var (
 	DefaultApiHost   = "https://api.mixin.one"
 	DefaultBlazeHost = "blaze.mixin.one"
 
-	httpClient *http.Client
-	httpUri    string
-	blazeUri   string
-	userAgent  = "Bot-API-Go-Client/v3.25.10"
-	debug      = false
+	httpClient           *http.Client
+	httpUri              string
+	blazeUri             string
+	userAgent            = defaultUserAgent
+	debug                = false
+	userAgentWarningOnce sync.Once
 
 	globalUser *SafeUser
 )
@@ -53,6 +57,7 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 	req.Header.Set("X-Request-Id", requestID)
 	req.Header.Set("User-Agent", userAgent)
+	warnDefaultUserAgent(userAgent)
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -85,6 +90,8 @@ func SimpleRequest(ctx context.Context, method, path string, body []byte) ([]byt
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", userAgent)
+	warnDefaultUserAgent(userAgent)
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -126,8 +133,18 @@ func SetBlazeUri(blaze string) {
 	blazeUri = blaze
 }
 
+// SetUserAgent sets the User-Agent for HTTP requests. Call it during startup,
+// before making requests concurrently.
 func SetUserAgent(ua string) {
 	userAgent = ua
+}
+
+func warnDefaultUserAgent(ua string) {
+	if ua == "" || ua == defaultUserAgent {
+		userAgentWarningOnce.Do(func() {
+			log.Print(`⚠️ bot-api-go-client: User-Agent is empty or uses the SDK default; set your own with bot.SetUserAgent("my-app/1.0")`)
+		})
+	}
 }
 
 func SetDebug(d bool) {
