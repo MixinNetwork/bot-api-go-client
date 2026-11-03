@@ -222,19 +222,11 @@ func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients 
 	return sendTransaction(ctx, asset, utxos, recipients, traceId, extra, references, u)
 }
 
-func GetTransactionById(ctx context.Context, requestId string) (*SequencerTransactionRequest, error) {
-	return GetTransactionByIdWithSafeUser(ctx, requestId, nil)
-}
-
-func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
+func GetTransactionById(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
-	var accessToken string
-	var err error
-	if su != nil {
-		accessToken, err = SignAuthenticationToken(method, path, "", su)
-		if err != nil {
-			return nil, err
-		}
+	accessToken, err := SignAuthenticationToken(method, path, "", su)
+	if err != nil {
+		return nil, err
 	}
 	body, err := Request(ctx, method, path, nil, accessToken)
 	if err != nil {
@@ -246,7 +238,7 @@ func GetTransactionByIdWithSafeUser(ctx context.Context, requestId string, su *S
 	}
 	err = json.Unmarshal(body, &resp)
 	if err != nil {
-		return nil, BadDataError(ctx)
+		return nil, err
 	}
 	if resp.Error.Code == 404 {
 		return nil, nil
