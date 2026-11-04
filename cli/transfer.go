@@ -201,7 +201,7 @@ func transferCSV(c *cli.Context, filePath string, asset string, su *bot.SafeUser
 		if traceID.String() != trace {
 			trace = bot.UniqueObjectId(trace)
 		}
-		transaction, err := bot.GetTransactionById(c.Context, trace)
+		transaction, err := bot.GetTransactionById(c.Context, trace, su)
 		if err != nil {
 			if !strings.Contains(err.Error(), "The endpoint is not found") {
 				log.Print(err)

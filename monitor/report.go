@@ -58,7 +58,7 @@ func ReportToMonitor(ctx context.Context, asset, amount, trace string, receivers
 	if trace == "" {
 		trace = bot.UniqueObjectId(ma.String(), asset, amount, u.UserId, hex.EncodeToString(memo), fmt.Sprint(minutes))
 	}
-	old, err := bot.GetTransactionById(ctx, trace)
+	old, err := bot.GetTransactionById(ctx, trace, u)
 	if err != nil || old != nil {
 		return nil, err
 	}
