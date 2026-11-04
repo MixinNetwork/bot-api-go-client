@@ -31,7 +31,7 @@ func TestRequestWithID(t *testing.T) {
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
 		assert.Equal(t, "Bearer access-token", r.Header.Get("Authorization"))
 		assert.Equal(t, "request-id", r.Header.Get("X-Request-Id"))
-		assert.Equal(t, "Bot-API-Go-Client", r.Header.Get("User-Agent"))
+		assert.Equal(t, defaultUserAgent, r.Header.Get("User-Agent"))
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 
