@@ -13,7 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const defaultUserAgent = "Bot-API-Go-Client/v3.26.0"
+const defaultUserAgent = "Bot-API-Go-Client/v3.26.1"
 
 var (
 	DefaultApiHost   = "https://api.mixin.one"
