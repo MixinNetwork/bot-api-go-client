@@ -60,6 +60,7 @@ type Asset struct {
 	Confirmations  int64   `json:"confirmations"`
 	Fee            string  `json:"fee"`
 	Reserve        string  `json:"reserve"`
+	Dust           string  `json:"dust"`
 	SnapshotsCount int64   `json:"snapshots_count"`
 	Capitalization float64 `json:"capitalization"`
 	Liquidity      string  `json:"liquidity"`
