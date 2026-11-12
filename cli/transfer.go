@@ -280,3 +280,45 @@ func notifySnapshotCmd(c *cli.Context) error {
 	log.Printf("message: %#v", msg)
 	return nil
 }
+
+var consolidationUtxosCmdCli = &cli.Command{
+	Name:   "consolidation_utxos",
+	Action: consolidationUtxosCmd,
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:     "keystore,k",
+			Usage:    "keystore download from https://developers.mixin.one/dashboard",
+			Required: true,
+		},
+		&cli.StringFlag{
+			Name:     "asset,a",
+			Usage:    "asset id",
+			Required: true,
+		},
+	},
+}
+
+func consolidationUtxosCmd(c *cli.Context) error {
+	keystore := c.String("keystore")
+	asset := c.String("asset")
+
+	dat, err := os.ReadFile(keystore)
+	if err != nil {
+		panic(err)
+	}
+	var su bot.SafeUser
+	err = json.Unmarshal(dat, &su)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Println("asset:", asset)
+
+	str, count, err := bot.ConsolidationUnspentOutputs(context.Background(), asset, &su)
+	if err != nil {
+		log.Println("Consolidation UTXOs failed: ", err, " count:", count)
+		return err
+	}
+	log.Println("Consolidation UTXOs successfully: ", str.TransactionHash, " count:", count)
+	return nil
+}
