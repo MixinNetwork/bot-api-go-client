@@ -12,6 +12,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const jwtValidDuration = time.Minute * 5
+
 func SignAuthenticationTokenWithoutBody(method, uri string, user *SafeUser) (string, error) {
 	return SignAuthenticationToken(method, uri, "", user)
 }
@@ -24,14 +26,15 @@ func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, s
 	if su == nil {
 		return "", fmt.Errorf("safe user is nil")
 	}
-	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
+	iat := time.Now().UTC()
+	exp := iat.Add(jwtValidDuration)
 	sum := sha256.Sum256([]byte(method + uri + body))
 
 	claims := jwt.MapClaims{
 		"uid": su.UserId,
 		"sid": su.SessionId,
-		"iat": time.Now().UTC().Unix(),
-		"exp": expire.Unix(),
+		"iat": iat.Unix(),
+		"exp": exp.Unix(),
 		"jti": requestID,
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
@@ -45,13 +48,14 @@ func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, s
 }
 
 func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
-	expire := time.Now().UTC().Add(time.Hour * 24 * 30 * 3)
+	iat := time.Now().UTC()
+	exp := iat.Add(jwtValidDuration)
 	sum := sha256.Sum256([]byte(method + uri + body))
 	claims := jwt.MapClaims{
 		"iss": appID,
 		"aid": authorizationID,
-		"iat": time.Now().UTC().Unix(),
-		"exp": expire.Unix(),
+		"iat": iat.Unix(),
+		"exp": exp.Unix(),
 		"sig": hex.EncodeToString(sum[:]),
 		"scp": scp,
 		"jti": requestID,
