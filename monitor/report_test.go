@@ -2,6 +2,8 @@ package monitor
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -69,8 +71,10 @@ func TestCheckRetryableError(t *testing.T) {
 }
 
 func TestReportToMonitorReturnsExistingTransaction(t *testing.T) {
+	seed := sha256.Sum256([]byte("monitor-report-test"))
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.True(t, strings.HasPrefix(r.URL.Path, "/safe/transactions/"))
+		assert.True(t, strings.HasPrefix(r.Header.Get("Authorization"), "Bearer "))
 		_, _ = w.Write([]byte(`{"data":{"request_id":"existing"}}`))
 	}))
 	defer server.Close()
@@ -85,7 +89,11 @@ func TestReportToMonitorReturnsExistingTransaction(t *testing.T) {
 		[]string{"e95b1d4e-4d49-4ac3-9402-988804458adc"},
 		1,
 		&AppMessage{Project: "service", Status: 200},
-		&bot.SafeUser{UserId: "c76310d8-c563-499e-9866-c61ae2cbee11"},
+		&bot.SafeUser{
+			UserId:            "c76310d8-c563-499e-9866-c61ae2cbee11",
+			SessionId:         "e95b1d4e-4d49-4ac3-9402-988804458adc",
+			SessionPrivateKey: hex.EncodeToString(seed[:]),
+		},
 	)
 	require.NoError(t, err)
 	assert.Nil(t, transaction)
