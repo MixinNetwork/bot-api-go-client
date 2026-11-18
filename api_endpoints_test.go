@@ -26,37 +26,37 @@ func TestAPIEndpointsWithUser(t *testing.T) {
 			assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
 		}
 		var response string
-		switch {
-		case r.URL.Path == "/external/fiats":
+		switch r.URL.Path {
+		case "/external/fiats":
 			response = `{"data":[{"code":"USD","rate":1.25}]}`
-		case r.URL.Path == "/network":
+		case "/network":
 			response = `{"data":{"assets":[{"asset_id":"asset","display_symbol":"USDT"}]}}`
-		case r.URL.Path == "/network/assets/top":
+		case "/network/assets/top":
 			response = `{"data":[{"asset_id":"top"}]}`
-		case r.URL.Path == "/network/assets/asset":
+		case "/network/assets/asset":
 			response = `{"data":{"asset_id":"asset"}}`
-		case r.URL.Path == "/network/ticker":
+		case "/network/ticker":
 			assert.Equal(t, "asset", r.URL.Query().Get("asset"))
 			response = `{"data":{"price_usd":"2.50"}}`
-		case r.URL.Path == "/network/assets/search/usdt":
+		case "/network/assets/search/usdt":
 			response = `{"data":[{"asset_id":"search"}]}`
-		case r.URL.Path == "/network/chains":
+		case "/network/chains":
 			response = `{"data":[{"chain_id":"chain","name":"Chain"}]}`
-		case r.URL.Path == "/network/chains/chain":
+		case "/network/chains/chain":
 			response = `{"data":{"chain_id":"chain","name":"Chain"}}`
-		case r.URL.Path == "/safe/inscriptions/collections/collection/items":
+		case "/safe/inscriptions/collections/collection/items":
 			response = `{"data":[{"inscription_hash":"item","collection_hash":"collection"}]}`
-		case r.URL.Path == "/safe/inscriptions/collections/collection":
+		case "/safe/inscriptions/collections/collection":
 			response = `{"data":{"collection_hash":"collection","name":"Collection"}}`
-		case r.URL.Path == "/safe/inscriptions/items/item":
+		case "/safe/inscriptions/items/item":
 			response = `{"data":{"inscription_hash":"item","collection_hash":"collection"}}`
-		case r.URL.Path == "/safe/deposits":
+		case "/safe/deposits":
 			response = `{"data":[{"deposit_id":"deposit","amount":"1"}]}`
-		case r.URL.Path == "/codes/code":
+		case "/codes/code":
 			response = `{"data":{"request_id":"request"}}`
-		case r.URL.Path == "/external/tip/nodes":
+		case "/external/tip/nodes":
 			response = `{"data":{"identity":"node","commitments":["commitment"]}}`
-		case r.URL.Path == "/external/addresses/check":
+		case "/external/addresses/check":
 			assert.Equal(t, "asset", r.URL.Query().Get("asset"))
 			assert.Equal(t, "destination", r.URL.Query().Get("destination"))
 			assert.Equal(t, "tag", r.URL.Query().Get("tag"))
@@ -284,10 +284,13 @@ func TestAuthenticatedAPIEndpoints(t *testing.T) {
 	assert.Equal(t, "output", outputs[0].OutputID)
 	outputs, err = ListUnspentOutputs(ctx, "members", 1, "asset", user)
 	require.NoError(t, err)
+	require.Len(t, outputs, 1)
 	outputs, err = ListOutputsByToken(ctx, "members", 1, "asset", OutputStateSpent, 2, 5, "token")
 	require.NoError(t, err)
+	require.Len(t, outputs, 1)
 	outputs, err = ListUnspentOutputsByToken(ctx, "members", 1, "asset", "token")
 	require.NoError(t, err)
+	require.Len(t, outputs, 1)
 	output, err := GetOutput(ctx, "output", user)
 	require.NoError(t, err)
 	assert.Equal(t, "2", output.Amount)

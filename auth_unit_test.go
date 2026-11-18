@@ -40,7 +40,7 @@ func TestSignAuthenticationTokenClaims(t *testing.T) {
 	issuedAt := int64(claims["iat"].(float64))
 	expiresAt := int64(claims["exp"].(float64))
 	assert.GreaterOrEqual(t, issuedAt, before)
-	assert.InDelta(t, int64(90*24*time.Hour/time.Second), expiresAt-issuedAt, 1)
+	assert.InDelta(t, int64(5*time.Minute/time.Second), expiresAt-issuedAt, 1)
 }
 
 func TestSignAuthenticationTokenWithoutBody(t *testing.T) {
