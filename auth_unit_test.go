@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,13 +44,12 @@ func TestSignAuthenticationTokenClaims(t *testing.T) {
 
 func TestSignAuthenticationTokenWithoutBody(t *testing.T) {
 	user, privateKey := newTestSafeUser(t.Name())
-	tokenString, err := SignAuthenticationTokenWithoutBody(http.MethodGet, "/me", user)
+	tokenString, err := SignAuthenticationTokenWithoutBody(http.MethodGet, "/me", "request-id", user)
 	require.NoError(t, err)
 	claims := parseTestJWT(t, tokenString, privateKey.Public().(ed25519.PublicKey))
 	sum := sha256.Sum256([]byte(http.MethodGet + "/me"))
 	assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
-	_, err = uuid.FromString(claims["jti"].(string))
-	assert.NoError(t, err)
+	assert.Equal(t, "request-id", claims["jti"])
 }
 
 func TestSignOAuthAccessTokenClaims(t *testing.T) {
@@ -78,7 +76,7 @@ func TestSigningRejectsMalformedPrivateKeys(t *testing.T) {
 	for _, key := range []string{"not-hex", "00"} {
 		t.Run(key, func(t *testing.T) {
 			user := &SafeUser{SessionPrivateKey: key}
-			_, err := SignAuthenticationToken(http.MethodGet, "/me", "", user)
+			_, err := SignAuthenticationTokenWithRequestID(http.MethodGet, "/me", "", "id", user)
 			require.Error(t, err)
 			_, err = SignOauthAccessToken("app", "authorization", key, http.MethodGet, "/me", "", "FULL", "id")
 			require.Error(t, err)
@@ -90,11 +88,46 @@ func TestSigningRejectsMalformedPrivateKeys(t *testing.T) {
 func TestAuthenticatorBuildJWT(t *testing.T) {
 	user, privateKey := newTestSafeUser(t.Name())
 	authenticator := NewAuthenticator(user.UserId, user.SessionId, user.SessionPrivateKey)
-	tokenString, err := authenticator.BuildJWT(http.MethodDelete, "/items/1", "")
+	tokenString, err := authenticator.BuildJWT(http.MethodDelete, "/items/1", "", "request-id")
 	require.NoError(t, err)
 	claims := parseTestJWT(t, tokenString, privateKey.Public().(ed25519.PublicKey))
 	assert.Equal(t, user.UserId, claims["uid"])
 	assert.Equal(t, user.SessionId, claims["sid"])
+	assert.Equal(t, "request-id", claims["jti"])
+}
+
+func TestSigningRequiresRequestID(t *testing.T) {
+	user, _ := newTestSafeUser(t.Name())
+	for _, id := range []string{"", " ", " request-id\t", "invalid\xff", "bad\nheader"} {
+		token, err := SignAuthenticationTokenWithoutBody(http.MethodGet, "/me", id, user)
+		require.Error(t, err)
+		assert.Empty(t, token)
+		token, err = SignOauthAccessToken("app", "authorization", user.SessionPrivateKey, http.MethodGet, "/me", "", "FULL", id)
+		require.Error(t, err)
+		assert.Empty(t, token)
+	}
+}
+
+func TestChangingJWTRequestIDInvalidatesSignature(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
+	const id = "signed-id"
+	session, err := SignAuthenticationTokenWithoutBody(http.MethodGet, "/me", id, user)
+	require.NoError(t, err)
+	oauth, err := SignOauthAccessToken(user.UserId, "auth-id", user.SessionPrivateKey, http.MethodGet, "/me", "", "FULL", id)
+	require.NoError(t, err)
+	publicKey := privateKey.Public().(ed25519.PublicKey)
+	for name, signed := range map[string]string{"session": session, "oauth": oauth} {
+		t.Run(name, func(t *testing.T) {
+			token, err := jwt.Parse(signed, func(*jwt.Token) (any, error) { return publicKey, nil })
+			require.NoError(t, err)
+			claims := token.Claims.(jwt.MapClaims)
+			require.Equal(t, id, claims["jti"])
+			claims["jti"] = "different-id"
+			changed, err := token.SigningString()
+			require.NoError(t, err)
+			assert.False(t, ed25519.Verify(publicKey, []byte(changed), token.Signature))
+		})
+	}
 }
 
 func TestOAuthGetAccessToken(t *testing.T) {

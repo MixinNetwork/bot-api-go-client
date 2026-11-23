@@ -12,11 +12,11 @@ type Turn struct {
 }
 
 func GetTurnServer(ctx context.Context, su *SafeUser) ([]*Turn, error) {
-	token, err := SignAuthenticationToken("GET", "/turn", "", su)
+	req, err := newSignedRequest(ctx, "GET", "/turn", nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", "/turn", nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

@@ -35,12 +35,7 @@ func TestTIPTransaction(t *testing.T) {
 		SpendPrivateKey:   bot.Pin[:64],
 	}
 
-	method := "GET"
-	path := "/safe/me"
-	token, err := SignAuthenticationTokenWithoutBody(method, path, su)
-	assert.Nil(err)
-
-	me, err := UserMe(ctx, token)
+	me, err := RequestUserMe(ctx, su)
 	assert.Nil(err)
 	assert.NotNil(me)
 	log.Printf("%#v", me)
@@ -68,7 +63,7 @@ func TestTIPTransaction(t *testing.T) {
 	 assert.Nil(err)
 	 assert.NotNil(user)
 
-	 me, err = UserMe(ctx, token)
+	 me, err = RequestUserMe(ctx, su)
 	 assert.Nil(err)
 	 assert.NotNil(me)
 	 log.Printf("%#v", me)

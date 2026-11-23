@@ -224,11 +224,7 @@ func SendTransactionWithOutputs(ctx context.Context, assetId string, recipients 
 
 func GetTransactionById(ctx context.Context, requestId string, su *SafeUser) (*SequencerTransactionRequest, error) {
 	method, path := "GET", fmt.Sprintf("/safe/transactions/%s", requestId)
-	accessToken, err := SignAuthenticationToken(method, path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, method, path, nil, accessToken)
+	body, err := doSignedRequest(ctx, method, path, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -350,11 +346,11 @@ func VerifyRawTransaction(ctx context.Context, requests []*KernelTransactionRequ
 		return nil, err
 	}
 	method, path := "POST", "/safe/transaction/requests"
-	token, err := SignAuthenticationToken(method, path, string(data), u)
+	req, err := newSignedRequest(ctx, method, path, data, u)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -435,11 +431,11 @@ func SendRawTransaction(ctx context.Context, requests []*KernelTransactionReques
 		return nil, err
 	}
 	method, path := "POST", "/safe/transactions"
-	token, err := SignAuthenticationToken(method, path, string(data), u)
+	req, err := newSignedRequest(ctx, method, path, data, u)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

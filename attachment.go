@@ -13,11 +13,7 @@ type Attachment struct {
 }
 
 func CreateAttachment(ctx context.Context, user *SafeUser) (*Attachment, error) {
-	token, err := SignAuthenticationToken("POST", "/attachments", "", user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/attachments", nil, token)
+	body, err := doSignedRequest(ctx, "POST", "/attachments", nil, user)
 	if err != nil {
 		return nil, err
 	}
@@ -41,11 +37,7 @@ func CreateAttachment(ctx context.Context, user *SafeUser) (*Attachment, error) 
 }
 
 func AttachmentShow(ctx context.Context, id string, user *SafeUser) (*Attachment, error) {
-	token, err := SignAuthenticationToken("GET", "/attachments/"+id, "", user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "GET", "/attachments/"+id, nil, token)
+	body, err := doSignedRequest(ctx, "GET", "/attachments/"+id, nil, user)
 	if err != nil {
 		return nil, err
 	}

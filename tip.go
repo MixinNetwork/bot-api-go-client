@@ -41,7 +41,7 @@ type TipNodeData struct {
 
 func GetTipNodeByPathWithRequestId(ctx context.Context, path, requestId string) (*TipNodeData, error) {
 	url := fmt.Sprintf("/external/tip/%s", path)
-	body, err := RequestWithId(ctx, "GET", url, nil, "", requestId)
+	body, err := doUnsignedRequest(ctx, "GET", url, nil, requestId)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

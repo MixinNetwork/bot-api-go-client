@@ -63,7 +63,7 @@ type LegacySnapshotShort struct {
 	Memo         string    `json:"data"`
 }
 
-func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*LegacySnapshot, error) {
+func Snapshots(ctx context.Context, limit int, offset, assetId, order string, su *SafeUser) ([]*LegacySnapshot, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -75,35 +75,8 @@ func Snapshots(ctx context.Context, limit int, offset, assetId, order, uid, sid,
 	if order != "" {
 		v.Set("order", order)
 	}
-
 	path := "/snapshots?" + v.Encode()
-	su := &SafeUser{
-		UserId:            uid,
-		SessionId:         sid,
-		SessionPrivateKey: sessionKey,
-	}
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	return SnapshotsByToken(ctx, limit, offset, assetId, order, token)
-}
-
-func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, accessToken string) ([]*LegacySnapshot, error) {
-	v := url.Values{}
-	v.Set("limit", strconv.Itoa(limit))
-	if offset != "" {
-		v.Set("offset", offset)
-	}
-	if assetId != "" {
-		v.Set("asset", assetId)
-	}
-	if order != "" {
-		v.Set("order", order)
-	}
-
-	path := "/snapshots?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := doSignedRequest(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -122,53 +95,19 @@ func SnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, ac
 	return resp.Data, nil
 }
 
-func SnapshotById(ctx context.Context, snapshotId string, uid, sid, sessionKey string) (*LegacySnapshot, error) {
-	su := &SafeUser{
-		UserId:            uid,
-		SessionId:         sid,
-		SessionPrivateKey: sessionKey,
-	}
-	path := "/snapshots/" + snapshotId
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	return SnapshotByToken(ctx, snapshotId, token)
+func SnapshotById(ctx context.Context, snapshotId string, su *SafeUser) (*LegacySnapshot, error) {
+	return readLegacySnapshot(doSignedRequest(ctx, "GET", "/snapshots/"+snapshotId, nil, su))
 }
 
-func SnapshotByTraceId(ctx context.Context, traceId string, uid, sid, sessionKey string) (*LegacySnapshot, error) {
-	su := &SafeUser{
-		UserId:            uid,
-		SessionId:         sid,
-		SessionPrivateKey: sessionKey,
-	}
-	path := "/snapshots/trace/" + traceId
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := Request(ctx, "GET", path, nil, token)
-	if err != nil {
-		return nil, err
-	}
-	var resp struct {
-		Data  *LegacySnapshot `json:"data"`
-		Error Error           `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
+func SnapshotByTraceId(ctx context.Context, traceId string, su *SafeUser) (*LegacySnapshot, error) {
+	return readLegacySnapshot(doSignedRequest(ctx, "GET", "/snapshots/trace/"+traceId, nil, su))
 }
 
-func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*LegacySnapshot, error) {
-	path := "/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+func NetworkSnapshot(ctx context.Context, snapshotId string, su *SafeUser) (*LegacySnapshot, error) {
+	return readLegacySnapshot(RequestWithUser(ctx, "GET", "/network/snapshots/"+snapshotId, nil, su))
+}
+
+func readLegacySnapshot(body []byte, err error) (*LegacySnapshot, error) {
 	if err != nil {
 		return nil, err
 	}
@@ -187,36 +126,7 @@ func SnapshotByToken(ctx context.Context, snapshotId string, accessToken string)
 	return resp.Data, nil
 }
 
-func NetworkSnapshot(ctx context.Context, snapshotId string) (*LegacySnapshot, error) {
-	return NetworkSnapshotByToken(ctx, snapshotId, "")
-}
-
-func NetworkSnapshotByToken(ctx context.Context, snapshotId, accessToken string) (*LegacySnapshot, error) {
-	path := "/network/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
-	if err != nil {
-		return nil, err
-	}
-
-	var resp struct {
-		Data  *LegacySnapshot `json:"data"`
-		Error Error           `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string) ([]*LegacySnapshotShort, error) {
-	return NetworkSnapshotsByToken(ctx, limit, offset, assetId, order, "", "", "")
-}
-
-func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, order, uid, sid, sessionKey string) ([]*LegacySnapshotShort, error) {
+func NetworkSnapshots(ctx context.Context, limit int, offset, assetId, order string, su *SafeUser) ([]*LegacySnapshotShort, error) {
 	v := url.Values{}
 	v.Set("limit", strconv.Itoa(limit))
 	if offset != "" {
@@ -230,20 +140,7 @@ func NetworkSnapshotsByToken(ctx context.Context, limit int, offset, assetId, or
 	}
 
 	path := "/network/snapshots?" + v.Encode()
-	accessToken := ""
-	if sessionKey != "" {
-		var err error
-		su := &SafeUser{
-			UserId:            uid,
-			SessionId:         sid,
-			SessionPrivateKey: sessionKey,
-		}
-		accessToken, err = SignAuthenticationToken("GET", path, "", su)
-		if err != nil {
-			return nil, err
-		}
-	}
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := RequestWithUser(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, err
 	}

@@ -90,23 +90,21 @@ type SafeFee struct {
 	Priority   int    `json:"priority"`
 }
 
-func AssetBalance(ctx context.Context, assetId, uid, sid, sessionKey string) (common.Integer, error) {
-	su := &SafeUser{
-		UserId:            uid,
-		SessionId:         sid,
-		SessionPrivateKey: sessionKey,
+func AssetBalance(ctx context.Context, assetId string, su *SafeUser) (common.Integer, error) {
+	if su == nil {
+		return common.Zero, fmt.Errorf("safe user is nil")
 	}
-
-	return AssetBalanceWithSafeUser(ctx, assetId, su)
+	return UserAssetBalance(ctx, su.UserId, assetId, su)
 }
 
-func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser) (common.Integer, error) {
+func UserAssetBalance(ctx context.Context, userID, assetId string, su *SafeUser) (common.Integer, error) {
+	membersHash := HashMembers([]string{userID})
 	offset := int64(0)
 	filter := make(map[string]bool)
 	var total common.Integer
 	for {
 		previousOffset := offset
-		outputs, err := ListOutputs(ctx, HashMembers([]string{su.UserId}), 1, assetId, OutputStateUnspent, offset, 500, su)
+		outputs, err := ListOutputs(ctx, membersHash, 1, assetId, OutputStateUnspent, offset, 500, su)
 		if err != nil {
 			return common.Zero, err
 		}
@@ -130,29 +128,15 @@ func AssetBalanceWithSafeUser(ctx context.Context, assetId string, su *SafeUser)
 	return total, nil
 }
 
-func UserAssetBalance(ctx context.Context, userID, assetId, accessToken string) (common.Integer, error) {
-	membersHash := HashMembers([]string{userID})
-	outputs, err := ListUnspentOutputsByToken(ctx, membersHash, 1, assetId, accessToken)
-	if err != nil {
-		return common.Zero, err
-	}
-	var total common.Integer
-	for _, o := range outputs {
-		amt := common.NewIntegerFromString(o.Amount)
-		total = total.Add(amt)
-	}
-	return total, nil
-}
-
 func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser) ([]*AssetFee, error) {
 	params := url.Values{}
 	params.Set("destination", destination)
 	method, path := "GET", fmt.Sprintf("/safe/assets/%s/fees?%s", assetId, params.Encode())
-	token, err := SignAuthenticationToken(method, path, "", su)
+	req, err := newSignedRequest(ctx, method, path, nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -172,11 +156,11 @@ func ReadAssetFee(ctx context.Context, assetId, destination string, su *SafeUser
 
 func ReadSafeFees(ctx context.Context, su *SafeUser) ([]*SafeFee, error) {
 	method, path := "GET", "/safe/fees"
-	token, err := SignAuthenticationToken(method, path, "", su)
+	req, err := newSignedRequest(ctx, method, path, nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -201,11 +185,7 @@ func FetchAssets(ctx context.Context, assetIds []string, safeUser *SafeUser) ([]
 	}
 
 	path := "/safe/assets/fetch"
-	token, err := SignAuthenticationToken("POST", path, string(body), safeUser)
-	if err != nil {
-		return nil, err
-	}
-	result, err := Request(ctx, "POST", path, body, token)
+	result, err := doSignedRequest(ctx, "POST", path, body, safeUser)
 	if err != nil {
 		return nil, err
 	}

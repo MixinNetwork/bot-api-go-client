@@ -2,6 +2,7 @@ package bot
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,10 +13,15 @@ import (
 )
 
 func TestAssetBalancePaginationAndAggregation(t *testing.T) {
-	user, _ := newTestSafeUser(t.Name())
+	user, privateKey := newTestSafeUser(t.Name())
+	seenIDs := make(map[string]bool)
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/safe/outputs":
+			assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
+			id := r.Header.Get("X-Request-Id")
+			assert.False(t, seenIDs[id], "each page needs a fresh request ID")
+			seenIDs[id] = true
 			if r.URL.Query().Get("asset") == "asset" {
 				if r.URL.Query().Get("offset") == "" {
 					outputs := make([]*Output, 500)
@@ -40,10 +46,7 @@ func TestAssetBalancePaginationAndAggregation(t *testing.T) {
 		}
 	}))
 
-	balance, err := AssetBalanceWithSafeUser(context.Background(), "asset", user)
-	require.NoError(t, err)
-	assert.Equal(t, "502.00000000", balance.String())
-	balance, err = AssetBalance(context.Background(), "asset", user.UserId, user.SessionId, user.SessionPrivateKey)
+	balance, err := AssetBalance(context.Background(), "asset", user)
 	require.NoError(t, err)
 	assert.Equal(t, "502.00000000", balance.String())
 	assets, err := ListAssetWithBalance(context.Background(), user)
@@ -58,7 +61,7 @@ func TestAssetBalanceReturnsOutputErrors(t *testing.T) {
 		_, _ = w.Write([]byte(`{"error":{"status":202,"code":1234,"description":"failed"}}`))
 	}))
 
-	_, err := AssetBalanceWithSafeUser(context.Background(), "asset", user)
+	_, err := AssetBalance(context.Background(), "asset", user)
 	require.Error(t, err)
 	var apiError Error
 	require.ErrorAs(t, err, &apiError)
@@ -80,19 +83,25 @@ func TestAssetBalanceRejectsStalledPagination(t *testing.T) {
 		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"data": outputs}))
 	}))
 
-	_, err := AssetBalanceWithSafeUser(context.Background(), "asset", user)
+	_, err := AssetBalance(context.Background(), "asset", user)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "pagination did not advance")
 	assert.Equal(t, 1, requests)
 }
 
 func TestUserAssetBalance(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
+	const targetUserID = "cb6c567e-bcca-4e7a-91b2-463e566d3956"
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, HashMembers([]string{targetUserID}), r.URL.Query().Get("members"))
+		assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
 		_, _ = w.Write([]byte(`{"data":[{"output_id":"one","amount":"1.25"},{"output_id":"two","amount":"2.75"}]}`))
 	}))
-	balance, err := UserAssetBalance(context.Background(), "user", "asset", "token")
+	balance, err := UserAssetBalance(context.Background(), targetUserID, "asset", user)
 	require.NoError(t, err)
 	assert.Equal(t, "4.00000000", balance.String())
+	_, err = UserAssetBalance(context.Background(), targetUserID, "asset", nil)
+	require.Error(t, err)
 }
 
 func TestAssetSymbols(t *testing.T) {

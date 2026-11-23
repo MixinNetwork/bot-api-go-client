@@ -75,11 +75,11 @@ func FetchUserSessions(ctx context.Context, users []string, su *SafeUser) ([]*Us
 		return nil, err
 	}
 	method, path := "POST", "/sessions/fetch"
-	token, err := SignAuthenticationToken(method, path, string(data), su)
+	req, err := newSignedRequest(ctx, method, path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

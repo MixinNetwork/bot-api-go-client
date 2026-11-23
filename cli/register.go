@@ -78,14 +78,7 @@ func registerSafeCMD(c *cli.Context) error {
 	}
 
 	ctx := context.Background()
-	method := "GET"
-	path := "/safe/me"
-	token, err := bot.SignAuthenticationTokenWithoutBody(method, path, &su)
-	if err != nil {
-		return err
-	}
-
-	me, err := bot.UserMe(ctx, token)
+	me, err := bot.RequestUserMe(ctx, &su)
 	if err != nil {
 		return err
 	}

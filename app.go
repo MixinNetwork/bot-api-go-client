@@ -42,11 +42,7 @@ func UpdateApp(ctx context.Context, in *UpdateAppInput, user *SafeUser) (*App, e
 	}
 
 	path := fmt.Sprintf("/apps/%s", user.UserId)
-	token, err := SignAuthenticationToken("POST", path, string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doSignedRequest(ctx, "POST", path, data, user)
 	if err != nil {
 		return nil, err
 	}
@@ -83,11 +79,7 @@ func TransferAppOwnership(ctx context.Context, appId, receiver string, user *Saf
 	}
 
 	path := fmt.Sprintf("/apps/%s/transfer", appId)
-	token, err := SignAuthenticationToken("POST", path, string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doSignedRequest(ctx, "POST", path, data, user)
 	if err != nil {
 		return nil, err
 	}

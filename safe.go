@@ -59,11 +59,11 @@ func RequestSafeGhostKeys(ctx context.Context, gkr []*GhostKeyRequest, user *Saf
 		return nil, err
 	}
 	method, path := "POST", "/safe/keys"
-	token, err := SignAuthenticationToken(method, path, string(data), user)
+	req, err := newSignedRequest(ctx, method, path, data, user)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

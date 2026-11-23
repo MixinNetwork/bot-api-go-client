@@ -96,11 +96,7 @@ func PostMessageRequest(ctx context.Context, message *MessageRequest, user *Safe
 	if err != nil {
 		return err
 	}
-	accessToken, err := SignAuthenticationToken("POST", "/messages", string(msg), user)
-	if err != nil {
-		return err
-	}
-	body, err := Request(ctx, "POST", "/messages", msg, accessToken)
+	body, err := doSignedRequest(ctx, "POST", "/messages", msg, user)
 	if err != nil {
 		return err
 	}
@@ -122,11 +118,7 @@ func PostMessages(ctx context.Context, messages []*MessageRequest, user *SafeUse
 	if err != nil {
 		return err
 	}
-	accessToken, err := SignAuthenticationToken("POST", "/messages", string(msg), user)
-	if err != nil {
-		return err
-	}
-	body, err := Request(ctx, "POST", "/messages", msg, accessToken)
+	body, err := doSignedRequest(ctx, "POST", "/messages", msg, user)
 	if err != nil {
 		return err
 	}
@@ -314,11 +306,7 @@ func postEncryptedMessageRequests(ctx context.Context, requests []*encryptedMess
 		return nil, err
 	}
 	const path = "/encrypted_messages"
-	accessToken, err := SignAuthenticationToken("POST", path, string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", path, data, accessToken)
+	body, err := doSignedRequest(ctx, "POST", path, data, user)
 	if err != nil {
 		return nil, err
 	}
@@ -379,11 +367,7 @@ func PostAcknowledgements(ctx context.Context, requests []*ReceiptAcknowledgemen
 		return err
 	}
 	path := "/acknowledgements"
-	accessToken, err := SignAuthenticationToken("POST", path, string(array), user)
-	if err != nil {
-		return err
-	}
-	body, err := Request(ctx, "POST", path, array, accessToken)
+	body, err := doSignedRequest(ctx, "POST", path, array, user)
 	if err != nil {
 		return err
 	}

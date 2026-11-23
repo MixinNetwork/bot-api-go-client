@@ -7,13 +7,17 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/pkg/errors"
 )
 
 const defaultUserAgent = "Bot-API-Go-Client/v3.26.1"
+const requestIDHeader = "X-Request-Id"
 
 var (
 	DefaultApiHost   = "https://api.mixin.one"
@@ -30,33 +34,78 @@ var (
 )
 
 func RequestWithUser(ctx context.Context, method, path string, body []byte, su *SafeUser) ([]byte, error) {
-	var accessToken string
-	if su != nil {
-		token, err := SignAuthenticationToken(method, path, string(body), su)
-		if err != nil {
-			return nil, err
-		}
-		accessToken = token
+	if su == nil {
+		return doUnsignedRequest(ctx, method, path, body, UuidNewV4().String())
 	}
-	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
+	return doSignedRequest(ctx, method, path, body, su)
 }
 
-func Request(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
-	return RequestWithId(ctx, method, path, body, accessToken, UuidNewV4().String())
+func doSignedRequest(ctx context.Context, method, path string, body []byte, su *SafeUser) ([]byte, error) {
+	return RequestWithId(ctx, method, path, body, UuidNewV4().String(), su)
 }
 
-func RequestWithId(ctx context.Context, method, path string, body []byte, accessToken, requestID string) ([]byte, error) {
+// RequestWithId signs the request using requestID as both the JWT's jti and the
+// X-Request-Id header.
+func RequestWithId(ctx context.Context, method, path string, body []byte, requestID string, su *SafeUser) ([]byte, error) {
+	req, err := newSignedRequestWithID(ctx, method, path, body, requestID, su)
+	if err != nil {
+		return nil, err
+	}
+	return doRequest(req)
+}
+
+func newSignedRequest(ctx context.Context, method, path string, body []byte, su *SafeUser) (*http.Request, error) {
+	return newSignedRequestWithID(ctx, method, path, body, UuidNewV4().String(), su)
+}
+
+func newSignedRequestWithID(ctx context.Context, method, path string, body []byte, requestID string, su *SafeUser) (*http.Request, error) {
+	req, err := newAPIRequest(ctx, method, path, body, requestID)
+	if err != nil {
+		return nil, err
+	}
+	if err := signRequestHeaders(req.Header, req.Method, req.URL.RequestURI(), body, su); err != nil {
+		return nil, err
+	}
+	return req, nil
+}
+
+func doUnsignedRequest(ctx context.Context, method, path string, body []byte, requestID string) ([]byte, error) {
+	req, err := newAPIRequest(ctx, method, path, body, requestID)
+	if err != nil {
+		return nil, err
+	}
+	return doRequest(req)
+}
+
+func validateRequestID(requestID string) error {
+	if requestID == "" || strings.TrimSpace(requestID) != requestID {
+		return errors.New("request ID must be nonempty and have no surrounding whitespace")
+	}
+	if !utf8.ValidString(requestID) || strings.IndexFunc(requestID, unicode.IsControl) >= 0 {
+		return errors.New("request ID must be valid UTF-8 and contain no control characters")
+	}
+	return nil
+}
+
+func newAPIRequest(ctx context.Context, method, path string, body []byte, requestID string) (*http.Request, error) {
+	if err := validateRequestID(requestID); err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequestWithContext(ctx, method, httpUri+path, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
-	if debug {
-		log.Printf("Request: %s , path: %s, requestId: %s", method, path, requestID)
-	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-	req.Header.Set("X-Request-Id", requestID)
+	req.Header.Set(requestIDHeader, requestID)
 	req.Header.Set("User-Agent", userAgent)
+	return req, nil
+}
+
+func doRequest(req *http.Request) ([]byte, error) {
+	requestID := req.Header.Get(requestIDHeader)
+	if debug {
+		log.Printf("Request: %s , path: %s, requestId: %s", req.Method, req.URL.RequestURI(), requestID)
+	}
 	warnDefaultUserAgent(userAgent)
 	resp, err := httpClient.Do(req)
 	if err != nil {
@@ -65,7 +114,7 @@ func RequestWithId(ctx context.Context, method, path string, body []byte, access
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 500 {
-		return nil, errors.Wrap(ServerError(ctx, nil), fmt.Sprintf("response status code %d %s", resp.StatusCode, requestID))
+		return nil, errors.Wrap(ServerError(req.Context(), nil), fmt.Sprintf("response status code %d %s", resp.StatusCode, requestID))
 	}
 	return io.ReadAll(resp.Body)
 }

@@ -25,11 +25,11 @@ func CreateDepositEntry(ctx context.Context, chainID string, members []string, t
 	})
 	endpoint := "/safe/deposit/entries"
 
-	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
+	req, err := newSignedRequest(ctx, "POST", endpoint, data, user)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", endpoint, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

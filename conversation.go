@@ -72,11 +72,7 @@ func createConversation(ctx context.Context, category, conversationId string, na
 			return nil, fmt.Errorf("bad participants members length %d", len(participants))
 		}
 	}
-	accessToken, err := SignAuthenticationToken("POST", "/conversations", string(params), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/conversations", params, accessToken)
+	body, err := doSignedRequest(ctx, "POST", "/conversations", params, user)
 	if err != nil {
 		return nil, err
 	}
@@ -102,15 +98,7 @@ func createConversation(ctx context.Context, category, conversationId string, na
 
 func ConversationShow(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := "/conversations/" + conversationId
-	token, err := SignAuthenticationToken("GET", path, "", user)
-	if err != nil {
-		return nil, err
-	}
-	return ConversationShowByToken(ctx, conversationId, token)
-}
-
-func ConversationShowByToken(ctx context.Context, conversationId string, accessToken string) (*Conversation, error) {
-	body, err := Request(ctx, "GET", "/conversations/"+conversationId, nil, accessToken)
+	body, err := doSignedRequest(ctx, "GET", path, nil, user)
 	if err != nil {
 		return nil, err
 	}
@@ -136,12 +124,7 @@ func ConversationShowByToken(ctx context.Context, conversationId string, accessT
 
 func JoinConversation(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := fmt.Sprintf("/conversations/%s/join", conversationId)
-	accessToken, err := SignAuthenticationToken("POST", path, "", user)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := Request(ctx, "POST", path, nil, accessToken)
+	body, err := doSignedRequest(ctx, "POST", path, nil, user)
 	if err != nil {
 		return nil, err
 	}
@@ -165,12 +148,7 @@ func JoinConversation(ctx context.Context, conversationId string, user *SafeUser
 
 func RotateConversation(ctx context.Context, conversationId string, user *SafeUser) (*Conversation, error) {
 	path := fmt.Sprintf("/conversations/%s/rotate", conversationId)
-	accessToken, err := SignAuthenticationToken("POST", path, "", user)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := Request(ctx, "POST", path, nil, accessToken)
+	body, err := doSignedRequest(ctx, "POST", path, nil, user)
 	if err != nil {
 		return nil, err
 	}
@@ -198,12 +176,7 @@ func UpdateParticipants(ctx context.Context, conversationId, action string, requ
 	if err != nil {
 		return nil, err
 	}
-	accessToken, err := SignAuthenticationToken("POST", path, string(params), user)
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := Request(ctx, "POST", path, params, accessToken)
+	body, err := doSignedRequest(ctx, "POST", path, params, user)
 	if err != nil {
 		return nil, err
 	}

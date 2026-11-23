@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -134,7 +135,7 @@ func TestAPIEndpointsWithUser(t *testing.T) {
 }
 
 func TestAuthenticatedAPIEndpoints(t *testing.T) {
-	user, _ := newTestSafeUser(t.Name())
+	user, privateKey := newTestSafeUser(t.Name())
 	spendSeed := sha256.Sum256([]byte("spend key"))
 	serverSeed := sha256.Sum256([]byte("server key"))
 	serverPrivate := ed25519.NewKeyFromSeed(serverSeed[:])
@@ -145,8 +146,13 @@ func TestAuthenticatedAPIEndpoints(t *testing.T) {
 	globalUser = user
 
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if authorization := r.Header.Get("Authorization"); authorization != "" {
-			assert.True(t, strings.HasPrefix(authorization, "Bearer"), r.URL.Path)
+		if r.Header.Get("Authorization") == "" {
+			assert.True(t, strings.HasPrefix(r.URL.Path, "/network/snapshots"), "unexpected unsigned request to %s", r.URL.Path)
+			assert.NotEmpty(t, r.Header.Get("X-Request-Id"))
+		} else {
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			assertTestRequestAuthentication(t, r, body, user, privateKey.Public().(ed25519.PublicKey))
 		}
 		var response string
 		switch {
@@ -285,10 +291,7 @@ func TestAuthenticatedAPIEndpoints(t *testing.T) {
 	outputs, err = ListUnspentOutputs(ctx, "members", 1, "asset", user)
 	require.NoError(t, err)
 	require.Len(t, outputs, 1)
-	outputs, err = ListOutputsByToken(ctx, "members", 1, "asset", OutputStateSpent, 2, 5, "token")
-	require.NoError(t, err)
-	require.Len(t, outputs, 1)
-	outputs, err = ListUnspentOutputsByToken(ctx, "members", 1, "asset", "token")
+	outputs, err = ListOutputs(ctx, "members", 1, "asset", OutputStateSpent, 2, 5, user)
 	require.NoError(t, err)
 	require.Len(t, outputs, 1)
 	output, err := GetOutput(ctx, "output", user)
@@ -315,38 +318,44 @@ func testSnapshotEndpoints(t *testing.T, ctx context.Context, user *SafeUser) {
 	safeSnapshots, err := SafeSnapshots(ctx, 10, "app", "asset", "opponent", "offset", user)
 	require.NoError(t, err)
 	assert.Equal(t, "snapshot", safeSnapshots[0].SnapshotID)
-	safeSnapshots, err = SafeSnapshotsByToken(ctx, 10, "app", "asset", "opponent", "offset", "token")
-	require.NoError(t, err)
 	safeSnapshot, err := SafeSnapshotById(ctx, "snapshot", user)
 	require.NoError(t, err)
 	assert.Equal(t, "1", safeSnapshot.Amount)
-	safeSnapshot, err = SafeSnapshotByToken(ctx, "snapshot", "token")
-	require.NoError(t, err)
 	notification, err := SafeNotifySnapshot(ctx, "hash", 1, "receiver", user)
 	require.NoError(t, err)
 	assert.Equal(t, "message", notification.MessageId)
 
-	legacy, err := Snapshots(ctx, 10, "offset", "asset", "DESC", user.UserId, user.SessionId, user.SessionPrivateKey)
+	legacy, err := Snapshots(ctx, 10, "offset", "asset", "DESC", user)
 	require.NoError(t, err)
 	assert.Equal(t, "snapshot", legacy[0].SnapshotId)
-	legacy, err = SnapshotsByToken(ctx, 10, "offset", "asset", "DESC", "token")
-	require.NoError(t, err)
-	legacySnapshot, err := SnapshotById(ctx, "snapshot", user.UserId, user.SessionId, user.SessionPrivateKey)
+	legacySnapshot, err := SnapshotById(ctx, "snapshot", user)
 	require.NoError(t, err)
 	assert.Equal(t, "snapshot", legacySnapshot.SnapshotId)
-	legacySnapshot, err = SnapshotByTraceId(ctx, "trace", user.UserId, user.SessionId, user.SessionPrivateKey)
+	legacySnapshot, err = SnapshotByTraceId(ctx, "trace", user)
 	require.NoError(t, err)
-	legacySnapshot, err = SnapshotByToken(ctx, "snapshot", "token")
+	legacySnapshot, err = NetworkSnapshot(ctx, "snapshot", nil)
 	require.NoError(t, err)
-	legacySnapshot, err = NetworkSnapshot(ctx, "snapshot")
+	legacySnapshot, err = NetworkSnapshot(ctx, "snapshot", user)
 	require.NoError(t, err)
-	legacySnapshot, err = NetworkSnapshotByToken(ctx, "snapshot", "token")
-	require.NoError(t, err)
-	short, err := NetworkSnapshots(ctx, 10, "offset", "asset", "ASC")
+	short, err := NetworkSnapshots(ctx, 10, "offset", "asset", "ASC", nil)
 	require.NoError(t, err)
 	assert.Equal(t, "snapshot", short[0].SnapshotId)
-	short, err = NetworkSnapshotsByToken(ctx, 10, "offset", "asset", "invalid-order", user.UserId, user.SessionId, user.SessionPrivateKey)
+	short, err = NetworkSnapshots(ctx, 10, "offset", "asset", "invalid-order", user)
 	require.NoError(t, err)
+}
+
+func TestUserMeWithRequestID(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
+	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/safe/me", r.URL.Path)
+		assert.Equal(t, "caller-id", r.Header.Get("X-Request-Id"))
+		assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
+		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
+	}))
+
+	me, err := UserMeWithRequestID(context.Background(), "caller-id", user)
+	require.NoError(t, err)
+	assert.True(t, me.HasPIN)
 }
 
 func testUserEndpoints(t *testing.T, ctx context.Context, user *SafeUser, serverPublicKey ed25519.PublicKey) {
@@ -365,13 +374,9 @@ func testUserEndpoints(t *testing.T, ctx context.Context, user *SafeUser, server
 	fetched, err = SearchUser(ctx, "query", user)
 	require.NoError(t, err)
 
-	me, err := UserMeWithRequestID(ctx, "token", "request-id")
+	me, err := RequestUserMe(ctx, user)
 	require.NoError(t, err)
 	assert.True(t, me.HasPIN)
-	me, err = UserMe(ctx, "token")
-	require.NoError(t, err)
-	me, err = RequestUserMe(ctx, user)
-	require.NoError(t, err)
 	updated, err := UpdateUserMe(ctx, "User", "avatar", user)
 	require.NoError(t, err)
 	assert.Equal(t, "user", updated.UserId)
@@ -397,8 +402,6 @@ func testConversationEndpoints(t *testing.T, ctx context.Context, user *SafeUser
 	conversation, err = CreateGroupConversation(ctx, "Group", "Announcement", []Participant{{UserId: "recipient"}}, user)
 	require.NoError(t, err)
 	conversation, err = ConversationShow(ctx, "conversation", user)
-	require.NoError(t, err)
-	conversation, err = ConversationShowByToken(ctx, "conversation", "token")
 	require.NoError(t, err)
 	conversation, err = JoinConversation(ctx, "conversation", user)
 	require.NoError(t, err)

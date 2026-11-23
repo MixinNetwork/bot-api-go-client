@@ -49,11 +49,7 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 		return nil, err
 	}
 	endpoint := "/safe/multisigs"
-	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", endpoint, data, token)
+	body, err := doSignedRequest(ctx, "POST", endpoint, data, user)
 	if err != nil {
 		return nil, err
 	}
@@ -73,11 +69,7 @@ func CreateSafeMultisigRequest(ctx context.Context, request []*KernelTransaction
 
 func FetchSafeMultisigRequest(ctx context.Context, idOrHash string, user *SafeUser) (*SafeMultisigRequest, error) {
 	endpoint := "/safe/multisigs/" + idOrHash
-	token, err := SignAuthenticationToken("GET", endpoint, "", user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "GET", endpoint, nil, token)
+	body, err := doSignedRequest(ctx, "GET", endpoint, nil, user)
 	if err != nil {
 		return nil, err
 	}

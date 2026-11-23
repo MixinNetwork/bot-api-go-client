@@ -56,11 +56,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Addr
 		return nil, err
 	}
 
-	token, err := SignAuthenticationToken("POST", "/addresses", string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/addresses", data, token)
+	body, err := doSignedRequest(ctx, "POST", "/addresses", data, user)
 	if err != nil {
 		return nil, err
 	}
@@ -81,11 +77,7 @@ func CreateAddress(ctx context.Context, in *AddressInput, user *SafeUser) (*Addr
 
 func ReadAddress(ctx context.Context, addressId string, user *SafeUser) (*Address, error) {
 	endpoint := fmt.Sprintf("/addresses/%s", addressId)
-	token, err := SignAuthenticationToken("GET", endpoint, "", user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "GET", endpoint, nil, token)
+	body, err := doSignedRequest(ctx, "GET", endpoint, nil, user)
 	if err != nil {
 		return nil, err
 	}
@@ -122,11 +114,7 @@ func DeleteAddress(ctx context.Context, addressId string, user *SafeUser) error 
 	}
 
 	endpoint := fmt.Sprintf("/addresses/%s/delete", addressId)
-	token, err := SignAuthenticationToken("POST", endpoint, string(data), user)
-	if err != nil {
-		return err
-	}
-	body, err := Request(ctx, "POST", endpoint, data, token)
+	body, err := doSignedRequest(ctx, "POST", endpoint, data, user)
 	if err != nil {
 		return err
 	}
@@ -146,11 +134,7 @@ func DeleteAddress(ctx context.Context, addressId string, user *SafeUser) error 
 
 func GetAddressesByAssetId(ctx context.Context, assetId string, user *SafeUser) ([]*Address, error) {
 	endpoint := fmt.Sprintf("/assets/%s/addresses", assetId)
-	token, err := SignAuthenticationToken("GET", endpoint, "", user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "GET", endpoint, nil, token)
+	body, err := doSignedRequest(ctx, "GET", endpoint, nil, user)
 	if err != nil {
 		return nil, err
 	}

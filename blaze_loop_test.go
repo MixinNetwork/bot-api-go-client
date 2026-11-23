@@ -3,6 +3,7 @@ package bot
 import (
 	"compress/gzip"
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"net"
@@ -177,7 +178,9 @@ func newBlazeLoopTestClient(t *testing.T) (*BlazeClient, func()) {
 		}
 	}
 	upgrader := websocket.Upgrader{Subprotocols: []string{"Mixin-Blaze-1"}}
+	user, privateKey := newTestSafeUser(t.Name())
 	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if !assert.NoError(t, err) {
 			return

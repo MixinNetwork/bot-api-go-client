@@ -34,11 +34,11 @@ func ReadMultisigsLegacy(ctx context.Context, limit int, offset string, user *Sa
 		v.Set("offset", offset)
 	}
 	method, path := "GET", "/multisigs?"+v.Encode()
-	token, err := SignAuthenticationToken(method, path, "", user)
+	req, err := newSignedRequest(ctx, method, path, nil, user)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -67,11 +67,11 @@ func ReadMultisigs(ctx context.Context, limit int, offset, membersHash, threshol
 	v.Set("threshold", threshold)
 	v.Set("state", state)
 	method, path := "GET", "/multisigs/outputs?"+v.Encode()
-	token, err := SignAuthenticationToken(method, path, "", su)
+	req, err := newSignedRequest(ctx, method, path, nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -118,11 +118,11 @@ func CreateMultisig(ctx context.Context, action, raw string, su *SafeUser) (*Mul
 		return nil, err
 	}
 	method, path := "POST", "/multisigs/requests"
-	token, err := SignAuthenticationToken(method, path, string(data), su)
+	req, err := newSignedRequest(ctx, method, path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -148,11 +148,11 @@ func SignMultisig(ctx context.Context, id, pin string, su *SafeUser) (*MultisigR
 		return nil, err
 	}
 	method, path := "POST", "/multisigs/requests/"+id+"/sign"
-	token, err := SignAuthenticationToken(method, path, string(data), su)
+	req, err := newSignedRequest(ctx, method, path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -172,11 +172,11 @@ func SignMultisig(ctx context.Context, id, pin string, su *SafeUser) (*MultisigR
 
 func CancelMultisig(ctx context.Context, id string, su *SafeUser) error {
 	method, path := "POST", "/multisigs/requests/"+id+"/cancel"
-	token, err := SignAuthenticationToken(method, path, "", su)
+	req, err := newSignedRequest(ctx, method, path, nil, su)
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, method, path, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
@@ -201,11 +201,11 @@ func UnlockMultisig(ctx context.Context, id, pin string, su *SafeUser) error {
 		return err
 	}
 	method, path := "POST", "/multisigs/requests/"+id+"/unlock"
-	token, err := SignAuthenticationToken(method, path, string(data), su)
+	req, err := newSignedRequest(ctx, method, path, data, su)
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return ServerError(ctx, err)
 	}

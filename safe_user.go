@@ -58,11 +58,7 @@ func RegisterSafeBareUser(ctx context.Context, su *SafeUser) (*User, error) {
 		"pin_base64": encryptedPIN,
 	})
 
-	token, err := SignAuthenticationToken("POST", "/safe/users", string(data), su)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/safe/users", data, token)
+	body, err := doSignedRequest(ctx, "POST", "/safe/users", data, su)
 	if err != nil {
 		return nil, err
 	}
@@ -120,11 +116,7 @@ func RegisterSafe(ctx context.Context, spendPrivateKeyOrSeed string, su *SafeUse
 		"pin_base64": encryptedPIN,
 	})
 
-	token, err := SignAuthenticationToken("POST", "/safe/users", string(data), su)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/safe/users", data, token)
+	body, err := doSignedRequest(ctx, "POST", "/safe/users", data, su)
 	if err != nil {
 		return nil, err
 	}

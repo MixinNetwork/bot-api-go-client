@@ -66,48 +66,7 @@ func ListOutputs(ctx context.Context, membersHash string, threshold byte, assetI
 		v.Set("state", state)
 	}
 	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
-	token, err := SignAuthenticationToken(method, path, "", u)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, method, path, []byte{}, token)
-	if err != nil {
-		return nil, err
-	}
-	var resp struct {
-		Data  []*Output `json:"data"`
-		Error Error     `json:"error"`
-	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
-		return nil, BadDataError(ctx)
-	}
-	if resp.Error.Code > 0 {
-		return nil, resp.Error
-	}
-	return resp.Data, nil
-}
-
-func ListUnspentOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId string, accessToken string) ([]*Output, error) {
-	return ListOutputsByToken(ctx, membersHash, threshold, assetId, OutputStateUnspent, 0, 500, accessToken)
-}
-
-func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte, assetId, state string, offset int64, limit int, accessToken string) ([]*Output, error) {
-	v := url.Values{}
-	v.Set("members", membersHash)
-	v.Set("threshold", fmt.Sprint(threshold))
-	v.Set("limit", strconv.Itoa(limit))
-	if offset > 0 {
-		v.Set("offset", fmt.Sprint(offset))
-	}
-	if assetId != "" {
-		v.Set("asset", assetId)
-	}
-	if state != "" {
-		v.Set("state", state)
-	}
-	method, path := "GET", fmt.Sprintf("/safe/outputs?%s", v.Encode())
-	body, err := Request(ctx, method, path, []byte{}, accessToken)
+	body, err := doSignedRequest(ctx, method, path, []byte{}, u)
 	if err != nil {
 		return nil, err
 	}
@@ -127,11 +86,11 @@ func ListOutputsByToken(ctx context.Context, membersHash string, threshold byte,
 
 func GetOutput(ctx context.Context, id string, u *SafeUser) (*Output, error) {
 	method, path := "GET", fmt.Sprintf("/safe/outputs/%s", id)
-	token, err := SignAuthenticationToken(method, path, "", u)
+	req, err := newSignedRequest(ctx, method, path, []byte{}, u)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, method, path, []byte{}, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

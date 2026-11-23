@@ -3,14 +3,15 @@ package bot
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
+	"strings"
 )
 
 type transport struct {
-	roundTripper  http.RoundTripper
-	authenticator *Authenticator
+	roundTripper http.RoundTripper
+	user         SafeUser
 }
 
 // NewTransport returns a new transport based on the given inputs.
@@ -23,8 +24,8 @@ func NewTransport(
 		roundTripper = http.DefaultTransport
 	}
 	return &transport{
-		roundTripper:  roundTripper,
-		authenticator: NewAuthenticator(uid, sid, privateKey),
+		roundTripper: roundTripper,
+		user:         SafeUser{UserId: uid, SessionId: sid, SessionPrivateKey: privateKey},
 	}, nil
 }
 
@@ -61,15 +62,48 @@ func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	clone := req.Clone(req.Context())
+	if clone.Method == "" {
+		clone.Method = http.MethodGet
+	}
 	if req.Body != nil {
 		clone.Body = io.NopCloser(bytes.NewReader(body))
 	}
-	jwt, err := t.authenticator.BuildJWT(
-		clone.Method, clone.URL.RequestURI(), string(body),
-	)
-	if err != nil {
+	if clone.Header == nil {
+		clone.Header = make(http.Header)
+	}
+	if err := prepareSigningHeaders(clone.Header); err != nil {
 		return nil, err
 	}
-	clone.Header.Set("Authorization", fmt.Sprintf("Bearer %s", jwt))
+	if err := signRequestHeaders(clone.Header, clone.Method, clone.URL.RequestURI(), body, &t.user); err != nil {
+		return nil, err
+	}
 	return t.roundTripper.RoundTrip(clone)
+}
+
+func prepareSigningHeaders(header http.Header) error {
+	// A caller may populate the header map directly with noncanonical keys.
+	// Send exactly one request ID and one Authorization header.
+	var requestID string
+	for name, values := range header {
+		switch {
+		case strings.EqualFold(name, requestIDHeader):
+			for _, value := range values {
+				if value == "" {
+					continue
+				}
+				if requestID != "" && requestID != value {
+					return errors.New("conflicting request ID headers")
+				}
+				requestID = value
+			}
+			delete(header, name)
+		case strings.EqualFold(name, "Authorization"):
+			delete(header, name)
+		}
+	}
+	if requestID == "" {
+		requestID = UuidNewV4().String()
+	}
+	header.Set(requestIDHeader, requestID)
+	return nil
 }

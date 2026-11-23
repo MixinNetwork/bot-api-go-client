@@ -15,11 +15,7 @@ func CallKernelRPC(ctx context.Context, user *SafeUser, method string, params ..
 		return nil, err
 	}
 
-	token, err := SignAuthenticationToken("POST", "/external/kernel", string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", "/external/kernel", data, token)
+	body, err := doSignedRequest(ctx, "POST", "/external/kernel", data, user)
 	if err != nil {
 		return nil, err
 	}

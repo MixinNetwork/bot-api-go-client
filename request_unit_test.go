@@ -21,36 +21,38 @@ import (
 )
 
 func TestRequestWithID(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
 	requestBody := []byte(`{"hello":"world"}`)
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		assert.Equal(t, http.MethodPost, r.Method)
-		assert.Equal(t, "/resource?order=desc", r.URL.RequestURI())
+		assert.Equal(t, "/api/resource%20name?order=desc", r.URL.RequestURI())
 		assert.Equal(t, requestBody, body)
 		assert.Equal(t, "application/json", r.Header.Get("Content-Type"))
-		assert.Equal(t, "Bearer access-token", r.Header.Get("Authorization"))
+		assertTestRequestAuthentication(t, r, body, user, privateKey.Public().(ed25519.PublicKey))
 		assert.Equal(t, "request-id", r.Header.Get("X-Request-Id"))
 		assert.Equal(t, defaultUserAgent, r.Header.Get("User-Agent"))
 		_, _ = w.Write([]byte(`{"ok":true}`))
 	}))
 
-	body, err := RequestWithId(context.Background(), http.MethodPost, "/resource?order=desc", requestBody, "access-token", "request-id")
+	SetBaseUri(httpUri + "/api")
+	body, err := RequestWithId(context.Background(), http.MethodPost, "/resource name?order=desc", requestBody, "request-id", user)
 	require.NoError(t, err)
 	assert.JSONEq(t, `{"ok":true}`, string(body))
 }
 
-func TestRequestGeneratesRequestID(t *testing.T) {
-	var requestID string
+func TestRequestWithIDRejectsInvalidID(t *testing.T) {
+	user, _ := newTestSafeUser(t.Name())
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestID = r.Header.Get("X-Request-Id")
-		_, _ = w.Write([]byte(`{}`))
+		t.Error("request with an invalid ID reached the server")
 	}))
-
-	_, err := Request(context.Background(), http.MethodGet, "/resource", nil, "")
-	require.NoError(t, err)
-	_, err = uuid.FromString(requestID)
-	assert.NoError(t, err)
+	for _, id := range []string{"", " ", " padded-id ", "invalid\xff", "bad\nheader"} {
+		_, err := RequestWithId(context.Background(), http.MethodGet, "/resource", nil, id, user)
+		require.ErrorContains(t, err, "request ID")
+	}
+	_, err := RequestWithId(context.Background(), http.MethodGet, "/resource", nil, "valid-id", nil)
+	require.ErrorContains(t, err, "safe user is nil")
 }
 
 func TestRequestWithUser(t *testing.T) {
@@ -127,7 +129,8 @@ func TestRequestHonorsContextCancellation(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	_, err := Request(ctx, http.MethodGet, "/blocked", nil, "")
+	user, _ := newTestSafeUser(t.Name())
+	_, err := RequestWithId(ctx, http.MethodGet, "/blocked", nil, "request-id", user)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, context.Canceled)
 }
@@ -137,7 +140,8 @@ func TestRequestReturnsServerErrorFor5xx(t *testing.T) {
 		http.Error(w, "unavailable", http.StatusServiceUnavailable)
 	}))
 
-	_, err := RequestWithId(context.Background(), http.MethodGet, "/resource", nil, "", "known-id")
+	user, _ := newTestSafeUser(t.Name())
+	_, err := RequestWithId(context.Background(), http.MethodGet, "/resource", nil, "known-id", user)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "response status code 503 known-id")
 	assert.Contains(t, err.Error(), `"code":500`)
@@ -158,6 +162,9 @@ func TestSimpleRequestSignsRequestURIWithoutMutatingClient(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, parsed.Valid)
 		claims := parsed.Claims.(jwt.MapClaims)
+		requestID := r.Header.Get("X-Request-Id")
+		assert.NotEmpty(t, requestID)
+		assert.Equal(t, requestID, claims["jti"])
 		sum := sha256.Sum256(append([]byte(http.MethodPost+"/signed?part=two"), body...))
 		assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
 		assert.Equal(t, user.UserId, claims["uid"])
@@ -202,6 +209,8 @@ func TestTransportPreservesBodyAndOriginalRequest(t *testing.T) {
 	req, err := http.NewRequest(http.MethodPut, "https://example.test/items?a=1", bytes.NewBufferString("body"))
 	require.NoError(t, err)
 	req.Header.Set("X-Original", "yes")
+	req.Header["x-request-id"] = []string{"caller-request-id"}
+	req.Header["authorization"] = []string{"stale-token"}
 
 	resp, err := transport.RoundTrip(req)
 	require.NoError(t, err)
@@ -211,6 +220,8 @@ func TestTransportPreservesBodyAndOriginalRequest(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "body", string(originalBody))
 	require.NotNil(t, forwarded)
+	assert.NotContains(t, forwarded.Header, "x-request-id")
+	assert.NotContains(t, forwarded.Header, "authorization")
 	forwardedBody, err := io.ReadAll(forwarded.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "body", string(forwardedBody))
@@ -221,21 +232,32 @@ func TestTransportPreservesBodyAndOriginalRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 	claims := parsed.Claims.(jwt.MapClaims)
+	assert.Equal(t, "caller-request-id", forwarded.Header.Get("X-Request-Id"))
+	assert.Equal(t, "caller-request-id", claims["jti"])
 	sum := sha256.Sum256([]byte(http.MethodPut + "/items?a=1" + "body"))
 	assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
+
+	req.Header.Set("X-Request-Id", "different-id")
+	forwarded = nil
+	_, err = transport.RoundTrip(req)
+	require.ErrorContains(t, err, "conflicting request ID")
+	assert.Nil(t, forwarded)
 }
 
 func TestTransportHandlesNilAndUnreadableBodies(t *testing.T) {
-	user, _ := newTestSafeUser(t.Name())
+	user, privateKey := newTestSafeUser(t.Name())
 	called := false
 	base := roundTripFunc(func(r *http.Request) (*http.Response, error) {
 		called = true
+		assert.Equal(t, http.MethodGet, r.Method)
+		assertTestRequestAuthentication(t, r, nil, user, privateKey.Public().(ed25519.PublicKey))
 		return &http.Response{StatusCode: http.StatusNoContent, Header: make(http.Header), Body: http.NoBody, Request: r}, nil
 	})
 	transport, err := NewTransport(base, user.UserId, user.SessionId, user.SessionPrivateKey)
 	require.NoError(t, err)
 	req, err := http.NewRequest(http.MethodGet, "https://example.test/items", nil)
 	require.NoError(t, err)
+	req.Method = "" // net/http sends an empty method as GET.
 	_, err = transport.RoundTrip(req)
 	require.NoError(t, err)
 	assert.True(t, called)

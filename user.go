@@ -88,11 +88,11 @@ func CreateUser(ctx context.Context, sessionSecret, fullName string, su *SafeUse
 		"session_secret": sessionSecret,
 		"full_name":      fullName,
 	})
-	token, err := SignAuthenticationToken("POST", "/users", string(data), su)
+	req, err := newSignedRequest(ctx, "POST", "/users", data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", "/users", data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -112,11 +112,11 @@ func CreateUser(ctx context.Context, sessionSecret, fullName string, su *SafeUse
 
 func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/users/%s", userId)
-	token, err := SignAuthenticationToken("GET", url, "", su)
+	req, err := newSignedRequest(ctx, "GET", url, nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", url, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -137,11 +137,11 @@ func GetUser(ctx context.Context, userId string, su *SafeUser) (*User, error) {
 func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, error) {
 	url := "/users/fetch"
 	data, _ := json.Marshal(userIds)
-	token, err := SignAuthenticationToken("POST", url, string(data), su)
+	req, err := newSignedRequest(ctx, "POST", url, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", url, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -161,11 +161,11 @@ func GetUsers(ctx context.Context, userIds []string, su *SafeUser) ([]*User, err
 
 func SearchUser(ctx context.Context, query string, su *SafeUser) (*User, error) {
 	url := fmt.Sprintf("/search/%s", query)
-	token, err := SignAuthenticationToken("GET", url, "", su)
+	req, err := newSignedRequest(ctx, "GET", url, nil, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "GET", url, nil, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -214,11 +214,11 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin string, su *Sa
 		"pin_base64":     encryptedPin,
 	})
 
-	token, err := SignAuthenticationToken("POST", "/pin/update", string(data), su)
+	req, err := newSignedRequest(ctx, "POST", "/pin/update", data, su)
 	if err != nil {
 		return err
 	}
-	body, err := Request(ctx, "POST", "/pin/update", data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return ServerError(ctx, err)
 	}
@@ -235,8 +235,12 @@ func UpdatePin(ctx context.Context, oldEncryptedPin, encryptedPin string, su *Sa
 	return nil
 }
 
-func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*UserMeView, error) {
-	body, err := RequestWithId(ctx, "GET", "/safe/me", nil, accessToken, requestID)
+func UserMeWithRequestID(ctx context.Context, requestID string, su *SafeUser) (*UserMeView, error) {
+	req, err := newSignedRequestWithID(ctx, "GET", "/safe/me", nil, requestID, su)
+	if err != nil {
+		return nil, err
+	}
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -254,17 +258,8 @@ func UserMeWithRequestID(ctx context.Context, accessToken, requestID string) (*U
 	return resp.Data, nil
 }
 
-func UserMe(ctx context.Context, accessToken string) (*UserMeView, error) {
-	return UserMeWithRequestID(ctx, accessToken, UuidNewV4().String())
-}
-
 func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
-	path := "/safe/me"
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	return UserMe(ctx, token)
+	return UserMeWithRequestID(ctx, UuidNewV4().String(), su)
 }
 
 func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUser) (*User, error) {
@@ -277,11 +272,11 @@ func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUs
 	}
 
 	path := "/me"
-	token, err := SignAuthenticationToken("POST", path, string(data), su)
+	req, err := newSignedRequest(ctx, "POST", path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -310,11 +305,11 @@ func UpdatePreference(ctx context.Context, messageSource, conversationSource, cu
 		return nil, err
 	}
 	path := "/me/preferences"
-	token, err := SignAuthenticationToken("POST", path, string(data), su)
+	req, err := newSignedRequest(ctx, "POST", path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
@@ -342,11 +337,11 @@ func Relationship(ctx context.Context, userId, action string, su *SafeUser) (*Us
 	}
 
 	path := "/relationships"
-	token, err := SignAuthenticationToken("POST", path, string(data), su)
+	req, err := newSignedRequest(ctx, "POST", path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

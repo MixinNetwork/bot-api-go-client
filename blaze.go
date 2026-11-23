@@ -373,13 +373,12 @@ func (b *BlazeClient) connectMixinBlaze(ctx context.Context) (*websocket.Conn, e
 		SessionId:         b.sid,
 		SessionPrivateKey: b.key,
 	}
-	token, err := SignAuthenticationToken("GET", "/", "", user)
-	if err != nil {
+	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
+	header := make(http.Header)
+	header.Set(requestIDHeader, UuidNewV4().String())
+	if err := signRequestHeaders(header, http.MethodGet, u.RequestURI(), nil, user); err != nil {
 		return nil, err
 	}
-	header := make(http.Header)
-	header.Add("Authorization", "Bearer "+token)
-	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
 	// The WebSocket dialer uses socket deadlines while reading the HTTP
 	// upgrade response. Also close the socket on explicit cancellation.
 	var stopClose func() bool

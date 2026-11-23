@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -14,52 +15,49 @@ import (
 
 const jwtValidDuration = time.Minute * 5
 
-func SignAuthenticationTokenWithoutBody(method, uri string, user *SafeUser) (string, error) {
-	return SignAuthenticationToken(method, uri, "", user)
+func SignAuthenticationTokenWithoutBody(method, uri, requestID string, user *SafeUser) (string, error) {
+	return SignAuthenticationTokenWithRequestID(method, uri, "", requestID, user)
 }
 
-func SignAuthenticationToken(method, uri, body string, su *SafeUser) (string, error) {
-	return SignAuthenticationTokenWithRequestID(method, uri, body, UuidNewV4().String(), su)
-}
-
+// SignAuthenticationTokenWithRequestID includes requestID in the signed jti claim.
 func SignAuthenticationTokenWithRequestID(method, uri, body, requestID string, su *SafeUser) (string, error) {
 	if su == nil {
 		return "", fmt.Errorf("safe user is nil")
 	}
-	iat := time.Now().UTC()
-	exp := iat.Add(jwtValidDuration)
-	sum := sha256.Sum256([]byte(method + uri + body))
-
-	claims := jwt.MapClaims{
+	return signRequestJWT(method, uri, body, requestID, su.SessionPrivateKey, jwt.MapClaims{
 		"uid": su.UserId,
 		"sid": su.SessionId,
-		"iat": iat.Unix(),
-		"exp": exp.Unix(),
-		"jti": requestID,
-		"sig": hex.EncodeToString(sum[:]),
 		"scp": "FULL",
-	}
-	priv, err := parseEd25519PrivateKey(su.SessionPrivateKey)
-	if err != nil {
-		return "", err
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	return token.SignedString(priv)
+	})
 }
 
-func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp string, requestID string) (string, error) {
-	iat := time.Now().UTC()
-	exp := iat.Add(jwtValidDuration)
-	sum := sha256.Sum256([]byte(method + uri + body))
-	claims := jwt.MapClaims{
+func signRequestHeaders(header http.Header, method, uri string, body []byte, su *SafeUser) error {
+	token, err := SignAuthenticationTokenWithRequestID(method, uri, string(body), header.Get(requestIDHeader), su)
+	if err != nil {
+		return err
+	}
+	header.Set("Authorization", "Bearer "+token)
+	return nil
+}
+
+func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body, scp, requestID string) (string, error) {
+	return signRequestJWT(method, uri, body, requestID, privateKey, jwt.MapClaims{
 		"iss": appID,
 		"aid": authorizationID,
-		"iat": iat.Unix(),
-		"exp": exp.Unix(),
-		"sig": hex.EncodeToString(sum[:]),
 		"scp": scp,
-		"jti": requestID,
+	})
+}
+
+func signRequestJWT(method, uri, body, requestID, privateKey string, claims jwt.MapClaims) (string, error) {
+	if err := validateRequestID(requestID); err != nil {
+		return "", err
 	}
+	iat := time.Now().UTC()
+	sum := sha256.Sum256([]byte(method + uri + body))
+	claims["jti"] = requestID
+	claims["iat"] = iat.Unix()
+	claims["exp"] = iat.Add(jwtValidDuration).Unix()
+	claims["sig"] = hex.EncodeToString(sum[:])
 
 	priv, err := parseEd25519PrivateKey(privateKey)
 	if err != nil {

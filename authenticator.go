@@ -14,11 +14,11 @@ func NewAuthenticator(uid, sid, privateKey string) *Authenticator {
 	}
 }
 
-func (a *Authenticator) BuildJWT(method, uri, body string) (string, error) {
+func (a *Authenticator) BuildJWT(method, uri, body, requestID string) (string, error) {
 	user := &SafeUser{
 		UserId:            a.Uid,
 		SessionId:         a.Sid,
 		SessionPrivateKey: a.PrivateKey,
 	}
-	return SignAuthenticationToken(method, uri, body, user)
+	return SignAuthenticationTokenWithRequestID(method, uri, body, requestID, user)
 }

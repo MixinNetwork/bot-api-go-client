@@ -27,12 +27,15 @@ func assertTestRequestAuthentication(t *testing.T, request *http.Request, body [
 	t.Helper()
 	authorization := request.Header.Get("Authorization")
 	if user == nil {
-		assert.Equal(t, "Bearer", strings.TrimSpace(authorization))
+		assert.Empty(t, request.Header.Values("Authorization"))
 		return
 	}
 
 	assert.True(t, strings.HasPrefix(authorization, "Bearer "))
 	claims := parseTestJWT(t, strings.TrimPrefix(authorization, "Bearer "), publicKey)
+	requestID := request.Header.Get("X-Request-Id")
+	assert.NotEmpty(t, requestID)
+	assert.Equal(t, requestID, claims["jti"])
 	sum := sha256.Sum256([]byte(request.Method + request.URL.RequestURI() + string(body)))
 	assert.Equal(t, user.UserId, claims["uid"])
 	assert.Equal(t, user.SessionId, claims["sid"])

@@ -55,30 +55,7 @@ func SafeSnapshots(ctx context.Context, limit int, app, assetId, opponent, offse
 		v.Set("opponent", opponent)
 	}
 	path := "/safe/snapshots?" + v.Encode()
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	return SafeSnapshotsByToken(ctx, limit, app, assetId, opponent, offset, token)
-}
-
-func SafeSnapshotsByToken(ctx context.Context, limit int, app, assetId, opponent, offset, accessToken string) ([]*SafeSnapshot, error) {
-	v := url.Values{}
-	v.Set("limit", strconv.Itoa(limit))
-	if app != "" {
-		v.Set("app", app)
-	}
-	if assetId != "" {
-		v.Set("asset", assetId)
-	}
-	if offset != "" {
-		v.Set("offset", offset)
-	}
-	if opponent != "" {
-		v.Set("opponent", opponent)
-	}
-	path := "/safe/snapshots?" + v.Encode()
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := doSignedRequest(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -99,16 +76,7 @@ func SafeSnapshotsByToken(ctx context.Context, limit int, app, assetId, opponent
 
 func SafeSnapshotById(ctx context.Context, snapshotId string, su *SafeUser) (*SafeSnapshot, error) {
 	path := "/safe/snapshots/" + snapshotId
-	token, err := SignAuthenticationToken("GET", path, "", su)
-	if err != nil {
-		return nil, err
-	}
-	return SafeSnapshotByToken(ctx, snapshotId, token)
-}
-
-func SafeSnapshotByToken(ctx context.Context, snapshotId string, accessToken string) (*SafeSnapshot, error) {
-	path := "/safe/snapshots/" + snapshotId
-	body, err := Request(ctx, "GET", path, nil, accessToken)
+	body, err := doSignedRequest(ctx, "GET", path, nil, su)
 	if err != nil {
 		return nil, err
 	}
@@ -156,11 +124,7 @@ func SafeNotifySnapshot(ctx context.Context, transactionHash string, outputIndex
 		return nil, err
 	}
 	method, path := "POST", "/safe/snapshots/notifications"
-	token, err := SignAuthenticationToken(method, path, string(data), su)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, method, path, data, token)
+	body, err := doSignedRequest(ctx, method, path, data, su)
 	if err != nil {
 		return nil, err
 	}

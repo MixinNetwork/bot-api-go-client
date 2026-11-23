@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"filippo.io/edwards25519"
-	"github.com/gofrs/uuid/v5"
 	"golang.org/x/crypto/curve25519"
 )
 
@@ -93,11 +92,7 @@ func VerifyPIN(ctx context.Context, pin string, user *SafeUser) (*User, error) {
 		return nil, err
 	}
 	path := "/pin/verify"
-	token, err := SignAuthenticationToken("POST", path, string(data), user)
-	if err != nil {
-		return nil, err
-	}
-	body, err := Request(ctx, "POST", path, data, token)
+	body, err := doSignedRequest(ctx, "POST", path, data, user)
 	if err != nil {
 		return nil, err
 	}
@@ -135,13 +130,12 @@ func VerifyPINTip(ctx context.Context, su *SafeUser) (*User, error) {
 		return nil, err
 	}
 	path := "/pin/verify"
-	token, err := SignAuthenticationToken("POST", path, string(data), su)
+	req, err := newSignedRequest(ctx, "POST", path, data, su)
 	if err != nil {
 		return nil, err
 	}
-	id := uuid.Must(uuid.NewV4()).String()
-	log.Println(id)
-	body, err := RequestWithId(ctx, "POST", path, data, token, id)
+	log.Println(req.Header.Get(requestIDHeader))
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, err
 	}
