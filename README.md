@@ -1,7 +1,7 @@
 ## Installation
 
 ```
-go get github.com/MixinNetwork/bot-api-go-client/v3
+go get github.com/MixinNetwork/bot-api-go-client/v4
 ```
 
 ## User-Agent
@@ -10,7 +10,7 @@ Set a User-Agent that identifies your application during startup, before making
 requests:
 
 ```go
-import bot "github.com/MixinNetwork/bot-api-go-client/v3"
+import bot "github.com/MixinNetwork/bot-api-go-client/v4"
 
 bot.SetUserAgent("my-app/1.0 (+https://example.com)")
 ```

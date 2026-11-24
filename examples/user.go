@@ -12,7 +12,7 @@ import (
 	"os"
 	"time"
 
-	bot "github.com/MixinNetwork/bot-api-go-client/v3"
+	bot "github.com/MixinNetwork/bot-api-go-client/v4"
 )
 
 func main() {

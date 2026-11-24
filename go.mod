@@ -1,4 +1,4 @@
-module github.com/MixinNetwork/bot-api-go-client/v3
+module github.com/MixinNetwork/bot-api-go-client/v4
 
 go 1.27.4
 
@@ -29,6 +29,7 @@ require (
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
 	github.com/klauspost/compress v1.20.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.2 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/quic-go/quic-go v0.65.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect

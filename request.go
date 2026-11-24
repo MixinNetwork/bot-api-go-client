@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const defaultUserAgent = "Bot-API-Go-Client/v3.26.1"
+const defaultUserAgent = "Bot-API-Go-Client/v4.0.0"
 const requestIDHeader = "X-Request-Id"
 
 var (

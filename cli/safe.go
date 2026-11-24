@@ -6,7 +6,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/MixinNetwork/bot-api-go-client/v3"
+	"github.com/MixinNetwork/bot-api-go-client/v4"
 	"github.com/gofrs/uuid/v5"
 	"github.com/urfave/cli/v2"
 )
