@@ -376,9 +376,11 @@ func (b *BlazeClient) connectMixinBlaze(ctx context.Context) (*websocket.Conn, e
 	u := url.URL{Scheme: "wss", Host: blazeUri, Path: "/"}
 	header := make(http.Header)
 	header.Set(requestIDHeader, UuidNewV4().String())
+	header.Set("User-Agent", userAgent)
 	if err := signRequestHeaders(header, http.MethodGet, u.RequestURI(), nil, user); err != nil {
 		return nil, err
 	}
+	warnDefaultUserAgent(userAgent)
 	// The WebSocket dialer uses socket deadlines while reading the HTTP
 	// upgrade response. Also close the socket on explicit cancellation.
 	var stopClose func() bool

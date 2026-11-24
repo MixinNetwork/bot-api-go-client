@@ -222,3 +222,26 @@ func newBlazeLoopTestClient(t *testing.T) (*BlazeClient, func()) {
 	})
 	return blazeClientForTestServer(t, server), closeConnections
 }
+
+func TestBlazeHandshakeSetsUserAgent(t *testing.T) {
+	oldUA := userAgent
+	SetUserAgent("blaze-test/1.0")
+	t.Cleanup(func() { SetUserAgent(oldUA) })
+
+	got := make(chan string, 1)
+	upgrader := websocket.Upgrader{Subprotocols: []string{"Mixin-Blaze-1"}}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got <- r.Header.Get("User-Agent")
+		conn, err := upgrader.Upgrade(w, r, nil)
+		if err == nil {
+			_ = conn.Close()
+		}
+	}))
+	defer server.Close()
+
+	client := blazeClientForTestServer(t, server)
+	conn, err := client.connectMixinBlaze(context.Background())
+	require.NoError(t, err)
+	_ = conn.Close()
+	assert.Equal(t, "blaze-test/1.0", <-got)
+}

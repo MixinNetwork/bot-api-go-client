@@ -182,8 +182,8 @@ func SetBlazeUri(blaze string) {
 	blazeUri = blaze
 }
 
-// SetUserAgent sets the User-Agent for HTTP requests. Call it during startup,
-// before making requests concurrently.
+// SetUserAgent sets the User-Agent for HTTP requests and Blaze WebSocket
+// connections. Call it during startup, before making requests concurrently.
 func SetUserAgent(ua string) {
 	userAgent = ua
 }
