@@ -18,3 +18,5 @@ bot.SetUserAgent("my-app/1.0 (+https://example.com)")
 If the User-Agent is empty or still uses the SDK default, the SDK logs a warning
 once when it sends an HTTP request. `SetUserAgent` configures the whole process;
 call it before starting concurrent requests.
+
+For more info, see [api](https://developers.mixin.one/docs/api/guide).
