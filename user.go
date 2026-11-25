@@ -251,7 +251,7 @@ func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
 	return UserMeWithRequestID(ctx, UuidNewV4().String(), su)
 }
 
-func UserMeForOauth(ctx context.Context, accessToken string) (*UserMeView, error) {
+func UserMeForOAuth(ctx context.Context, accessToken string) (*UserMeView, error) {
 	body, err := doAccessTokenRequest(ctx, "GET", "/safe/me", nil, accessToken)
 	if err != nil {
 		return nil, ServerError(ctx, err)

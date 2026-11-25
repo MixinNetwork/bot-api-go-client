@@ -48,6 +48,21 @@ func SignOauthAccessToken(appID, authorizationID, privateKey, method, uri, body,
 	})
 }
 
+func oauthAccessTokenRequestID(accessToken string) (string, error) {
+	claims := jwt.MapClaims{}
+	if _, _, err := jwt.NewParser().ParseUnverified(accessToken, claims); err != nil {
+		return "", fmt.Errorf("parse OAuth access token: %w", err)
+	}
+	requestID, ok := claims["jti"].(string)
+	if !ok {
+		return "", fmt.Errorf("OAuth access token requires a string jti")
+	}
+	if err := validateRequestID(requestID); err != nil {
+		return "", fmt.Errorf("invalid OAuth token jti: %w", err)
+	}
+	return requestID, nil
+}
+
 func signRequestJWT(method, uri, body, requestID, privateKey string, claims jwt.MapClaims) (string, error) {
 	if err := validateRequestID(requestID); err != nil {
 		return "", err

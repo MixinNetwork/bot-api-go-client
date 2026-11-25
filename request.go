@@ -78,7 +78,11 @@ func doUnsignedRequest(ctx context.Context, method, path string, body []byte, re
 }
 
 func doAccessTokenRequest(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
-	req, err := newAPIRequest(ctx, method, path, body, UuidNewV4().String())
+	requestID, err := oauthAccessTokenRequestID(accessToken)
+	if err != nil {
+		return nil, err
+	}
+	req, err := newAPIRequest(ctx, method, path, body, requestID)
 	if err != nil {
 		return nil, err
 	}

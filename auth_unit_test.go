@@ -17,6 +17,24 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestOAuthAccessTokenRequestID(t *testing.T) {
+	key := []byte("test-key")
+	token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"jti": "oauth-id"}).SignedString(key)
+	require.NoError(t, err)
+	id, err := oauthAccessTokenRequestID(token)
+	require.NoError(t, err)
+	assert.Equal(t, "oauth-id", id)
+
+	for _, claims := range []jwt.MapClaims{{}, {"jti": ""}, {"jti": 42}, {"jti": " id"}, {"jti": "a\nb"}} {
+		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(key)
+		require.NoError(t, err)
+		_, err = oauthAccessTokenRequestID(token)
+		require.ErrorContains(t, err, "jti")
+	}
+	_, err = oauthAccessTokenRequestID("malformed")
+	require.Error(t, err)
+}
+
 func TestSignAuthenticationTokenClaims(t *testing.T) {
 	user, privateKey := newTestSafeUser(t.Name())
 	before := time.Now().Unix()
