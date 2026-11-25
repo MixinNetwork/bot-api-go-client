@@ -119,10 +119,11 @@ func TestOAuthExchangeCodeErrors(t *testing.T) {
 		name     string
 		response string
 		code     int
+		message  string
 	}{
 		{name: "unauthorized", response: `{"error":{"code":401}}`, code: 401},
 		{name: "forbidden", response: `{"error":{"code":403}}`, code: 403},
-		{name: "no authorization id", response: `{"data":{"access_token":"rsa","scope":"PROFILE:READ"}}`, code: 500},
+		{name: "no authorization id", response: `{"data":{"access_token":"rsa","scope":"PROFILE:READ"}}`, message: "without authorization id"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -132,6 +133,10 @@ func TestOAuthExchangeCodeErrors(t *testing.T) {
 			ou, err := OAuthExchangeCode(context.Background(), "client", "secret", "code", "")
 			require.Error(t, err)
 			assert.Nil(t, ou)
+			if tt.message != "" {
+				require.ErrorContains(t, err, tt.message)
+				return
+			}
 			var apiError Error
 			require.True(t, errors.As(err, &apiError))
 			assert.Equal(t, tt.code, apiError.Code)
