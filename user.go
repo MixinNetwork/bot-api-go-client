@@ -251,8 +251,14 @@ func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
 	return UserMeWithRequestID(ctx, UuidNewV4().String(), su)
 }
 
-func UserMeForOAuth(ctx context.Context, accessToken string) (*UserMeView, error) {
-	body, err := doAccessTokenRequest(ctx, "GET", "/safe/me", nil, accessToken)
+// UserMeForOAuth reads the profile of the user who granted ou, the scope
+// must include PROFILE:READ.
+func UserMeForOAuth(ctx context.Context, ou *OAuthUser) (*UserMeView, error) {
+	req, err := newOAuthSignedRequest(ctx, "GET", "/safe/me", nil, ou)
+	if err != nil {
+		return nil, err
+	}
+	body, err := doRequest(req)
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}

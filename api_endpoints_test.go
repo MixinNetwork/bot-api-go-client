@@ -3,8 +3,6 @@ package bot
 import (
 	"context"
 	"crypto/ed25519"
-	"crypto/rand"
-	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -12,10 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/gofrs/uuid/v5"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -364,44 +359,44 @@ func TestUserMeWithRequestID(t *testing.T) {
 }
 
 func TestUserMeForOAuth(t *testing.T) {
-	user, _ := newTestSafeUser(t.Name())
-	accessToken, err := SignOauthAccessToken("app", "authorization", user.SessionPrivateKey, http.MethodGet, "/safe/me", "", "PROFILE:READ", "oauth-request-id")
-	require.NoError(t, err)
+	user, privateKey := newTestSafeUser(t.Name())
+	ou := &OAuthUser{
+		AppID:           "e5b3d5c1-0d62-4b41-9a5e-1f1a8c3d2b7a",
+		AuthorizationID: "7c0f4e0a-3b9d-4c55-8b7a-2d6c1e9f0a13",
+		PrivateKey:      user.SessionPrivateKey,
+		Scope:           "PROFILE:READ",
+	}
+	requestIDs := make(map[string]bool)
 	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
 		assert.Equal(t, "/safe/me", r.URL.Path)
-		assert.Equal(t, "Bearer "+accessToken, r.Header.Get("Authorization"))
-		assert.Equal(t, "oauth-request-id", r.Header.Get("X-Request-Id"))
+		authorization := r.Header.Get("Authorization")
+		require.True(t, strings.HasPrefix(authorization, "Bearer "))
+		claims := parseTestJWT(t, strings.TrimPrefix(authorization, "Bearer "), privateKey.Public().(ed25519.PublicKey))
+		requestID := r.Header.Get("X-Request-Id")
+		assert.NotEmpty(t, requestID)
+		assert.Equal(t, requestID, claims["jti"])
+		requestIDs[requestID] = true
+		assert.Equal(t, ou.AppID, claims["iss"])
+		assert.Equal(t, ou.AuthorizationID, claims["aid"])
+		assert.Equal(t, ou.Scope, claims["scp"])
+		assert.NotContains(t, claims, "uid")
+		sum := sha256.Sum256([]byte("GET/safe/me"))
+		assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
 		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
 	}))
 
-	me, err := UserMeForOAuth(context.Background(), accessToken)
-	require.NoError(t, err)
-	assert.True(t, me.HasPIN)
-}
+	for range 2 {
+		me, err := UserMeForOAuth(context.Background(), ou)
+		require.NoError(t, err)
+		assert.True(t, me.HasPIN)
+	}
+	assert.Len(t, requestIDs, 2, "every request signs a fresh jti")
 
-func TestUserMeForOAuthServerIssuedToken(t *testing.T) {
-	// same claims as the server issued RSA access token, which has no jti
-	key, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(t, err)
-	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
-		"iss": "app",
-		"aid": "authorization",
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(time.Hour).Unix(),
-		"scp": "PROFILE:READ",
-	}).SignedString(key)
-	require.NoError(t, err)
-	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		assert.Equal(t, "/safe/me", r.URL.Path)
-		assert.Equal(t, "Bearer "+accessToken, r.Header.Get("Authorization"))
-		_, err := uuid.FromString(r.Header.Get("X-Request-Id"))
-		assert.NoError(t, err)
-		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
-	}))
-
-	me, err := UserMeForOAuth(context.Background(), accessToken)
-	require.NoError(t, err)
-	assert.True(t, me.HasPIN)
+	_, err := UserMeForOAuth(context.Background(), nil)
+	require.ErrorContains(t, err, "oauth user is nil")
+	_, err = UserMeForOAuth(context.Background(), &OAuthUser{PrivateKey: "bad"})
+	require.ErrorContains(t, err, "ed25519 private key")
 }
 
 func testUserEndpoints(t *testing.T, ctx context.Context, user *SafeUser, serverPublicKey ed25519.PublicKey) {
