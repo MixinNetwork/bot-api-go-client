@@ -358,6 +358,19 @@ func TestUserMeWithRequestID(t *testing.T) {
 	assert.True(t, me.HasPIN)
 }
 
+func TestUserMeForOauth(t *testing.T) {
+	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/safe/me", r.URL.Path)
+		assert.Equal(t, "Bearer oauth-access-token", r.Header.Get("Authorization"))
+		assert.NotEmpty(t, r.Header.Get("X-Request-Id"))
+		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
+	}))
+
+	me, err := UserMeForOauth(context.Background(), "oauth-access-token")
+	require.NoError(t, err)
+	assert.True(t, me.HasPIN)
+}
+
 func testUserEndpoints(t *testing.T, ctx context.Context, user *SafeUser, serverPublicKey ed25519.PublicKey) {
 	t.Helper()
 	created, err := CreateUserSimple(ctx, "session-public", "User")

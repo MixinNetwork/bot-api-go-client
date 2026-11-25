@@ -77,6 +77,15 @@ func doUnsignedRequest(ctx context.Context, method, path string, body []byte, re
 	return doRequest(req)
 }
 
+func doAccessTokenRequest(ctx context.Context, method, path string, body []byte, accessToken string) ([]byte, error) {
+	req, err := newAPIRequest(ctx, method, path, body, UuidNewV4().String())
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	return doRequest(req)
+}
+
 func validateRequestID(requestID string) error {
 	if requestID == "" || strings.TrimSpace(requestID) != requestID {
 		return errors.New("request ID must be nonempty and have no surrounding whitespace")
