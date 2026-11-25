@@ -358,6 +358,47 @@ func TestUserMeWithRequestID(t *testing.T) {
 	assert.True(t, me.HasPIN)
 }
 
+func TestUserMeForOAuth(t *testing.T) {
+	user, privateKey := newTestSafeUser(t.Name())
+	ou := &OAuthUser{
+		AppID:           "e5b3d5c1-0d62-4b41-9a5e-1f1a8c3d2b7a",
+		AuthorizationID: "7c0f4e0a-3b9d-4c55-8b7a-2d6c1e9f0a13",
+		PrivateKey:      user.SessionPrivateKey,
+		Scope:           "PROFILE:READ",
+	}
+	requestIDs := make(map[string]bool)
+	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/safe/me", r.URL.Path)
+		authorization := r.Header.Get("Authorization")
+		require.True(t, strings.HasPrefix(authorization, "Bearer "))
+		claims := parseTestJWT(t, strings.TrimPrefix(authorization, "Bearer "), privateKey.Public().(ed25519.PublicKey))
+		requestID := r.Header.Get("X-Request-Id")
+		assert.NotEmpty(t, requestID)
+		assert.Equal(t, requestID, claims["jti"])
+		requestIDs[requestID] = true
+		assert.Equal(t, ou.AppID, claims["iss"])
+		assert.Equal(t, ou.AuthorizationID, claims["aid"])
+		assert.Equal(t, ou.Scope, claims["scp"])
+		assert.NotContains(t, claims, "uid")
+		sum := sha256.Sum256([]byte("GET/safe/me"))
+		assert.Equal(t, hex.EncodeToString(sum[:]), claims["sig"])
+		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
+	}))
+
+	for range 2 {
+		me, err := UserMeForOAuth(context.Background(), ou)
+		require.NoError(t, err)
+		assert.True(t, me.HasPIN)
+	}
+	assert.Len(t, requestIDs, 2, "every request signs a fresh jti")
+
+	_, err := UserMeForOAuth(context.Background(), nil)
+	require.ErrorContains(t, err, "oauth user is nil")
+	_, err = UserMeForOAuth(context.Background(), &OAuthUser{PrivateKey: "bad"})
+	require.ErrorContains(t, err, "ed25519 private key")
+}
+
 func testUserEndpoints(t *testing.T, ctx context.Context, user *SafeUser, serverPublicKey ed25519.PublicKey) {
 	t.Helper()
 	created, err := CreateUserSimple(ctx, "session-public", "User")

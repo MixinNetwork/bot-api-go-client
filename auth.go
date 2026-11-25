@@ -86,8 +86,16 @@ func parseEd25519PrivateKey(s string) (ed25519.PrivateKey, error) {
 	return ed25519.NewKeyFromSeed(seed), nil
 }
 
-// OAuthGetAccessToken get the access token of a user
-// ed25519 is optional, only use it when you want to sign OAuth access token locally
+// OAuthGetAccessToken exchanges an OAuth authorization code at /oauth/token.
+//
+// Without ed25519 it returns the server issued RS512 access token, the scope
+// and an empty authorization id. With ed25519, the base64url (no padding)
+// client public key, it returns the server ed25519 public key instead of a
+// token, the scope and the authorization id; requests must then be signed
+// locally with the matching private key.
+//
+// Deprecated: Use OAuthExchangeCode, it handles the key pair and returns an
+// OAuthUser to sign requests with.
 func OAuthGetAccessToken(ctx context.Context, clientID, clientSecret string, authorizationCode string, codeVerifier string, ed25519 string, su *SafeUser) (string, string, string, error) {
 	params, err := json.Marshal(map[string]string{
 		"client_id":     clientID,

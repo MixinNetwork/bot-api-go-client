@@ -244,22 +244,39 @@ func UserMeWithRequestID(ctx context.Context, requestID string, su *SafeUser) (*
 	if err != nil {
 		return nil, ServerError(ctx, err)
 	}
+	return parseUserMeResponse(ctx, body)
+}
+
+func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
+	return UserMeWithRequestID(ctx, UuidNewV4().String(), su)
+}
+
+// UserMeForOAuth reads the profile of the user who granted ou, the scope
+// must include PROFILE:READ.
+func UserMeForOAuth(ctx context.Context, ou *OAuthUser) (*UserMeView, error) {
+	req, err := newOAuthSignedRequest(ctx, "GET", "/safe/me", nil, ou)
+	if err != nil {
+		return nil, err
+	}
+	body, err := doRequest(req)
+	if err != nil {
+		return nil, ServerError(ctx, err)
+	}
+	return parseUserMeResponse(ctx, body)
+}
+
+func parseUserMeResponse(ctx context.Context, body []byte) (*UserMeView, error) {
 	var resp struct {
 		Data  *UserMeView `json:"data"`
 		Error Error       `json:"error"`
 	}
-	err = json.Unmarshal(body, &resp)
-	if err != nil {
+	if err := json.Unmarshal(body, &resp); err != nil {
 		return nil, BadDataError(ctx)
 	}
 	if resp.Error.Code > 0 {
 		return nil, resp.Error
 	}
 	return resp.Data, nil
-}
-
-func RequestUserMe(ctx context.Context, su *SafeUser) (*UserMeView, error) {
-	return UserMeWithRequestID(ctx, UuidNewV4().String(), su)
 }
 
 func UpdateUserMe(ctx context.Context, fullName, avatarBase64 string, su *SafeUser) (*User, error) {
