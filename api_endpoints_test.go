@@ -3,6 +3,8 @@ package bot
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/rsa"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -10,7 +12,10 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/gofrs/uuid/v5"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -366,6 +371,31 @@ func TestUserMeForOAuth(t *testing.T) {
 		assert.Equal(t, "/safe/me", r.URL.Path)
 		assert.Equal(t, "Bearer "+accessToken, r.Header.Get("Authorization"))
 		assert.Equal(t, "oauth-request-id", r.Header.Get("X-Request-Id"))
+		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
+	}))
+
+	me, err := UserMeForOAuth(context.Background(), accessToken)
+	require.NoError(t, err)
+	assert.True(t, me.HasPIN)
+}
+
+func TestUserMeForOAuthServerIssuedToken(t *testing.T) {
+	// same claims as the server issued RSA access token, which has no jti
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	accessToken, err := jwt.NewWithClaims(jwt.SigningMethodRS512, jwt.MapClaims{
+		"iss": "app",
+		"aid": "authorization",
+		"iat": time.Now().Unix(),
+		"exp": time.Now().Add(time.Hour).Unix(),
+		"scp": "PROFILE:READ",
+	}).SignedString(key)
+	require.NoError(t, err)
+	useTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/safe/me", r.URL.Path)
+		assert.Equal(t, "Bearer "+accessToken, r.Header.Get("Authorization"))
+		_, err := uuid.FromString(r.Header.Get("X-Request-Id"))
+		assert.NoError(t, err)
 		_, _ = w.Write([]byte(`{"data":{"has_pin":true}}`))
 	}))
 

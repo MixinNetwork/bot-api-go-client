@@ -53,7 +53,11 @@ func oauthAccessTokenRequestID(accessToken string) (string, error) {
 	if _, _, err := jwt.NewParser().ParseUnverified(accessToken, claims); err != nil {
 		return "", fmt.Errorf("parse OAuth access token: %w", err)
 	}
-	requestID, ok := claims["jti"].(string)
+	jti, exists := claims["jti"]
+	if !exists {
+		return UuidNewV4().String(), nil
+	}
+	requestID, ok := jti.(string)
 	if !ok {
 		return "", fmt.Errorf("OAuth access token requires a string jti")
 	}

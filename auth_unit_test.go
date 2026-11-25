@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gofrs/uuid/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,7 +26,18 @@ func TestOAuthAccessTokenRequestID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "oauth-id", id)
 
-	for _, claims := range []jwt.MapClaims{{}, {"jti": ""}, {"jti": 42}, {"jti": " id"}, {"jti": "a\nb"}} {
+	// server-issued RSA access tokens have no jti, a random request id is used
+	token, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{"aid": "authorization"}).SignedString(key)
+	require.NoError(t, err)
+	first, err := oauthAccessTokenRequestID(token)
+	require.NoError(t, err)
+	_, err = uuid.FromString(first)
+	require.NoError(t, err)
+	second, err := oauthAccessTokenRequestID(token)
+	require.NoError(t, err)
+	assert.NotEqual(t, first, second)
+
+	for _, claims := range []jwt.MapClaims{{"jti": nil}, {"jti": ""}, {"jti": 42}, {"jti": " id"}, {"jti": "a\nb"}} {
 		token, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(key)
 		require.NoError(t, err)
 		_, err = oauthAccessTokenRequestID(token)
